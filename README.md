@@ -37,6 +37,15 @@
 - Optional Parameters
    - patient_id: includes results matching `patient_id` column
 
+### Pharmacists
+- `/pharmacists` (GET)
+- Gets all of the pharmacies from the `pharmacists` table with optional filters.
+   - example: `/pharmacists?pharmacy_location=springview` includes all pharmacies with locations containing "springview"
+- Returns `pharmacists` array in json.
+- Optional Parameters
+   - pharmacist_id: includes results matching `pharmacist_id` column
+   - pharmacy_location: includes results like `pharmacy_location` column
+
 ### Appointments
 - `/appointments` (GET)
 - Gets all of the appointments from the `appointments` table with optional filters.
@@ -60,7 +69,17 @@
    - title: includes results like `title` column
    - post_type: includes results like `post_type` column (exercise plan, discussion)
 
-#### Reviews
+### Forum Comments
+- `/forum_comments` (GET)
+- Gets all of the post comments from the `forum_comments` table with optional filters.
+   - example: `/forum_comments?post_id=1` includes all comments under the post with post_id = 1
+- Returns `forum_comments` array in json.
+- Optional Parameters
+   - comment_id: includes results matching `comment_id` column
+   - post_id: includes results matching `post_id` column
+   - user_id: includes results matching `user_id` column
+
+### Reviews
 - `/reviews` (GET)
 - Retrieves all reviews from the `reviews` table with optional filters.
    - example: `/reviews?doctor_id=1&rating=5` Returns reviews for doctor 1 that have a rating of 5.

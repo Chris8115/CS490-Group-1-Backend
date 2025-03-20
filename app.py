@@ -13,6 +13,55 @@ db = SQLAlchemy(app)
 def home():
     return "<h1>It works!</h1>"
 
+@app.route("/pharmacists", methods=['GET'])
+def pharmacists():
+    #sql query
+    query = "SELECT * FROM pharmacists\n"
+    #get inputs
+    params = {
+        'pid': "" if request.args.get('pharmacist_id') == None else request.args.get('pharmacist_id'),
+        'loc': "" if request.args.get('pharmacy_location') == None else '%' + request.args.get('pharmacy_location') + '%',
+    }
+    if(params['pid'] != "" or params['loc'] != ""):
+        query += ("WHERE " + ("pharmacist_id = :pid\n" if params['pid'] != "" else "TRUE\n"))
+        query += ("AND " + ("pharmacy_location LIKE :loc\n" if params['loc'] != "" else "TRUE\n"))
+    #execute query
+    result = db.session.execute(text(query), params)
+    json = {'pharmacists': []}
+    for row in result:
+        json['pharmacists'].append({
+            'pharmacist_id': row.pharmacist_id,
+            'pharmacy_location': row.pharmacy_location,
+        })
+    return json, 200
+
+@app.route("/forum_comments", methods=['GET'])
+def forum_comments():
+    #sql query
+    query = "SELECT * FROM forum_comments\n"
+    #get inputs
+    params = {
+        'cid': "" if request.args.get('comment_id') == None else request.args.get('comment_id'),
+        'pid': "" if request.args.get('post_id') == None else request.args.get('post_id'),
+        'uid': "" if request.args.get('user_id') == None else request.args.get('user_id'),
+    }
+    if(params['pid'] != "" or params['uid'] != "" or params['cid'] != ""):
+        query += ("WHERE " + ("post_id = :pid\n" if params['pid'] != "" else "TRUE\n"))
+        query += ("AND " + ("user_id = :uid\n" if params['uid'] != "" else "TRUE\n"))
+        query += ("AND " + ("comment_id = :cid\n" if params['cid'] != "" else "TRUE\n"))
+    #execute query
+    result = db.session.execute(text(query), params)
+    json = {'forum_comments': []}
+    for row in result:
+        json['forum_comments'].append({
+            'comment_id': row.comment_id,
+            'post_id': row.post_id,
+            'user_id': row.user_id,
+            'comment_text': row.comment_text,
+            'created_at': row.created_at
+        })
+    return json, 200
+
 @app.route("/forum_posts", methods=['GET'])
 def forum_posts():
     #sql query

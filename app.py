@@ -158,5 +158,43 @@ def users():
         })
     return json, 200
 
+@app.route("/reviews", methods=['GET'])
+def reviews():
+    #sql query
+    query = "SELECT * FROM reviews\n"
+    
+    #get inputs
+    params = {
+        'rid': "" if request.args.get('review_id') is None else request.args.get('review_id'),
+        'did': "" if request.args.get('doctor_id') is None else request.args.get('doctor_id'),
+        'pid': "" if request.args.get('patient_id') is None else request.args.get('patient_id'),
+        'rating': "" if request.args.get('rating') is None else request.args.get('rating'),
+        'text': "" if request.args.get('review_text') is None else '%' + request.args.get('review_text') + '%',
+    }
+    
+    if (params['rid'] != "" or params['did'] != "" or params['pid'] != "" or params['rating'] != "" or params['text'] != ""):
+        query += ("WHERE " + ("review_id = :rid\n" if params['rid'] != "" else "TRUE\n"))
+        query += ("AND " + ("doctor_id = :did\n" if params['did'] != "" else "TRUE\n"))
+        query += ("AND " + ("patient_id = :pid\n" if params['pid'] != "" else "TRUE\n"))
+        query += ("AND " + ("rating = :rating\n" if params['rating'] != "" else "TRUE\n"))
+        query += ("AND " + ("review_text LIKE :text\n" if params['text'] != "" else "TRUE\n"))
+    
+    #execute query
+    result = db.session.execute(text(query), params)
+    json_response = {'reviews': []}
+    
+    for row in result:
+        json_response['reviews'].append({
+            'review_id': row.review_id,
+            'doctor_id': row.doctor_id,
+            'patient_id': row.patient_id,
+            'rating': row.rating,
+            'review_text': row.review_text,
+            'created_at': row.created_at
+        })
+    
+    return json_response, 200
+
+
 if __name__ == "__main__":
     app.run(debug=True)

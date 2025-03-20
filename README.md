@@ -59,3 +59,15 @@
    - user_id: includes results matching `user_id` column
    - title: includes results like `title` column
    - post_type: includes results like `post_type` column (exercise plan, discussion)
+
+#### Reviews
+- `/reviews` (GET)
+  Retrieves all reviews from the `reviews` table with optional filters.
+   - example: `/reviews?doctor_id=1&rating=5` Returns reviews for doctor 1 that have a rating of 5.
+- Returns a JSON array named `reviews`.
+- Optional Parameters
+  - review_id: Filters results matching the `review_id` column.
+  - doctor_id: Filters results matching the `doctor_id` column.
+  - patient_id: Filters results matching the `patient_id` column.
+  - rating: Filters results matching the `rating` column (typically values 1–5).
+  - review_text: Performs a text search on the `review_text` column.

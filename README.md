@@ -62,7 +62,7 @@
 
 #### Reviews
 - `/reviews` (GET)
-  Retrieves all reviews from the `reviews` table with optional filters.
+- Retrieves all reviews from the `reviews` table with optional filters.
    - example: `/reviews?doctor_id=1&rating=5` Returns reviews for doctor 1 that have a rating of 5.
 - Returns a JSON array named `reviews`.
 - Optional Parameters

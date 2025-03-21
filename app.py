@@ -13,6 +13,114 @@ db = SQLAlchemy(app)
 def home():
     return "<h1>It works!</h1>"
 
+@app.route("/exercise_plans", methods=['GET'])
+def exercise_plans():
+    #sql query
+    query = "SELECT * FROM exercise_plans\n"
+    #get inputs
+    params = {
+        'eid': "" if request.args.get('exercise_id') == None else request.args.get('exercise_id'),
+        'tit': "" if request.args.get('title') == None else '%' + request.args.get('title') + '%', # haha Tity
+    }
+    if(params['eid'] != "" or params['tit'] != ""):
+        query += ("WHERE " + ("exercise_id = :eid\n" if params['eid'] != "" else "TRUE\n"))
+        query += ("AND " + ("title LIKE :tit\n" if params['tit'] != "" else "TRUE\n"))
+    #execute query
+    result = db.session.execute(text(query), params)
+    json = {'exercise_plans': []}
+    for row in result:
+        json['exercise_plans'].append({
+            'exercise_id': row.exercise_id,
+            'title': row.title,
+            'description': row.description
+        })
+    return json, 200
+
+@app.route("/doctor_patient_relationship", methods=['GET'])
+def doctor_patient_relationship():
+    #sql query
+    query = "SELECT * FROM doctor_patient_relationship\n"
+    #get inputs
+    params = {
+        'did': "" if request.args.get('doctor_id') == None else request.args.get('doctor_id'),
+        'pid': "" if request.args.get('patient_id') == None else request.args.get('patient_id'),
+        'status': "" if request.args.get('status') == None else '%' + request.args.get('status') + '%',
+    }
+    if(params['did'] != "" or params['pid'] != "" or params['status'] != ""):
+        query += ("WHERE " + ("doctor_id = :did\n" if params['did'] != "" else "TRUE\n"))
+        query += ("AND " + ("patient_id = :pid\n" if params['pid'] != "" else "TRUE\n"))
+        query += ("AND " + ("status LIKE :status\n" if params['status'] != "" else "TRUE\n"))
+    #execute query
+    result = db.session.execute(text(query), params)
+    json = {'doctor_patient_relationship': []}
+    for row in result:
+        json['doctor_patient_relationship'].append({
+            'doctor_id': row.doctor_id,
+            'patient_id': row.patient_id,
+            'status': row.status,
+            'date_assigned': row.date_assigned
+        })
+    return json, 200
+
+@app.route("/credit_card", methods=['GET'])
+def credit_card():
+    #sql query
+    query = "SELECT * FROM credit_card\n"
+    #get inputs
+    params = {
+        'cid': "" if request.args.get('creditcard_id') == None else request.args.get('creditcard_id'),
+        'cnum': "" if request.args.get('card_ending') == None else '%' + request.args.get('card_ending'),
+        'exp': "" if request.args.get('exp_date') == None else '%' + request.args.get('exp_date') + '%',
+    }
+    if(len(params['cnum'][1:]) > 4):
+        return {'message': "Card ending query cannot exceed 4 characters for security purposes. Please use creditcard_id instead."}, 400
+    if(params['cid'] != "" or params['cnum'] != "" or params['exp'] != ""):
+        query += ("WHERE " + ("creditcard_id = :cid\n" if params['cid'] != "" else "TRUE\n"))
+        query += ("AND " + ("cardnumber LIKE :cnum\n" if params['cnum'] != "" else "TRUE\n"))
+        query += ("AND " + ("exp_date LIKE :exp\n" if params['exp'] != "" else "TRUE\n"))
+    #execute query
+    result = db.session.execute(text(query), params)
+    json = {'credit_card': []}
+    for row in result:
+        json['credit_card'].append({
+            'creditcard_id': row.creditcard_id,
+            'card_ending': "x" + str(row.cardnumber)[-4:],
+            #'cvv': row.cvv, # Nope
+            'exp_date': row.exp_date
+        })
+    return json, 200
+
+@app.route("/address", methods=['GET'])
+def address():
+    #sql query
+    query = "SELECT * FROM address\n"
+    #get inputs
+    params = {
+        'aid': "" if request.args.get('address_id') == None else request.args.get('address_id'),
+        'zip': "" if request.args.get('zip') == None else request.args.get('zip'),
+        'city': "" if request.args.get('city') == None else '%' + request.args.get('city') + '%',
+        'addr': "" if request.args.get('address') == None else '%' + request.args.get('address') + '%',
+        'addr2': "" if request.args.get('address2') == None else '%' + request.args.get('address2') + '%',
+    }
+    if(params['aid'] != "" or params['zip'] != "" or params['city'] != "" or params['addr'] != "" or params['addr2'] != ""):
+        query += ("WHERE " + ("address_id = :aid\n" if params['aid'] != "" else "TRUE\n"))
+        query += ("AND " + ("zip = :zip\n" if params['zip'] != "" else "TRUE\n"))
+        query += ("AND " + ("city LIKE :city\n" if params['city'] != "" else "TRUE\n"))
+        query += ("AND " + ("address LIKE :addr\n" if params['addr'] != "" else "TRUE\n"))
+        query += ("AND " + ("address2 LIKE :addr2\n" if params['addr2'] != "" else "TRUE\n"))
+    #execute query
+    result = db.session.execute(text(query), params)
+    json = {'address': []}
+    for row in result:
+        json['address'].append({
+            'address_id': row.address_id,
+            'city': row.city,
+            'address2': row.address2,
+            'address': row.address,
+            'zip': row.zip
+        })
+    return json, 200
+
 @app.route("/pharmacists", methods=['GET'])
 def pharmacists():
     #sql query

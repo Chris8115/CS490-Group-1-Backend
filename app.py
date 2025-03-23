@@ -13,6 +13,211 @@ db = SQLAlchemy(app)
 def home():
     return "<h1>It works!</h1>"
 
+@app.route("/transactions", methods=['GET'])
+def transactions():
+    #sql query
+    query = "SELECT * FROM transactions\n"
+    #get inputs
+    params = {
+        'cid': "" if request.args.get('creditcard_id') == None else request.args.get('creditcard_id'),
+        'pid': "" if request.args.get('patient_id') == None else request.args.get('patient_id'),
+        'did': "" if request.args.get('doctor_id') == None else request.args.get('doctor_id'),
+        'tid': "" if request.args.get('transaction_id') == None else request.args.get('transaction_id'),
+        'datetime': "" if request.args.get('created_at') == None else '%' + request.args.get('created_at') + '%'
+    }
+    if(params['pid'] != "" or params['did'] != "" or params['cid'] != "" or params['tid'] != "" or params['datetime'] != ""):
+        query += ("WHERE " + ("creditcard_id = :cid\n" if params['cid'] != "" else "TRUE\n"))
+        query += ("AND " + ("patient_id = :pid\n" if params['pid'] != "" else "TRUE\n"))
+        query += ("AND " + ("doctor_id = :did\n" if params['did'] != "" else "TRUE\n"))
+        query += ("AND " + ("transaction_id = :tid\n" if params['tid'] != "" else "TRUE\n"))
+        query += ("AND " + ("created_at LIKE :datetime\n" if params['datetime'] != "" else "TRUE\n"))
+    #execute query
+    result = db.session.execute(text(query), params)
+    json = {'transactions': []}
+    for row in result:
+        json['transactions'].append({
+            'creditcard_id': row.creditcard_id,
+            'doctor_id': row.doctor_id,
+            'patient_id': row.patient_id,
+            'transaction_id': row.transaction_id,
+            'created_at': row.created_at,
+            'service_fee': row.service_fee,
+            'doctor_fee': row.doctor_fee,
+            'subtotal': row.subtotal
+        })
+    return json, 200
+
+@app.route("/saved_posts", methods=['GET'])
+def saved_posts():
+    #sql query
+    query = "SELECT * FROM saved_posts\n"
+    #get inputs
+    params = {
+        'uid': "" if request.args.get('user_id') == None else request.args.get('user_id'),
+        'pid': "" if request.args.get('post_id') == None else request.args.get('post_id'),
+        'datetime': "" if request.args.get('saved_at') == None else '%' + request.args.get('saved_at') + '%'
+    }
+    if(params['uid'] != "" or params['pid'] != "" or params['datetime'] != ""):
+        query += ("WHERE " + ("user_id = :uid\n" if params['uid'] != "" else "TRUE\n"))
+        query += ("AND " + ("post_id = :pid\n" if params['pid'] != "" else "TRUE\n"))
+        query += ("AND " + ("saved_at LIKE :datetime\n" if params['datetime'] != "" else "TRUE\n"))
+    #execute query
+    result = db.session.execute(text(query), params)
+    json = {'saved_posts': []}
+    for row in result:
+        json['saved_posts'].append({
+            'user_id': row.user_id,
+            'post_id': row.post_id,
+            'saved_at': row.saved_at
+        })
+    return json, 200
+
+@app.route("/prescriptions", methods=['GET'])
+def prescriptions():
+    #sql query
+    query = "SELECT * FROM prescriptions\n"
+    #get inputs
+    params = {
+        'prescriptid': "" if request.args.get('prescription_id') == None else request.args.get('prescription_id'),
+        'pid': "" if request.args.get('patient_id') == None else request.args.get('patient_id'),
+        'did': "" if request.args.get('doctor_id') == None else request.args.get('doctor_id'),
+        'mid': "" if request.args.get('medication_id') == None else request.args.get('medication_id'),
+        'phid': "" if request.args.get('pharmacist_id') == None else request.args.get('pharmacist_id'),
+        'status': "" if request.args.get('status') == None else '%' + request.args.get('status') + '%',
+        'datetime': "" if request.args.get('date_prescribed') == None else '%' + request.args.get('date_prescribed') + '%'
+    }
+    if(params['prescriptid'] != "" or params['pid'] != "" or params['did'] != "" or params['mid'] != "" or params['phid'] != "" or params['status'] != "" or params['datetime'] != ""):
+        query += ("WHERE " + ("prescription_id = :prescriptid\n" if params['prescriptid'] != "" else "TRUE\n"))
+        query += ("AND " + ("patient_id = :pid\n" if params['pid'] != "" else "TRUE\n"))
+        query += ("AND " + ("doctor_id = :did\n" if params['did'] != "" else "TRUE\n"))
+        query += ("AND " + ("medication_id = :mid\n" if params['mid'] != "" else "TRUE\n"))
+        query += ("AND " + ("pharmacist_id = :phid\n" if params['phid'] != "" else "TRUE\n"))
+        query += ("AND " + ("status LIKE :status\n" if params['status'] != "" else "TRUE\n"))
+        query += ("AND " + ("date_prescribed LIKE :datetime\n" if params['datetime'] != "" else "TRUE\n"))
+    #execute query
+    result = db.session.execute(text(query), params)
+    json = {'prescriptions': []}
+    for row in result:
+        json['prescriptions'].append({
+            'prescription_id': row.prescription_id,
+            'doctor_id': row.doctor_id,
+            'patient_id': row.patient_id,
+            'medication_id': row.medication_id,
+            'pharmacist_id': row.pharmacist_id,
+            'status': row.status,
+            'date_prescribed': row.date_prescribed,
+            'instructions': row.instructions,
+            'quantity': row.quantity
+        })
+    return json, 200
+
+@app.route("/patient_progress", methods=['GET'])
+def patient_progress():
+    #sql query
+    query = "SELECT * FROM patient_progress\n"
+    #get inputs
+    params = {
+        'progid': "" if request.args.get('progress_id') == None else request.args.get('progress_id'),
+        'pid': "" if request.args.get('patient_id') == None else request.args.get('patient_id'),
+        'datetime': "" if request.args.get('date_logged') == None else '%' + request.args.get('date_logged') + '%'
+    }
+    if(params['progid'] != "" or params['pid'] != "" or params['datetime'] != ""):
+        query += ("WHERE " + ("progress_id = :progid\n" if params['progid'] != "" else "TRUE\n"))
+        query += ("AND " + ("patient_id = :pid\n" if params['pid'] != "" else "TRUE\n"))
+        query += ("AND " + ("date_logged LIKE :datetime\n" if params['datetime'] != "" else "TRUE\n"))
+    #execute query
+    result = db.session.execute(text(query), params)
+    json = {'patient_progress': []}
+    for row in result:
+        json['patient_progress'].append({
+            'progress_id': row.progress_id,
+            'patient_id': row.patient_id,
+            'weight': row.weight,
+            'calories': row.calories,
+            'notes': row.notes,
+            'date_logged': row.date_logged
+        })
+    return json, 200
+
+@app.route("/patient_exercise_assignments", methods=['GET'])
+def patient_exercise_assignments():
+    #sql query
+    query = "SELECT * FROM patient_exercise_assignments\n"
+    #get inputs
+    params = {
+        'aid': "" if request.args.get('assignment_id') == None else request.args.get('assignment_id'),
+        'pid': "" if request.args.get('patient_id') == None else request.args.get('patient_id'),
+        'did': "" if request.args.get('doctor_id') == None else request.args.get('doctor_id'),
+        'eid': "" if request.args.get('exercise_id') == None else request.args.get('exercise_id'),
+        'date': "" if request.args.get('assigned_at') == None else '%' + request.args.get('assigned_at') + '%'
+    }
+    if(params['aid'] != "" or params['pid'] != "" or params['did'] != "" or params['eid'] != "" or params['date'] != ""):
+        query += ("WHERE " + ("assignment_id = :aid\n" if params['aid'] != "" else "TRUE\n"))
+        query += ("AND " + ("patient_id = :pid\n" if params['pid'] != "" else "TRUE\n"))
+        query += ("AND " + ("doctor_id = :did\n" if params['did'] != "" else "TRUE\n"))
+        query += ("AND " + ("exercise_id = :eid\n" if params['eid'] != "" else "TRUE\n"))
+        query += ("AND " + ("assigned_at LIKE :date\n" if params['date'] != "" else "TRUE\n"))
+    #execute query
+    result = db.session.execute(text(query), params)
+    json = {'patient_exercise_assignments': []}
+    for row in result:
+        json['patient_exercise_assignments'].append({
+            'assignment_id': row.assignment_id,
+            'patient_id': row.patient_id,
+            'doctor_id': row.doctor_id,
+            'exercise_id': row.exercise_id,
+            'instructions': row.instructions,
+            'assigned_at': row.assigned_at
+        })
+    return json, 200
+
+@app.route("/medications", methods=['GET'])
+def medications():
+    #sql query
+    query = "SELECT * FROM medications\n"
+    #get inputs
+    params = {
+        'mid': "" if request.args.get('medication_id') == None else request.args.get('medication_id'),
+        'name': "" if request.args.get('name') == None else '%' + request.args.get('name') + '%'
+    }
+    if(params['mid'] != "" or params['name'] != ""):
+        query += ("WHERE " + ("medication_id = :mid\n" if params['mid'] != "" else "TRUE\n"))
+        query += ("AND " + ("name LIKE :name\n" if params['name'] != "" else "TRUE\n"))
+    #execute query
+    result = db.session.execute(text(query), params)
+    json = {'medications': []}
+    for row in result:
+        json['medications'].append({
+            'medication_id': row.medication_id,
+            'name': row.name,
+            'description': row.description
+        })
+    return json, 200
+
+@app.route("/inventory", methods=['GET'])
+def inventory():
+    #sql query
+    query = "SELECT * FROM inventory\n"
+    #get inputs
+    params = {
+        'iid': "" if request.args.get('inventory_id') == None else request.args.get('inventory_id'),
+        'mid': "" if request.args.get('medication_id') == None else request.args.get('medication_id'),
+    }
+    if(params['iid'] != "" or params['mid'] != ""):
+        query += ("WHERE " + ("inventory_id = :iid\n" if params['iid'] != "" else "TRUE\n"))
+        query += ("AND " + ("medication_id = :mid\n" if params['mid'] != "" else "TRUE\n"))
+    #execute query
+    result = db.session.execute(text(query), params)
+    json = {'inventory': []}
+    for row in result:
+        json['inventory'].append({
+            'inventory_id': row.inventory_id,
+            'medication_id': row.medication_id,
+            'stock': row.stock,
+            'last_updated': row.last_updated
+        })
+    return json, 200
+
 @app.route("/exercise_plans", methods=['GET'])
 def exercise_plans():
     #sql query

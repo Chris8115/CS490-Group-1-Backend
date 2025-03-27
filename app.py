@@ -557,6 +557,74 @@ def reviews():
     
     return json_response, 200
 
+@app.route("/delete_user/<int:user_id>", methods=["DELETE"])
+def delete_user(user_id):
+    try:
+        result = db.session.execute("SELECT * FROM users WHERE user_id = ?\n", user_id)
+        if result is not None:
+            db.session.execute("DELETE FROM users WHERE user_id = ?\n", user_id)
+        else:
+            return 400
+    except Exception as e:
+        return 500
+    else:
+        db.session.commit()
+        return 200
 
+@app.route("/delete_review/<int:review_id>", methods=["DELETE"])
+def delete_reviews(review_id):
+    try:
+        result = db.session.execute("SELECT * FROM reviews WHERE review_id = ?\n", review_id)
+        if result is not None:
+            db.session.execute("DELETE FROM reviews WHERE review_id = ?\n", review_id)
+        else:
+            return 400
+    except Exception as e:
+        return 500
+    else:
+        db.session.commit()
+        return 200
+
+@app.route("/delete_doctor/<int:user_id>", methods=["DELETE"])
+def delete_doctors(doctors_id):
+    try:
+        result = db.session.execute("SELECT * FROM doctors WHERE doctors_id = ?\n", doctors_id)
+        if result is not None:
+            db.session.execute("DELETE FROM doctors WHERE doctors_id = ?\n", doctors_id)
+        else:
+            return 400
+    except Exception as e:
+        return 500
+    else:
+        db.session.commit()
+        return 200
+    
+@app.route("/delete_patient/<int:patient_id>", methods=["DELETE"])
+def delete_patient(patient_id):
+    try:
+        result = db.session.execute("SELECT * FROM patients WHERE patient_id = ?\n", patient_id)
+        if result is not None:
+            db.session.execute("DELETE FROM patients WHERE patient_id = ?\n", patient_id)
+        else:
+            return 400
+    except Exception as e:
+        return 500
+    else:
+        db.session.commit()
+        return 200
+    
+@app.route("/delete_appointments/<int:appointment_id>", methods=["DELETE"])
+def delete_appointment(appointment_id):
+    try:
+        result = db.session.execute("SELECT * FROM appointments WHERE appointment_id = ?\n", appointment_id)
+        if result is not None:
+            db.session.execute("DELETE FROM appointments WHERE appointment_id = ?\n", appointment_id)
+        else:
+            return 400
+    except Exception as e:
+        return 500
+    else:
+        db.session.commit()
+        return 200
 if __name__ == "__main__":
     app.run(debug=True)

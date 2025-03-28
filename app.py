@@ -1,20 +1,47 @@
-from flask import Flask, request, Response
+from flask import Flask, request, Response, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.sql.functions import func
 from sqlalchemy import desc, text
 from sqlalchemy.dialects import mysql
+from flask_swagger import swagger
+from flask_restx import Api
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///craze.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
+api = Api(
+    title="BetterU API",
+    version="1.0",
+    description="API docs for BetterU endpoints",
+    doc="/doc"
+)
+
 @app.route("/")
 def home():
     return "<h1>It works!</h1>"
 
+# Swagger route
+@app.route("/spec")
+def spec():
+    return jsonify(swagger(app))
+
 @app.route("/transactions", methods=['GET'])
 def transactions():
+    """
+    Gets all transactions.
+    ---
+    parameters:
+        - creditcard_id
+        - patient_id
+        - doctor_id
+        - transaction_id
+        - created_at
+    responses:
+        200:
+            description: OK
+    """
     #sql query
     query = "SELECT * FROM transactions\n"
     #get inputs

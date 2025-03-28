@@ -747,24 +747,7 @@ def get_reviews():
             'review_text': row.review_text,
             'created_at': row.created_at
         })
-    
-    return json_response, 200
-
-@app.route("/reviews/<int:review_id>", methods=['DELETE'])
-@swag_from('docs/reviews/delete.yml')
-def delete_reviews(review_id):
-    try:
-        result = db.session.execute(text("SELECT * FROM reviews WHERE review_id = :review_id\n"), {'review_id': review_id})
-        if result.first() != None:
-            db.session.execute(text("DELETE FROM reviews WHERE review_id = :review_id\n"), {'review_id': review_id})
-        else:
-            return Response(status=400)
-    except Exception as e:
-        print(e)
-        return Response(status=500)
-    else:
-        db.session.commit()
-        return Response(status=200)
+    return json, 200
 
 @app.route("/patients", methods=['GET'])
 @swag_from('docs/patients/get.yml')
@@ -881,9 +864,76 @@ def get_users():
         })
     return json, 200
 
-@app.route("/users/<int:user_id>", methods=['DELETE'])
-@swag_from('docs/users/delete.yml')
-def delete_users(user_id):
+@app.route("/reviews", methods=['GET'])
+def reviews():
+    #sql query
+    query = "SELECT * FROM reviews\n"
+    
+    #get inputs
+    params = {
+        'rid': "" if request.args.get('review_id') is None else request.args.get('review_id'),
+        'did': "" if request.args.get('doctor_id') is None else request.args.get('doctor_id'),
+        'pid': "" if request.args.get('patient_id') is None else request.args.get('patient_id'),
+        'rating': "" if request.args.get('rating') is None else request.args.get('rating'),
+        'text': "" if request.args.get('review_text') is None else '%' + request.args.get('review_text') + '%',
+    }
+    
+    if (params['rid'] != "" or params['did'] != "" or params['pid'] != "" or params['rating'] != "" or params['text'] != ""):
+        query += ("WHERE " + ("review_id = :rid\n" if params['rid'] != "" else "TRUE\n"))
+        query += ("AND " + ("doctor_id = :did\n" if params['did'] != "" else "TRUE\n"))
+        query += ("AND " + ("patient_id = :pid\n" if params['pid'] != "" else "TRUE\n"))
+        query += ("AND " + ("rating = :rating\n" if params['rating'] != "" else "TRUE\n"))
+        query += ("AND " + ("review_text LIKE :text\n" if params['text'] != "" else "TRUE\n"))
+    
+    #execute query
+    result = db.session.execute(text(query), params)
+    json_response = {'reviews': []}
+    
+    for row in result:
+        json_response['reviews'].append({
+            'review_id': row.review_id,
+            'doctor_id': row.doctor_id,
+            'patient_id': row.patient_id,
+            'rating': row.rating,
+            'review_text': row.review_text,
+            'created_at': row.created_at
+        })
+    
+    return json_response, 200
+
+@app.route("/reviews", methods=['PUT'])
+def update_review():
+    data = request.get_json(force=True)
+    
+    if 'review_id' not in data:
+        return {"error": "Missing review_id in request"}, 400
+    
+    update_fields = []
+    params = {}
+    
+    if 'rating' in data:
+        update_fields.append("rating = :rating")
+        params['rating'] = data['rating']
+    
+    if 'review_text' in data:
+        update_fields.append("review_text = :review_text")
+        params['review_text'] = data['review_text']
+    
+    if not update_fields:
+        return {"error": "No update fields provided."}, 400
+    
+    params['review_id'] = data['review_id']
+    query = "UPDATE reviews SET " + ", ".join(update_fields) + " WHERE review_id = :review_id"
+    
+    db.session.execute(text(query), params)
+    db.session.commit()
+    
+    return {"message": "Review updated successfully"}, 200
+
+
+#delete routes
+@app.route("/delete_user/<int:user_id>", methods=["DELETE"])
+def delete_user(user_id):
     try:
         result = db.session.execute(text("SELECT * FROM users WHERE user_id = :user_id\n"), {'user_id': user_id})
         if result.first() != None:

@@ -557,6 +557,36 @@ def reviews():
     
     return json_response, 200
 
+@app.route("/reviews", methods=['PUT'])
+def update_review():
+    data = request.get_json(force=True)
+    
+    if 'review_id' not in data:
+        return {"error": "Missing review_id in request"}, 400
+    
+    update_fields = []
+    params = {}
+    
+    if 'rating' in data:
+        update_fields.append("rating = :rating")
+        params['rating'] = data['rating']
+    
+    if 'review_text' in data:
+        update_fields.append("review_text = :review_text")
+        params['review_text'] = data['review_text']
+    
+    if not update_fields:
+        return {"error": "No update fields provided."}, 400
+    
+    params['review_id'] = data['review_id']
+    query = "UPDATE reviews SET " + ", ".join(update_fields) + " WHERE review_id = :review_id"
+    
+    db.session.execute(text(query), params)
+    db.session.commit()
+    
+    return {"message": "Review updated successfully"}, 200
+
+
 #delete routes
 @app.route("/delete_user/<int:user_id>", methods=["DELETE"])
 def delete_user(user_id):

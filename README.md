@@ -92,6 +92,15 @@
   - rating: Filters results matching the `rating` column (typically values 1–5).
   - review_text: Performs a text search on the `review_text` column.
 
+- `/reviews` (PUT)
+- Updates an existing review in the `reviews` table.
+   - example: `/reviews` with a JSON body containing updated fields.
+- Request Body (JSON):
+  - review_id: **Required.** The ID of the review to update.
+  - rating: *(Optional)* New numeric rating (typically values 1–5).
+  - review_text: *(Optional)* New review text.
+- Returns a confirmation message in JSON indicating that the review was updated successfully.
+
 ### Addresses
 - `/address` (GET)
 - Gets all of the addresses from the `address` table with optional filters.

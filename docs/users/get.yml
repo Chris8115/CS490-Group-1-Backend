@@ -1,0 +1,36 @@
+Users records
+---
+tags:
+    - Users
+description:
+    Gets all of the users from the `users` table with optional filters.
+    
+    example - `/users?first_name=birch&user_id=10` includes users whose names contain "birch" or have a `user_id` of 10.
+responses:
+    200:
+        description: JSON array named `users` containing all user records. Passwords are omitted for security reasons.
+parameters:
+    - in: query
+      name: first_name
+      required: false
+      description: includes results like `first_name` column
+      schema:
+        type: string
+    - in: query
+      name: last_name
+      required: false
+      description: includes results like `last_name` column
+      schema:
+        type: string
+    - in: query
+      name: user_id
+      required: false
+      description: includes results matching `user_id` column
+      schema:
+        type: integer
+    - in: query
+      name: role
+      required: false
+      description: includes results matching `role` column (pharmacist, doctor, or patient)
+      schema:
+        type: string

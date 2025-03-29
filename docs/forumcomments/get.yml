@@ -1,0 +1,30 @@
+Forum Comments records
+---
+tags:
+    - Discussion Forum
+description:
+    Gets all of the post comments from the `forum_comments` table with optional filters.
+    
+    example - `/forum_comments?post_id=1` includes all comments under the post with `post_id` = 1.
+responses:
+    200:
+        description: JSON array named `forum_comments` containing all forum comment records.
+parameters:
+    - in: query
+      name: comment_id
+      required: false
+      description: includes results matching `comment_id` column
+      schema:
+        type: integer
+    - in: query
+      name: post_id
+      required: false
+      description: includes results matching `post_id` column
+      schema:
+        type: integer
+    - in: query
+      name: user_id
+      required: false
+      description: includes results matching `user_id` column
+      schema:
+        type: integer

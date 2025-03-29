@@ -1,0 +1,30 @@
+Doctors records
+---
+tags:
+    - Doctors
+description:
+    Gets all of the doctors from the `doctors` table with optional filters.
+    
+    example - `/doctors?specialization=physician` includes doctors whose specializations contain "physician".
+responses:
+    200:
+        description: JSON array named `doctors` containing all doctor records.
+parameters:
+    - in: query
+      name: specialization
+      required: false
+      description: includes results like `specialization` column
+      schema:
+        type: string
+    - in: query
+      name: license_number
+      required: false
+      description: includes results matching `license_number` column
+      schema:
+        type: string
+    - in: query
+      name: doctor_id
+      required: false
+      description: includes results matching `doctor_id` column
+      schema:
+        type: integer

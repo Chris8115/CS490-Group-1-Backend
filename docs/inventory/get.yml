@@ -1,0 +1,24 @@
+Inventory records
+---
+tags:
+    - Pharmacy
+description:
+    Gets all of the inventory entries from the `inventory` table with optional filters.
+    
+    example - `/inventory?inventory_id=5` gets inventory entry with id of 5.
+responses:
+    200:
+        description: JSON that contains all of the inventory records.
+parameters:
+    - in: query
+      name: inventory_id
+      required: false
+      description: includes results matching `inventory_id` column
+      schema:
+        type: integer
+    - in: query
+      name: medication_id
+      required: false
+      description: includes results matching `medication_id` column
+      schema:
+        type: integer

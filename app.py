@@ -111,34 +111,6 @@ def prescriptions():
         })
     return json, 200
 
-@app.route("/patient_progress", methods=['GET'])
-def patient_progress():
-    #sql query
-    query = "SELECT * FROM patient_progress\n"
-    #get inputs
-    params = {
-        'progid': "" if request.args.get('progress_id') == None else request.args.get('progress_id'),
-        'pid': "" if request.args.get('patient_id') == None else request.args.get('patient_id'),
-        'datetime': "" if request.args.get('date_logged') == None else '%' + request.args.get('date_logged') + '%'
-    }
-    if(params['progid'] != "" or params['pid'] != "" or params['datetime'] != ""):
-        query += ("WHERE " + ("progress_id = :progid\n" if params['progid'] != "" else "TRUE\n"))
-        query += ("AND " + ("patient_id = :pid\n" if params['pid'] != "" else "TRUE\n"))
-        query += ("AND " + ("date_logged LIKE :datetime\n" if params['datetime'] != "" else "TRUE\n"))
-    #execute query
-    result = db.session.execute(text(query), params)
-    json = {'patient_progress': []}
-    for row in result:
-        json['patient_progress'].append({
-            'progress_id': row.progress_id,
-            'patient_id': row.patient_id,
-            'weight': row.weight,
-            'calories': row.calories,
-            'notes': row.notes,
-            'date_logged': row.date_logged
-        })
-    return json, 200
-
 @app.route("/patient_exercise_assignments", methods=['GET'])
 def patient_exercise_assignments():
     #sql query
@@ -579,12 +551,12 @@ def delete_reviews(review_id):
         if result is not None:
             db.session.execute("DELETE FROM reviews WHERE review_id = ?\n", review_id)
         else:
-            return 400
+            return Response(status=400)
     except Exception as e:
-        return 500
+        return Response(status=500)
     else:
         db.session.commit()
-        return 200
+        return Response(status=200)
 
 @app.route("/delete_doctor/<int:user_id>", methods=["DELETE"])
 def delete_doctors(doctors_id):
@@ -593,12 +565,12 @@ def delete_doctors(doctors_id):
         if result is not None:
             db.session.execute("DELETE FROM doctors WHERE doctors_id = ?\n", doctors_id)
         else:
-            return 400
+            return Response(status=400)
     except Exception as e:
-        return 500
+        return Response(status=500)
     else:
         db.session.commit()
-        return 200
+        return Response(status=200)
     
 @app.route("/delete_patient/<int:patient_id>", methods=["DELETE"])
 def delete_patient(patient_id):
@@ -607,12 +579,12 @@ def delete_patient(patient_id):
         if result is not None:
             db.session.execute("DELETE FROM patients WHERE patient_id = ?\n", patient_id)
         else:
-            return 400
+            return Response(status=400)
     except Exception as e:
-        return 500
+        return Response(status=500)
     else:
         db.session.commit()
-        return 200
+        return Response(status=200)
     
 @app.route("/delete_appointment/<int:appointment_id>", methods=["DELETE"])
 def delete_appointment(appointment_id):
@@ -621,12 +593,12 @@ def delete_appointment(appointment_id):
         if result is not None:
             db.session.execute("DELETE FROM appointments WHERE appointment_id = ?\n", appointment_id)
         else:
-            return 400
+            return Response(status=400)
     except Exception as e:
-        return 500
+        return Response(status=500)
     else:
         db.session.commit()
-        return 200
+        return Response(status=200)
 
 @app.route("/delete_saved_post/<int:saved_post_id>", methods=["DELETE"])
 def delete_saved_post(saved_post_id):
@@ -635,12 +607,12 @@ def delete_saved_post(saved_post_id):
         if result is not None:
             db.session.execute("DELETE FROM saved_posts WHERE appointment_id = ?\n", saved_post_id)
         else:
-            return 400
+            return Response(status=400)
     except Exception as e:
-        return 500
+        return Response(status=500)
     else:
         db.session.commit()
-        return 200
+        return Response(status=200)
 
 @app.route("/delete_prescription/<int:prescription_id>", methods=["DELETE"])
 def delete_prescription(prescription_id):
@@ -649,26 +621,12 @@ def delete_prescription(prescription_id):
         if result is not None:
             db.session.execute("DELETE FROM prescriptions WHERE prescription_id = ?\n", prescription_id)
         else:
-            return 400
+            return Response(status=400)
     except Exception as e:
-        return 500
+        return Response(status=500)
     else:
         db.session.commit()
-        return 200
-
-@app.route("/delete_patient_progress/<int:patient_progress_id>", methods=["DELETE"])
-def delete_patient_progress(patient_progress_id):
-    try:
-        result = db.session.execute("SELECT * FROM patient_progress WHERE patient_progress_id = ?\n", patient_progress_id)
-        if result is not None:
-            db.session.execute("DELETE FROM patient_progress WHERE patient_progress_id = ?\n", patient_progress_id)
-        else:
-            return 400
-    except Exception as e:
-        return 500
-    else:
-        db.session.commit()
-        return 200
+        return Response(status=200)
 
 @app.route("/delete_patient_exercise_assignment/<int:patient_exercise_assignment_id>", methods=["DELETE"])
 def delete_patient_exercise_assignment(patient_exercise_assignment_id):
@@ -677,12 +635,12 @@ def delete_patient_exercise_assignment(patient_exercise_assignment_id):
         if result is not None:
             db.session.execute("DELETE FROM patient_exercise_assignment WHERE patient_exercise_assignment_id = ?\n", patient_exercise_assignment_id)
         else:
-            return 400
+            return Response(status=400)
     except Exception as e:
-        return 500
+        return Response(status=500)
     else:
         db.session.commit()
-        return 200
+        return Response(status=200)
     
 @app.route("/delete_medication/<int:medication_id>", methods=["DELETE"])
 def delete_medication(medication_id):
@@ -691,12 +649,12 @@ def delete_medication(medication_id):
         if result is not None:
             db.session.execute("DELETE FROM medications WHERE medication_id = ?\n", medication_id)
         else:
-            return 400
+            return Response(status=400)
     except Exception as e:
-        return 500
+        return Response(status=500)
     else:
         db.session.commit()
-        return 200
+        return Response(status=200)
 
 @app.route("/delete_inventory/<int:inventory_id>", methods=["DELETE"])
 def delete_inventory(inventory_id):
@@ -705,12 +663,12 @@ def delete_inventory(inventory_id):
         if result is not None:
             db.session.execute("DELETE FROM inventory WHERE inventory_id = ?\n", inventory_id)
         else:
-            return 400
+            return Response(status=400)
     except Exception as e:
-        return 500
+        return Response(status=500)
     else:
         db.session.commit()
-        return 200
+        return Response(status=200)
     
 @app.route("/delete_exercise_plan/<int:exercise_plan_id>", methods=["DELETE"])
 def delete_exercise_plan(exercise_plan_id):
@@ -719,12 +677,12 @@ def delete_exercise_plan(exercise_plan_id):
         if result is not None:
             db.session.execute("DELETE FROM exercise_plan WHERE exercise_plan_id = ?\n", exercise_plan_id)
         else:
-            return 400
+            return Response(status=400)
     except Exception as e:
-        return 500
+        return Response(status=500)
     else:
         db.session.commit()
-        return 200
+        return Response(status=200)
 
 @app.route("/delete_doctor_patient_relationship/<int:doctor_patient_relationship_id>", methods=["DELETE"])
 def delete_doctor_patient_relationship(doctor_patient_relationship_id):
@@ -733,12 +691,12 @@ def delete_doctor_patient_relationship(doctor_patient_relationship_id):
         if result is not None:
             db.session.execute("DELETE FROM doctor_patient_relationship WHERE doctor_patient_relationship_id = ?\n", doctor_patient_relationship_id)
         else:
-            return 400
+            return Response(status=400)
     except Exception as e:
-        return 500
+        return Response(status=500)
     else:
         db.session.commit()
-        return 200
+        return Response(status=200)
     
 @app.route("/delete_credit_card/<int:credit_card_id>", methods=["DELETE"])
 def delete_credit_card(credit_card_id):
@@ -747,12 +705,12 @@ def delete_credit_card(credit_card_id):
         if result is not None:
             db.session.execute("DELETE FROM credit_cards WHERE credit_card_id = ?\n", credit_card_id)
         else:
-            return 400
+            return Response(status=400)
     except Exception as e:
-        return 500
+        return Response(status=500)
     else:
         db.session.commit()
-        return 200
+        return Response(status=200)
     
 @app.route("/delete_address/<int:address_id>", methods=["DELETE"])
 def delete_address(address_id):
@@ -761,12 +719,12 @@ def delete_address(address_id):
         if result is not None:
             db.session.execute("DELETE FROM address WHERE address_id = ?\n", address_id)
         else:
-            return 400
+            return Response(status=400)
     except Exception as e:
-        return 500
+        return Response(status=500)
     else:
         db.session.commit()
-        return 200
+        return Response(status=200)
 
 @app.route("/delete_pharmacist/<int:pharmacist_id>", methods=["DELETE"])
 def delete_pharmacist(pharmacist_id):
@@ -775,12 +733,12 @@ def delete_pharmacist(pharmacist_id):
         if result is not None:
             db.session.execute("DELETE FROM pharmacists WHERE pharmacist_id = ?\n", pharmacist_id)
         else:
-            return 400
+            return Response(status=400)
     except Exception as e:
-        return 500
+        return Response(status=500)
     else:
         db.session.commit()
-        return 200
+        return Response(status=200)
 
 @app.route("/delete_forum_comment/<int:forum_comment_id>", methods=["DELETE"])
 def delete_forum_comment(forum_comment_id):
@@ -789,12 +747,12 @@ def delete_forum_comment(forum_comment_id):
         if result is not None:
             db.session.execute("DELETE FROM forum_comments WHERE forum_comment_id = ?\n", forum_comment_id)
         else:
-            return 400
+            return Response(status=400)
     except Exception as e:
-        return 500
+        return Response(status=500)
     else:
         db.session.commit()
-        return 200
+        return Response(status=200)
 
 @app.route("/delete_forum_post/<int:forum_post_id>", methods=["DELETE"])
 def delete_forum_post(forum_post_id):
@@ -803,13 +761,12 @@ def delete_forum_post(forum_post_id):
         if result is not None:
             db.session.execute("DELETE FROM forum_post WHERE forum_comment_id = ?\n", forum_post_id)
         else:
-            return 400
+            return Response(status=400)
     except Exception as e:
-        return 500
+        return Response(status=500)
     else:
         db.session.commit()
-        return 200
-
+        return Response(status=200)
 
 @app.route("/delete_transaction/<int:transaction_id>", methods=["DELETE"])
 def delete_transaction(transaction_id):
@@ -818,12 +775,73 @@ def delete_transaction(transaction_id):
         if result is not None:
             db.session.execute("DELETE FROM transactions WHERE transaction_id = ?\n", transaction_id)
         else:
-            return 400
+            return Response(status=400)
     except Exception as e:
-        return 500
+        return Response(status=500)
     else:
         db.session.commit()
-        return 200
-    
+        return Response(status=200)
+
+
+#patient progress endpoint
+@app.route("/patient_progress", methods=['GET'])
+def patient_progress():
+    #sql query
+    query = "SELECT * FROM patient_progress\n"
+    #get inputs
+    params = {
+        'progid': "" if request.args.get('progress_id') == None else request.args.get('progress_id'),
+        'pid': "" if request.args.get('patient_id') == None else request.args.get('patient_id'),
+        'datetime': "" if request.args.get('date_logged') == None else '%' + request.args.get('date_logged') + '%'
+    }
+    if(params['progid'] != "" or params['pid'] != "" or params['datetime'] != ""):
+        query += ("WHERE " + ("progress_id = :progid\n" if params['progid'] != "" else "TRUE\n"))
+        query += ("AND " + ("patient_id = :pid\n" if params['pid'] != "" else "TRUE\n"))
+        query += ("AND " + ("date_logged LIKE :datetime\n" if params['datetime'] != "" else "TRUE\n"))
+    #execute query
+    result = db.session.execute(text(query), params)
+    json = {'patient_progress': []}
+    for row in result:
+        json['patient_progress'].append({
+            'progress_id': row.progress_id,
+            'patient_id': row.patient_id,
+            'weight': row.weight,
+            'calories': row.calories,
+            'notes': row.notes,
+            'date_logged': row.date_logged
+        })
+    return json, 200
+
+@app.route("/delete_patient_progress/<int:patient_progress_id>", methods=["DELETE"])
+def delete_patient_progress(patient_progress_id):
+    try:
+        result = db.session.execute("SELECT * FROM patient_progress WHERE patient_progress_id = ?\n", patient_progress_id)
+        if result is not None:
+            db.session.execute("DELETE FROM patient_progress WHERE patient_progress_id = ?\n", patient_progress_id)
+        else:
+            return Response(status=400)
+    except Exception as e:
+        return Response(status=500)
+    else:
+        db.session.commit()
+        return Response(status=200)
+
+@app.route("/add_patient_progress", methods=['PUT'])
+def add_patient_progress():
+    try:
+        data = request.json
+        progress_id = data.progress_id
+        patient_id = data.patient_id
+        weight = data.weight
+        calories = data.calories
+        notes = data.notes
+        date_logged = data.date_logged
+        db.session.execute("INSERT INTO patient_progress VALUES (?, ?, ?, ?, ?, ?)\n", progress_id, patient_id, weight, calories, notes, date_logged)
+    except Exception as e:
+        return Response(status=500)
+    else:
+        db.session.commit()
+        return Response(status=200)
+
 if __name__ == "__main__":
     app.run(debug=True)

@@ -1,0 +1,36 @@
+Forum Posts records
+---
+tags:
+    - Discussion Forum
+description:
+    Gets all of the forum posts from the `forum_posts` table with optional filters.
+    
+    example - `/forum_posts?post_type=exercise+plan&title=upper+body` includes all exercise posts with titles containing "upper body".
+responses:
+    200:
+        description: JSON array named `forum_posts` containing all forum post records.
+parameters:
+    - in: query
+      name: post_id
+      required: false
+      description: includes results matching `post_id` column
+      schema:
+        type: integer
+    - in: query
+      name: user_id
+      required: false
+      description: includes results matching `user_id` column
+      schema:
+        type: integer
+    - in: query
+      name: title
+      required: false
+      description: includes results like `title` column
+      schema:
+        type: string
+    - in: query
+      name: post_type
+      required: false
+      description: includes results like `post_type` column (exercise plan, discussion)
+      schema:
+        type: string

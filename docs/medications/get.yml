@@ -1,0 +1,24 @@
+Medications records
+---
+tags:
+    - Pharmacy
+description:
+    Gets all of the medication entries from the `medications` table with optional filters.
+    
+    example - `/medications?name=nutrislim` gets the medication with name "NutriSlim".
+responses:
+    200:
+        description: JSON that contains all of the medication records.
+parameters:
+    - in: query
+      name: medication_id
+      required: false
+      description: includes results matching `medication_id` column
+      schema:
+        type: integer
+    - in: query
+      name: name
+      required: false
+      description: includes results like `name` column
+      schema:
+        type: string

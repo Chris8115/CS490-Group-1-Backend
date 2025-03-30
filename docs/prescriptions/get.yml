@@ -1,0 +1,54 @@
+Prescriptions records
+---
+tags:
+    - Pharmacy
+description:
+    Gets all of the prescriptions from the `prescriptions` table with optional filters.
+    
+    example - `/prescriptions?pharmacist_id=6&status=accepted` gets all Accepted prescriptions from the pharmacy with an id = 6.
+responses:
+    200:
+        description: JSON that contains all of the prescription records.
+parameters:
+    - in: query
+      name: prescription_id
+      required: false
+      description: includes results matching `prescription_id` column
+      schema:
+        type: integer
+    - in: query
+      name: doctor_id
+      required: false
+      description: includes results matching `doctor_id` column
+      schema:
+        type: integer
+    - in: query
+      name: medication_id
+      required: false
+      description: includes results matching `medication_id` column
+      schema:
+        type: integer
+    - in: query
+      name: patient_id
+      required: false
+      description: includes results matching `patient_id` column
+      schema:
+        type: integer
+    - in: query
+      name: pharmacist_id
+      required: false
+      description: includes results matching `pharmacist_id` column
+      schema:
+        type: integer
+    - in: query
+      name: status
+      required: false
+      description: includes results like `status` column (canceled, rejected, accepted, ready)
+      schema:
+        type: string
+    - in: query
+      name: date_prescribed
+      required: false
+      description: includes results like `date_prescribed` column (A datetime of format mm-dd-yyyy hh:mm:ss)
+      schema:
+        type: string

@@ -1,0 +1,30 @@
+Saved Posts records
+---
+tags:
+    - Discussion Forum
+description:
+    Gets all of the discussion posts users have saved from the `saved_posts` table with optional filters.
+    
+    example - `/saved_posts?user_id=11&saved_at=2025` gets all of the posts the user with an id = 11 saved in the year 2025.
+responses:
+    200:
+        description: JSON that contains all of the saved discussion posts.
+parameters:
+    - in: query
+      name: post_id
+      required: false
+      description: includes results matching `post_id` column
+      schema:
+        type: integer
+    - in: query
+      name: user_id
+      required: false
+      description: includes results matching `user_id` column
+      schema:
+        type: integer
+    - in: query
+      name: saved_at
+      required: false
+      description: includes results like `saved_at` column (A datetime of format mm-dd-yyyy hh:mm:ss)
+      schema:
+        type: string

@@ -1,0 +1,42 @@
+Reviews records
+---
+tags:
+    - Services
+description:
+    Retrieves all reviews from the `reviews` table with optional filters.
+    
+    example - `/reviews?doctor_id=1&rating=5` returns reviews for doctor 1 that have a rating of 5.
+responses:
+    200:
+        description: JSON array named `reviews` containing all review records.
+parameters:
+    - in: query
+      name: review_id
+      required: false
+      description: filters results matching the `review_id` column
+      schema:
+        type: integer
+    - in: query
+      name: doctor_id
+      required: false
+      description: filters results matching the `doctor_id` column
+      schema:
+        type: integer
+    - in: query
+      name: patient_id
+      required: false
+      description: filters results matching the `patient_id` column
+      schema:
+        type: integer
+    - in: query
+      name: rating
+      required: false
+      description: filters results matching the `rating` column (typically values 1–5)
+      schema:
+        type: integer
+    - in: query
+      name: review_text
+      required: false
+      description: performs a text search on the `review_text` column
+      schema:
+        type: string

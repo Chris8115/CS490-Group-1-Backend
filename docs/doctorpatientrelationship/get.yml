@@ -1,0 +1,30 @@
+Doctor Patient Relationships records
+---
+tags:
+    - Services
+description:
+    Gets all of the doctor patient relationships from the `doctor_patient_relationship` table with optional filters.
+    
+    example - `/doctor_patient_relationship?status=pending` gets all relationships with pending statuses.
+responses:
+    200:
+        description: JSON that contains all of the doctor-patient relationship records.
+parameters:
+    - in: query
+      name: doctor_id
+      required: false
+      description: includes results matching `doctor_id` column
+      schema:
+        type: integer
+    - in: query
+      name: patient_id
+      required: false
+      description: includes results matching `patient_id` column
+      schema:
+        type: integer
+    - in: query
+      name: status
+      required: false
+      description: includes results like `status` column (active, inactive, pending)
+      schema:
+        type: string

@@ -1,0 +1,24 @@
+Exercise Plans records
+---
+tags:
+    - Services
+description:
+    Gets all of the exercise plans from the `exercise_plans` table with optional filters.
+    
+    example - `/exercise_plans?title=push-up` gets all exercise plans with titles including "push-up".
+responses:
+    200:
+        description: JSON that contains all of the exercise plan records.
+parameters:
+    - in: query
+      name: exercise_id
+      required: false
+      description: includes results matching `exercise_id` column
+      schema:
+        type: integer
+    - in: query
+      name: title
+      required: false
+      description: includes results like `title` column
+      schema:
+        type: string

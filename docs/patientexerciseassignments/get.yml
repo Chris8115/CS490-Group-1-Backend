@@ -1,0 +1,42 @@
+Patient Exercise Assignments records
+---
+tags:
+    - Patients
+description:
+    Gets all of the patient exercise assignment entries from the `patient_exercise_assignments` table with optional filters.
+    
+    example - `/patient_exercise_assignments?doctor_id=4&patient_id=5` gets all assignments from the doctor with `doctor_id` = 4 and the patient with `patient_id` = 5.
+responses:
+    200:
+        description: JSON that contains all of the patient exercise assignment records.
+parameters:
+    - in: query
+      name: assignment_id
+      required: false
+      description: includes results matching `assignment_id` column
+      schema:
+        type: integer
+    - in: query
+      name: patient_id
+      required: false
+      description: includes results matching `patient_id` column
+      schema:
+        type: integer
+    - in: query
+      name: doctor_id
+      required: false
+      description: includes results matching `doctor_id` column
+      schema:
+        type: integer
+    - in: query
+      name: exercise_id
+      required: false
+      description: includes results matching `exercise_id` column
+      schema:
+        type: integer
+    - in: query
+      name: assigned_at
+      required: false
+      description: includes results like `assigned_at` column (A date of format mm/dd/yyyy)
+      schema:
+        type: string

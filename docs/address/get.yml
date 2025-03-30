@@ -1,0 +1,42 @@
+Address records
+---
+tags:
+    - Services
+description:
+    Gets all of the addresses from the `address` table with optional filters.
+    
+    example - `/address?city=phoenix` includes all addresses from the city of Phoenix.
+responses:
+    200:
+        description: JSON that contains all of the address records.
+parameters:
+    - in: query
+      name: address_id
+      required: false
+      description: includes results matching `address_id` column
+      schema:
+        type: integer
+    - in: query
+      name: city
+      required: false
+      description: includes results like `city` column
+      schema:
+        type: string
+    - in: query
+      name: address
+      required: false
+      description: includes results like `address` column
+      schema:
+        type: string
+    - in: query
+      name: address2
+      required: false
+      description: includes results like `address2` column
+      schema:
+        type: string
+    - in: query
+      name: zip
+      required: false
+      description: includes results matching `zip` column
+      schema:
+        type: string

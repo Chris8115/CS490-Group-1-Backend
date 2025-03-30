@@ -1,0 +1,42 @@
+Transactions records
+---
+tags:
+    - Services
+description:
+    Gets all of the transaction records from the `transactions` table with optional filters.
+    
+    example - `/transactions?creditcard_id=3` gets all transactions paid for by a credit card with an id = 3
+responses:
+    200:
+        description: JSON that contains all of the transaction records.
+parameters:
+    - in: query
+      name: creditcard_id
+      required: false
+      description: includes results matching `creditcard_id` column
+      schema:
+        type: integer
+    - in: query
+      name: patient_id
+      required: false
+      description: includes results matching `patient_id` column
+      schema:
+        type: integer
+    - in: query
+      name: doctor_id
+      required: false
+      description: includes results matching `doctor_id` column
+      schema:
+        type: integer
+    - in: query
+      name: transaction_id
+      required: false
+      description: includes results matching `transaction_id` column
+      schema:
+        type: integer
+    - in: query
+      name: created_at
+      required: false
+      description: includes results like `created_at` column (A date of format mm/dd/yyyy)
+      schema:
+        type: string

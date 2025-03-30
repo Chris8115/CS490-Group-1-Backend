@@ -24,9 +24,13 @@ swag = Swagger(app)
 @app.route("/")
 def home():
     return "<h1>It works!</h1>"
-<<<<<<< HEAD
-#get routes
+
+@app.route("/docs")
+def docs():
+    return render_template("build/html/index.html")
+
 @app.route("/transactions", methods=['GET'])
+@swag_from('docs/transactions/get.yml')
 def transactions():
     #sql query
     query = "SELECT * FROM transactions\n"
@@ -59,46 +63,22 @@ def transactions():
             'subtotal': row.subtotal
         })
     return json, 200
-=======
 
-@app.route("/docs")
-def docs():
-    return render_template("build/html/index.html")
->>>>>>> origin/main
-
-class Transactions(Resource):
-    def get(self):
-        #sql query
-        query = "SELECT * FROM transactions\n"
-        #get inputs
-        params = {
-            'cid': "" if request.args.get('creditcard_id') == None else request.args.get('creditcard_id'),
-            'pid': "" if request.args.get('patient_id') == None else request.args.get('patient_id'),
-            'did': "" if request.args.get('doctor_id') == None else request.args.get('doctor_id'),
-            'tid': "" if request.args.get('transaction_id') == None else request.args.get('transaction_id'),
-            'datetime': "" if request.args.get('created_at') == None else '%' + request.args.get('created_at') + '%'
-        }
-        if(params['pid'] != "" or params['did'] != "" or params['cid'] != "" or params['tid'] != "" or params['datetime'] != ""):
-            query += ("WHERE " + ("creditcard_id = :cid\n" if params['cid'] != "" else "TRUE\n"))
-            query += ("AND " + ("patient_id = :pid\n" if params['pid'] != "" else "TRUE\n"))
-            query += ("AND " + ("doctor_id = :did\n" if params['did'] != "" else "TRUE\n"))
-            query += ("AND " + ("transaction_id = :tid\n" if params['tid'] != "" else "TRUE\n"))
-            query += ("AND " + ("created_at LIKE :datetime\n" if params['datetime'] != "" else "TRUE\n"))
-        #execute query
-        result = db.session.execute(text(query), params)
-        json = {'transactions': []}
-        for row in result:
-            json['transactions'].append({
-                'creditcard_id': row.creditcard_id,
-                'doctor_id': row.doctor_id,
-                'patient_id': row.patient_id,
-                'transaction_id': row.transaction_id,
-                'created_at': row.created_at,
-                'service_fee': row.service_fee,
-                'doctor_fee': row.doctor_fee,
-                'subtotal': row.subtotal
-            })
-        return json, 200
+@app.route("/transactions/<int:transaction_id>", methods=['DELETE'])
+@swag_from('docs/transactions/delete.yml')
+def transaction(transaction_id):
+    try:
+        result = db.session.execute(text("SELECT * FROM transactions WHERE transaction_id = :transaction_id\n"), {'transaction_id': transaction_id})
+        if result.rowcount > 0:
+            db.session.execute(text("DELETE FROM transactions WHERE transaction_id = :transaction_id\n"), {'transaction_id': transaction_id})
+        else:
+            return Response(status=400)
+    except Exception as e:
+        print(e)
+        return Response(status=500)
+    else:
+        db.session.commit()
+        return Response(status=200)
 
 class SavedPosts(Resource):
     def get(self):
@@ -573,260 +553,6 @@ class Users(Resource):
             })
         return json, 200
 
-<<<<<<< HEAD
-#delete routes
-@app.route("/delete_user/<int:user_id>", methods=["DELETE"])
-def delete_user(user_id):
-    try:
-        result = db.session.execute("SELECT * FROM users WHERE user_id = ?\n", user_id)
-        if result is not None:
-            db.session.execute("DELETE FROM users WHERE user_id = ?\n", user_id)
-        else:
-            return 400
-    except Exception as e:
-        return 500
-    else:
-        db.session.commit()
-        return 200
-
-@app.route("/delete_review/<int:review_id>", methods=["DELETE"])
-def delete_reviews(review_id):
-    try:
-        result = db.session.execute("SELECT * FROM reviews WHERE review_id = ?\n", review_id)
-        if result is not None:
-            db.session.execute("DELETE FROM reviews WHERE review_id = ?\n", review_id)
-        else:
-            return Response(status=400)
-    except Exception as e:
-        return Response(status=500)
-    else:
-        db.session.commit()
-        return Response(status=200)
-
-@app.route("/delete_doctor/<int:user_id>", methods=["DELETE"])
-def delete_doctors(doctors_id):
-    try:
-        result = db.session.execute("SELECT * FROM doctors WHERE doctors_id = ?\n", doctors_id)
-        if result is not None:
-            db.session.execute("DELETE FROM doctors WHERE doctors_id = ?\n", doctors_id)
-        else:
-            return Response(status=400)
-    except Exception as e:
-        return Response(status=500)
-    else:
-        db.session.commit()
-        return Response(status=200)
-    
-@app.route("/delete_patient/<int:patient_id>", methods=["DELETE"])
-def delete_patient(patient_id):
-    try:
-        result = db.session.execute("SELECT * FROM patients WHERE patient_id = ?\n", patient_id)
-        if result is not None:
-            db.session.execute("DELETE FROM patients WHERE patient_id = ?\n", patient_id)
-        else:
-            return Response(status=400)
-    except Exception as e:
-        return Response(status=500)
-    else:
-        db.session.commit()
-        return Response(status=200)
-    
-@app.route("/delete_appointment/<int:appointment_id>", methods=["DELETE"])
-def delete_appointment(appointment_id):
-    try:
-        result = db.session.execute("SELECT * FROM appointments WHERE appointment_id = ?\n", appointment_id)
-        if result is not None:
-            db.session.execute("DELETE FROM appointments WHERE appointment_id = ?\n", appointment_id)
-        else:
-            return Response(status=400)
-    except Exception as e:
-        return Response(status=500)
-    else:
-        db.session.commit()
-        return Response(status=200)
-
-@app.route("/delete_saved_post/<int:saved_post_id>", methods=["DELETE"])
-def delete_saved_post(saved_post_id):
-    try:
-        result = db.session.execute("SELECT * FROM saved_posts WHERE appointment_id = ?\n", saved_post_id)
-        if result is not None:
-            db.session.execute("DELETE FROM saved_posts WHERE appointment_id = ?\n", saved_post_id)
-        else:
-            return Response(status=400)
-    except Exception as e:
-        return Response(status=500)
-    else:
-        db.session.commit()
-        return Response(status=200)
-
-@app.route("/delete_prescription/<int:prescription_id>", methods=["DELETE"])
-def delete_prescription(prescription_id):
-    try:
-        result = db.session.execute("SELECT * FROM prescriptions WHERE prescription_id = ?\n", prescription_id)
-        if result is not None:
-            db.session.execute("DELETE FROM prescriptions WHERE prescription_id = ?\n", prescription_id)
-        else:
-            return Response(status=400)
-    except Exception as e:
-        return Response(status=500)
-    else:
-        db.session.commit()
-        return Response(status=200)
-
-@app.route("/delete_patient_exercise_assignment/<int:patient_exercise_assignment_id>", methods=["DELETE"])
-def delete_patient_exercise_assignment(patient_exercise_assignment_id):
-    try:
-        result = db.session.execute("SELECT * FROM patient_exercise_assignment WHERE patient_exercise_assignment_id = ?\n", patient_exercise_assignment_id)
-        if result is not None:
-            db.session.execute("DELETE FROM patient_exercise_assignment WHERE patient_exercise_assignment_id = ?\n", patient_exercise_assignment_id)
-        else:
-            return Response(status=400)
-    except Exception as e:
-        return Response(status=500)
-    else:
-        db.session.commit()
-        return Response(status=200)
-    
-@app.route("/delete_medication/<int:medication_id>", methods=["DELETE"])
-def delete_medication(medication_id):
-    try:
-        result = db.session.execute("SELECT * FROM medications WHERE medication_id = ?\n", medication_id)
-        if result is not None:
-            db.session.execute("DELETE FROM medications WHERE medication_id = ?\n", medication_id)
-        else:
-            return Response(status=400)
-    except Exception as e:
-        return Response(status=500)
-    else:
-        db.session.commit()
-        return Response(status=200)
-
-@app.route("/delete_inventory/<int:inventory_id>", methods=["DELETE"])
-def delete_inventory(inventory_id):
-    try:
-        result = db.session.execute("SELECT * FROM inventory WHERE inventory_id = ?\n", inventory_id)
-        if result is not None:
-            db.session.execute("DELETE FROM inventory WHERE inventory_id = ?\n", inventory_id)
-        else:
-            return Response(status=400)
-    except Exception as e:
-        return Response(status=500)
-    else:
-        db.session.commit()
-        return Response(status=200)
-    
-@app.route("/delete_exercise_plan/<int:exercise_plan_id>", methods=["DELETE"])
-def delete_exercise_plan(exercise_plan_id):
-    try:
-        result = db.session.execute("SELECT * FROM exercise_plan WHERE exercise_plan_id = ?\n", exercise_plan_id)
-        if result is not None:
-            db.session.execute("DELETE FROM exercise_plan WHERE exercise_plan_id = ?\n", exercise_plan_id)
-        else:
-            return Response(status=400)
-    except Exception as e:
-        return Response(status=500)
-    else:
-        db.session.commit()
-        return Response(status=200)
-
-@app.route("/delete_doctor_patient_relationship/<int:doctor_patient_relationship_id>", methods=["DELETE"])
-def delete_doctor_patient_relationship(doctor_patient_relationship_id):
-    try:
-        result = db.session.execute("SELECT * FROM doctor_patient_relationship WHERE doctor_patient_relationship_id = ?\n", doctor_patient_relationship_id)
-        if result is not None:
-            db.session.execute("DELETE FROM doctor_patient_relationship WHERE doctor_patient_relationship_id = ?\n", doctor_patient_relationship_id)
-        else:
-            return Response(status=400)
-    except Exception as e:
-        return Response(status=500)
-    else:
-        db.session.commit()
-        return Response(status=200)
-    
-@app.route("/delete_credit_card/<int:credit_card_id>", methods=["DELETE"])
-def delete_credit_card(credit_card_id):
-    try:
-        result = db.session.execute("SELECT * FROM credit_cards WHERE credit_card_id = ?\n", credit_card_id)
-        if result is not None:
-            db.session.execute("DELETE FROM credit_cards WHERE credit_card_id = ?\n", credit_card_id)
-        else:
-            return Response(status=400)
-    except Exception as e:
-        return Response(status=500)
-    else:
-        db.session.commit()
-        return Response(status=200)
-    
-@app.route("/delete_address/<int:address_id>", methods=["DELETE"])
-def delete_address(address_id):
-    try:
-        result = db.session.execute("SELECT * FROM address WHERE address_id = ?\n", address_id)
-        if result is not None:
-            db.session.execute("DELETE FROM address WHERE address_id = ?\n", address_id)
-        else:
-            return Response(status=400)
-    except Exception as e:
-        return Response(status=500)
-    else:
-        db.session.commit()
-        return Response(status=200)
-
-@app.route("/delete_pharmacist/<int:pharmacist_id>", methods=["DELETE"])
-def delete_pharmacist(pharmacist_id):
-    try:
-        result = db.session.execute("SELECT * FROM pharmacists WHERE pharmacist_id = ?\n", pharmacist_id)
-        if result is not None:
-            db.session.execute("DELETE FROM pharmacists WHERE pharmacist_id = ?\n", pharmacist_id)
-        else:
-            return Response(status=400)
-    except Exception as e:
-        return Response(status=500)
-    else:
-        db.session.commit()
-        return Response(status=200)
-
-@app.route("/delete_forum_comment/<int:forum_comment_id>", methods=["DELETE"])
-def delete_forum_comment(forum_comment_id):
-    try:
-        result = db.session.execute("SELECT * FROM forum_comments WHERE forum_comment_id = ?\n", forum_comment_id)
-        if result is not None:
-            db.session.execute("DELETE FROM forum_comments WHERE forum_comment_id = ?\n", forum_comment_id)
-        else:
-            return Response(status=400)
-    except Exception as e:
-        return Response(status=500)
-    else:
-        db.session.commit()
-        return Response(status=200)
-
-@app.route("/delete_forum_post/<int:forum_post_id>", methods=["DELETE"])
-def delete_forum_post(forum_post_id):
-    try:
-        result = db.session.execute("SELECT * FROM forum_post WHERE forum_comment_id = ?\n", forum_post_id)
-        if result is not None:
-            db.session.execute("DELETE FROM forum_post WHERE forum_comment_id = ?\n", forum_post_id)
-        else:
-            return Response(status=400)
-    except Exception as e:
-        return Response(status=500)
-    else:
-        db.session.commit()
-        return Response(status=200)
-
-@app.route("/delete_transaction/<int:transaction_id>", methods=["DELETE"])
-def delete_transaction(transaction_id):
-    try:
-        result = db.session.execute("SELECT * FROM transactions WHERE transaction_id = ?\n", transaction_id)
-        if result is not None:
-            db.session.execute("DELETE FROM transactions WHERE transaction_id = ?\n", transaction_id)
-        else:
-            return Response(status=400)
-    except Exception as e:
-        return Response(status=500)
-    else:
-        db.session.commit()
-        return Response(status=200)
-=======
 class Reviews(Resource):
     def get(self):
         #sql query
@@ -864,7 +590,6 @@ class Reviews(Resource):
         
         return json_response, 200
 
-api.add_resource(Transactions,'/transactions')
 api.add_resource(SavedPosts,'/saved_posts')
 api.add_resource(Prescriptions,'/prescriptions')
 api.add_resource(PatientProgress,'/patient_progress')
@@ -883,7 +608,6 @@ api.add_resource(Patients,'/patients')
 api.add_resource(Doctors,'/doctors')
 api.add_resource(Users,'/users')
 api.add_resource(Reviews,'/reviews')
->>>>>>> origin/main
 
 if __name__ == "__main__":
     app.run(debug=True)

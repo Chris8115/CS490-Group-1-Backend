@@ -31,7 +31,7 @@ def docs():
 
 @app.route("/transactions", methods=['GET'])
 @swag_from('docs/transactions/get.yml')
-def transactions():
+def get_transactions():
     #sql query
     query = "SELECT * FROM transactions\n"
     #get inputs
@@ -66,7 +66,7 @@ def transactions():
 
 @app.route("/transactions/<int:transaction_id>", methods=['DELETE'])
 @swag_from('docs/transactions/delete.yml')
-def transaction(transaction_id):
+def delete_transaction(transaction_id):
     try:
         result = db.session.execute(text("SELECT * FROM transactions WHERE transaction_id = :transaction_id\n"), {'transaction_id': transaction_id})
         if result.rowcount > 0:
@@ -82,7 +82,7 @@ def transaction(transaction_id):
 
 @app.route("/saved_posts", methods=['GET'])
 @swag_from('docs/savedposts/get.yml')
-def saved_posts():
+def get_saved_posts():
     #sql query
     query = "SELECT * FROM saved_posts\n"
     #get inputs
@@ -108,7 +108,7 @@ def saved_posts():
 
 @app.route("/prescriptions", methods=['GET'])
 @swag_from('docs/prescriptions/get.yml')
-def prescriptions():
+def get_prescriptions():
     #sql query
     query = "SELECT * FROM prescriptions\n"
     #get inputs
@@ -148,7 +148,7 @@ def prescriptions():
 
 @app.route("/patient_progress", methods=['GET'])
 @swag_from('docs/patientprogress/get.yml')
-def patient_progress():
+def get_patient_progress():
     #sql query
     query = "SELECT * FROM patient_progress\n"
     #get inputs
@@ -177,7 +177,7 @@ def patient_progress():
 
 @app.route("/patient_exercise_assignments", methods=['GET'])
 @swag_from('docs/patientexerciseassignments/get.yml')
-def patient_exercise_assignments():
+def get_patient_exercise_assignments():
     #sql query
     query = "SELECT * FROM patient_exercise_assignments\n"
     #get inputs
@@ -210,7 +210,7 @@ def patient_exercise_assignments():
 
 @app.route("/medications", methods=['GET'])
 @swag_from('docs/medications/get.yml')
-def medications():
+def get_medications():
     #sql query
     query = "SELECT * FROM medications\n"
     #get inputs
@@ -234,7 +234,7 @@ def medications():
 
 @app.route("/inventory", methods=['GET'])
 @swag_from('docs/inventory/get.yml')
-def inventory():
+def get_inventory():
     #sql query
     query = "SELECT * FROM inventory\n"
     #get inputs
@@ -258,8 +258,8 @@ def inventory():
     return json, 200
 
 @app.route("/exercise_plans", methods=['GET'])
-@swag_from('docs/exercise_plans/get.yml')
-def exercise_plans():
+@swag_from('docs/exerciseplans/get.yml')
+def get_exercise_plans():
     #sql query
     query = "SELECT * FROM exercise_plans\n"
     #get inputs
@@ -282,8 +282,8 @@ def exercise_plans():
     return json, 200
 
 @app.route("/doctor_patient_relationship", methods=['GET'])
-@swag_from('docs/doctor_patient_relationship/get.yml')
-def doctor_patient_relationship():
+@swag_from('docs/doctorpatientrelationship/get.yml')
+def get_doctor_patient_relationship():
     #sql query
     query = "SELECT * FROM doctor_patient_relationship\n"
     #get inputs
@@ -309,8 +309,8 @@ def doctor_patient_relationship():
     return json, 200
 
 @app.route("/credit_card", methods=['GET'])
-@swag_from('docs/credit_card/get.yml')
-def credit_card():
+@swag_from('docs/creditcard/get.yml')
+def get_credit_card():
     #sql query
     query = "SELECT * FROM credit_card\n"
     #get inputs
@@ -339,7 +339,7 @@ def credit_card():
 
 @app.route("/address", methods=['GET'])
 @swag_from('docs/address/get.yml')
-def address():
+def get_address():
     #sql query
     query = "SELECT * FROM address\n"
     #get inputs
@@ -371,7 +371,7 @@ def address():
 
 @app.route("/pharmacists", methods=['GET'])
 @swag_from('docs/pharmacists/get.yml')
-def pharmacists():
+def get_pharmacists():
     #sql query
     query = "SELECT * FROM pharmacists\n"
     #get inputs
@@ -393,8 +393,8 @@ def pharmacists():
     return json, 200
 
 @app.route("/forum_comments", methods=['GET'])
-@swag_from('docs/forum_comments/get.yml')
-def forum_comments():
+@swag_from('docs/forumcomments/get.yml')
+def get_forum_comments():
     #sql query
     query = "SELECT * FROM forum_comments\n"
     #get inputs
@@ -421,8 +421,8 @@ def forum_comments():
     return json, 200
 
 @app.route("/forum_posts", methods=['GET'])
-@swag_from('docs/forum_posts/get.yml')
-def forum_posts():
+@swag_from('docs/forumposts/get.yml')
+def get_forum_posts():
     #sql query
     query = "SELECT * FROM forum_posts\n"
     #get inputs
@@ -453,7 +453,7 @@ def forum_posts():
 
 @app.route("/appointments", methods=['GET'])
 @swag_from('docs/appointments/get.yml')
-def appointments():
+def get_appointments():
     #sql query
     query = "SELECT * FROM appointments\n"
     #get inputs
@@ -489,7 +489,7 @@ def appointments():
 
 @app.route("/patients", methods=['GET'])
 @swag_from('docs/patients/get.yml')
-def patients():
+def get_patients():
     #sql query
     query = "SELECT * FROM patients\n"
     #get inputs
@@ -512,7 +512,7 @@ def patients():
 
 @app.route("/doctors", methods=['GET'])
 @swag_from('docs/doctors/get.yml')
-def doctors():
+def get_doctors():
     #sql query
     query = "SELECT * FROM doctors\n"
     #get inputs
@@ -539,7 +539,7 @@ def doctors():
 
 @app.route("/users", methods=['GET'])
 @swag_from('docs/users/get.yml')
-def users():
+def get_users():
     #sql query
     query = "SELECT * FROM users\n"
     #get inputs
@@ -571,8 +571,8 @@ def users():
     return json, 200
 
 @app.route("/reviews", methods=['GET'])
-@swag_from('docs/patireviewsents/get.yml')
-def reviews():
+@swag_from('docs/reviews/get.yml')
+def get_reviews():
     #sql query
     query = "SELECT * FROM reviews\n"
     

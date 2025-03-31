@@ -3,9 +3,9 @@ Doctor Patient Relationships records
 tags:
     - Services
 description:
-    Deletes an instance of a doctor patient relationships record from the `doctor_patient_relationships` table using the required `doctor_patient_relationships_id` in the URL path.
+    Deletes an instance of a doctor patient relationships record from the `doctor_patient_relationships` table using the required `doctor_id` and a `patient_id` in the URL path.
 
-    example - `/doctor_patient_relationships/1` deletes the doctor patient relationships with `id = 1`.
+    example - `/doctor_patient_relationships/1/2` deletes the doctor patient relationships with a `doctor_id` of 1 and a `patient_id` of 2
 responses:
     200:
         description: Successfully deleted.

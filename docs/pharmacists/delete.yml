@@ -3,19 +3,19 @@ Pharmacists records
 tags:
     - Pharmacy
 description:
-    Deletes an instance of a pharmacies record from the `pharmacists` table using the required `prescriptions_id` in the URL path.
+    Deletes an instance of a pharmacies record from the `pharmacists` table using the required `pharmacist_id` in the URL path.
 
     example - `/pharmacists/1` deletes the pharmacists with `id = 1`.
 responses:
     200:
         description: Successfully deleted.
-    404:
+    400:
         description: pharmacist not found.
     500:
         description: Server error.
 parameters:
     - in: path
-      name: pharmacists_id
+      name: pharmacist_id
       required: true
       description: The ID of the prescription to delete
       schema:

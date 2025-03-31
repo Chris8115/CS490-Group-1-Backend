@@ -3,19 +3,19 @@ Address records
 tags:
     - Services
 description:
-    Deletes an instance of a addresses record from the `addresses` table using the required `addresses_id` in the URL path.
+    Deletes an instance of a addresses record from the `address` table using the required `address_id` in the URL path.
 
-    example - `/addresses/1` deletes the addresses with `id = 1`.
+    example - `/address/1` deletes the addresses with `id = 1`.
 responses:
     200:
         description: Successfully deleted.
-    404:
-        description: addresses not found.
+    400:
+        description: Address not found.
     500:
         description: Server error.
 parameters:
     - in: path
-      name: addresses_id
+      name: address_id
       required: true
       description: The ID of the addresses to delete
       schema:

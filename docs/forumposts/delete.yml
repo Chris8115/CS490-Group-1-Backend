@@ -3,19 +3,19 @@ Forum Posts records
 tags:
     - Discussion Forum
 description:
-    Deletes an instance of a forum posts record from the `forum_posts` table using the required `forum_posts_id` in the URL path.
+    Deletes an instance of a forum posts record from the `forum_posts` table using the required `post_id` in the URL path.
 
     example - `/forum_posts/1` deletes the forum posts with `id = 1`.
 responses:
     200:
         description: Successfully deleted.
-    404:
+    400:
         description: forum posts not found.
     500:
         description: Server error.
 parameters:
     - in: path
-      name: forum posts_id
+      name: post_id
       required: true
       description: The ID of the forum posts to delete
       schema:

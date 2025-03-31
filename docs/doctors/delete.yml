@@ -3,19 +3,19 @@ Doctors records
 tags:
     - Doctors
 description:
-    Deletes an instance of a doctors record from the `doctors` table using the required `doctors_id` in the URL path.
+    Deletes an instance of a doctors record from the `doctors` table using the required `doctor_id` in the URL path.
 
     example - `/doctors/1` deletes the doctors with `id = 1`.
 responses:
     200:
         description: Successfully deleted.
-    404:
+    400:
         description: doctors not found.
     500:
         description: Server error.
 parameters:
     - in: path
-      name: doctors_id
+      name: doctor_id
       required: true
       description: The ID of the doctors to delete
       schema:

@@ -3,19 +3,19 @@ Appointments records
 tags:
     - Services
 description:
-    Deletes an instance of a appointments record from the `appointments` table using the required `appointments_id` in the URL path.
+    Deletes an instance of a appointments record from the `appointments` table using the required `appointment_id` in the URL path.
 
     example - `/appointments/1` deletes the appointments with `id = 1`.
 responses:
     200:
         description: Successfully deleted.
-    404:
+    400:
         description: appointments not found.
     500:
         description: Server error.
 parameters:
     - in: path
-      name: appointments_id
+      name: appointment_id
       required: true
       description: The ID of the appointments to delete
       schema:

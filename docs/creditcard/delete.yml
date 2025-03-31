@@ -3,7 +3,7 @@ Credit Cards records
 tags:
     - Services
 description:
-    Deletes an instance of a credit cards record from the `credit_card` table using the required `credit_card_id` in the URL path.
+    Deletes an instance of a credit cards record from the `credit_card` table using the required `creditcard_id` in the URL path.
 
     example - `/credit_card/1` deletes the credit cards with `id = 1`.
 responses:
@@ -15,7 +15,7 @@ responses:
         description: Server error.
 parameters:
     - in: path
-      name: credit_cards_id
+      name: creditcard_id
       required: true
       description: The ID of the credit cards to delete
       schema:

@@ -3,19 +3,19 @@ Forum Comments records
 tags:
     - Discussion Forum
 description:
-    Deletes an instance of a post comments record from the `forum_comments` table using the required `forum_comments_id` in the URL path.
+    Deletes an instance of a post comments record from the `forum_comments` table using the required `comment_id` in the URL path.
 
     example - `/forum_comments/1` deletes the forum posts with `id = 1`.
 responses:
     200:
         description: Successfully deleted.
-    404:
+    400:
         description: forum_comments not found.
     500:
         description: Server error.
 parameters:
     - in: path
-      name: forum_comments_id
+      name: comment_id
       required: true
       description: The ID of the forum_comments to delete
       schema:

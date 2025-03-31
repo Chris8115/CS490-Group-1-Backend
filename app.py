@@ -69,7 +69,7 @@ def get_transactions():
 def delete_transaction(transaction_id):
     try:
         result = db.session.execute(text("SELECT * FROM transactions WHERE transaction_id = :transaction_id\n"), {'transaction_id': transaction_id})
-        if result.rowcount > 0:
+        if result.first() != None:
             db.session.execute(text("DELETE FROM transactions WHERE transaction_id = :transaction_id\n"), {'transaction_id': transaction_id})
         else:
             return Response(status=400)
@@ -111,7 +111,7 @@ def get_saved_posts():
 def delete_saved_posts(post_id):
     try:
         result = db.session.execute(text("SELECT * FROM saved_posts WHERE post_id = :post_id\n"), {'post_id': post_id})
-        if result.rowcount > 0:
+        if result.first() != None:
             db.session.execute(text("DELETE FROM saved_posts WHERE post_id = :post_id\n"), {'post_id': post_id})
         else:
             return Response(status=400)
@@ -167,7 +167,7 @@ def get_prescriptions():
 def delete_prescriptions(prescription_id):
     try:
         result = db.session.execute(text("SELECT * FROM prescriptions WHERE prescription_id = :prescription_id\n"), {'prescription_id': prescription_id})
-        if result.rowcount > 0:
+        if result.first() != None:
             db.session.execute(text("DELETE FROM prescriptions WHERE prescription_id = :prescription_id\n"), {'prescription_id': prescription_id})
         else:
             return Response(status=400)
@@ -219,7 +219,7 @@ def appointments():
 def delete_appointments(appointment_id):
     try:
         result = db.session.execute(text("SELECT * FROM appointments WHERE appointment_id = :appointment_id\n"), {'appointment_id': appointment_id})
-        if result.rowcount > 0:
+        if result.first() != None:
             db.session.execute(text("DELETE FROM appointments WHERE appointment_id = :appointment_id\n"), {'appointment_id': appointment_id})
         else:
             return Response(status=400)
@@ -264,7 +264,7 @@ def get_patient_progress():
 def delete_patient_progress(progress_id):
     try:
         result = db.session.execute(text("SELECT * FROM patient_progress WHERE progress_id = :progress_id\n"), {'progress_id': progress_id})
-        if result.rowcount > 0:
+        if result.first() != None:
             db.session.execute(text("DELETE FROM patient_progress WHERE progress_id = :progress_id\n"), {'progress_id': progress_id})
         else:
             return Response(status=400)
@@ -313,7 +313,7 @@ def get_patient_exercise_assignments():
 def delete_patient_exercise_assignments(assignment_id):
     try:
         result = db.session.execute(text("SELECT * FROM patient_exercise_assignments WHERE assignment_id = :assignment_id\n"), {'assignment_id': assignment_id})
-        if result.rowcount > 0:
+        if result.first() != None:
             db.session.execute(text("DELETE FROM patient_exercise_assignments WHERE assignment_id = :assignment_id\n"), {'assignment_id': assignment_id})
         else:
             return Response(status=400)
@@ -353,7 +353,7 @@ def get_medications():
 def delete_medications(medication_id):
     try:
         result = db.session.execute(text("SELECT * FROM medications WHERE medication_id = :medication_id\n"), {'medication_id': medication_id})
-        if result.rowcount > 0:
+        if result.first() != None:
             db.session.execute(text("DELETE FROM medications WHERE medication_id = :medication_id\n"), {'medication_id': medication_id})
         else:
             return Response(status=400)
@@ -394,7 +394,7 @@ def get_inventory():
 def delete_inventory(inventory_id):
     try:
         result = db.session.execute(text("SELECT * FROM inventory WHERE inventory_id = :inventory_id\n"), {'inventory_id': inventory_id})
-        if result.rowcount > 0:
+        if result.first() != None:
             db.session.execute(text("DELETE FROM inventory WHERE inventory_id = :inventory_id\n"), {'inventory_id': inventory_id})
         else:
             return Response(status=400)
@@ -434,7 +434,7 @@ def get_exercise_plans():
 def delete_exercise_plans(exercise_id):
     try:
         result = db.session.execute(text("SELECT * FROM exercise_plans WHERE exercise_id = :exercise_id\n"), {'exercise_id': exercise_id})
-        if result.rowcount > 0:
+        if result.first() != None:
             db.session.execute(text("DELETE FROM exercise_plans WHERE exercise_id = :exercise_id\n"), {'exercise_id': exercise_id})
         else:
             return Response(status=400)
@@ -477,7 +477,7 @@ def get_doctor_patient_relationship():
 def delete_doctor_patient_relationship(doctor_id, patient_id):
     try:
         result = db.session.execute(text("SELECT * FROM doctor_patient_relationship WHERE doctor_id = :doctor_id AND patient_id = :patient_id\n"), {'doctor_id': doctor_id, 'patient_id': patient_id})
-        if result.rowcount > 0:
+        if result.first() != None:
             db.session.execute(text("DELETE FROM doctor_patient_relationship WHERE doctor_id = :doctor_id AND patient_id = :patient_id\n"), {'doctor_id': doctor_id, 'patient_id': patient_id})
         else:
             return Response(status=400)
@@ -522,7 +522,7 @@ def get_credit_card():
 def delete_credit_card(creditcard_id):
     try:
         result = db.session.execute(text("SELECT * FROM credit_card WHERE creditcard_id = :creditcard_id\n"), {'creditcard_id': creditcard_id})
-        if result.rowcount > 0:
+        if result.first() != None:
             db.session.execute(text("DELETE FROM credit_card WHERE creditcard_id = :creditcard_id\n"), {'creditcard_id': creditcard_id})
         else:
             return Response(status=400)
@@ -570,9 +570,10 @@ def get_address():
 def delete_address(address_id):
     try:
         result = db.session.execute(text("SELECT * FROM address WHERE address_id = :address_id\n"), {'address_id': address_id})
-        if result.rowcount > 0:
+        if result.first() != None:
             db.session.execute(text("DELETE FROM address WHERE address_id = :address_id\n"), {'address_id': address_id})
         else:
+            print(result.first())
             return Response(status=400)
     except Exception as e:
         print(e)
@@ -609,7 +610,7 @@ def get_pharmacists():
 def delete_pharmacists(pharmacist_id):
     try:
         result = db.session.execute(text("SELECT * FROM pharmacists WHERE pharmacist_id = :pharmacist_id\n"), {'pharmacist_id': pharmacist_id})
-        if result.rowcount > 0:
+        if result.first() != None:
             db.session.execute(text("DELETE FROM pharmacists WHERE pharmacist_id = :pharmacist_id\n"), {'pharmacist_id': pharmacist_id})
         else:
             return Response(status=400)
@@ -653,7 +654,7 @@ def get_forum_comments():
 def delete_forum_comments(comment_id):
     try:
         result = db.session.execute(text("SELECT * FROM forum_comments WHERE comment_id = :comment_id\n"), {'comment_id': comment_id})
-        if result.rowcount > 0:
+        if result.first() != None:
             db.session.execute(text("DELETE FROM forum_comments WHERE comment_id = :comment_id\n"), {'comment_id': comment_id})
         else:
             return Response(status=400)
@@ -700,7 +701,7 @@ def get_forum_posts():
 def delete_forum_posts(post_id):
     try:
         result = db.session.execute(text("SELECT * FROM forum_posts WHERE post_id = :post_id\n"), {'post_id': post_id})
-        if result.rowcount > 0:
+        if result.first() != None:
             db.session.execute(text("DELETE FROM forum_posts WHERE post_id = :post_id\n"), {'post_id': post_id})
         else:
             return Response(status=400)
@@ -754,7 +755,7 @@ def get_reviews():
 def delete_reviews(review_id):
     try:
         result = db.session.execute(text("SELECT * FROM reviews WHERE review_id = :review_id\n"), {'review_id': review_id})
-        if result.rowcount > 0:
+        if result.first() != None:
             db.session.execute(text("DELETE FROM reviews WHERE review_id = :review_id\n"), {'review_id': review_id})
         else:
             return Response(status=400)
@@ -793,7 +794,7 @@ def get_patients():
 def delete_patients(patient_id):
     try:
         result = db.session.execute(text("SELECT * FROM patients WHERE patient_id = :patient_id\n"), {'patient_id': patient_id})
-        if result.rowcount > 0:
+        if result.first() != None:
             db.session.execute(text("DELETE FROM patients WHERE patient_id = :patient_id\n"), {'patient_id': patient_id})
         else:
             return Response(status=400)
@@ -836,7 +837,7 @@ def get_doctors():
 def delete_doctors(doctor_id):
     try:
         result = db.session.execute(text("SELECT * FROM doctors WHERE doctor_id = :doctor_id\n"), {'doctor_id': doctor_id})
-        if result.rowcount > 0:
+        if result.first() != None:
             db.session.execute(text("DELETE FROM doctors WHERE doctor_id = :doctor_id\n"), {'doctor_id': doctor_id})
         else:
             return Response(status=400)
@@ -885,7 +886,7 @@ def get_users():
 def delete_users(user_id):
     try:
         result = db.session.execute(text("SELECT * FROM users WHERE user_id = :user_id\n"), {'user_id': user_id})
-        if result.rowcount > 0:
+        if result.first() != None:
             db.session.execute(text("DELETE FROM users WHERE user_id = :user_id\n"), {'user_id': user_id})
         else:
             return Response(status=400)

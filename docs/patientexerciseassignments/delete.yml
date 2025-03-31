@@ -1,0 +1,22 @@
+Patient Exercise Assignments records
+---
+tags:
+    - Patients
+description:
+    Deletes an instance of a patient exercise assignment record from the `patient_exercise_assignments` table using the required `patient_exercise_assignments_id` in the URL path.
+
+    example - `/patient_exercise_assignments/1` deletes the patient exercise assignment with `id = 1`.
+responses:
+    200:
+        description: Successfully deleted.
+    404:
+        description: patient exercise assignment not found.
+    500:
+        description: Server error.
+parameters:
+    - in: path
+      name: patient exercise assignment_id
+      required: true
+      description: The ID of the patient exercise assignment to delete
+      schema:
+        type: integer

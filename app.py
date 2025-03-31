@@ -106,6 +106,22 @@ def get_saved_posts():
         })
     return json, 200
 
+@app.route("/saved_posts/<int:post_id>", methods=['DELETE'])
+@swag_from('docs/savedposts/delete.yml')
+def delete_saved_posts(post_id):
+    try:
+        result = db.session.execute(text("SELECT * FROM saved_posts WHERE post_id = :post_id\n"), {'post_id': post_id})
+        if result.rowcount > 0:
+            db.session.execute(text("DELETE FROM saved_posts WHERE post_id = :post_id\n"), {'post_id': post_id})
+        else:
+            return Response(status=400)
+    except Exception as e:
+        print(e)
+        return Response(status=500)
+    else:
+        db.session.commit()
+        return Response(status=200)
+
 @app.route("/prescriptions", methods=['GET'])
 @swag_from('docs/prescriptions/get.yml')
 def get_prescriptions():
@@ -146,6 +162,74 @@ def get_prescriptions():
         })
     return json, 200
 
+@app.route("/prescriptions/<int:prescription_id>", methods=['DELETE'])
+@swag_from('docs/prescriptions/delete.yml')
+def delete_prescriptions(prescription_id):
+    try:
+        result = db.session.execute(text("SELECT * FROM prescriptions WHERE prescription_id = :prescription_id\n"), {'prescription_id': prescription_id})
+        if result.rowcount > 0:
+            db.session.execute(text("DELETE FROM prescriptions WHERE prescription_id = :prescription_id\n"), {'prescription_id': prescription_id})
+        else:
+            return Response(status=400)
+    except Exception as e:
+        print(e)
+        return Response(status=500)
+    else:
+        db.session.commit()
+        return Response(status=200)
+
+@app.route("/appointments", methods=['GET'])
+@swag_from('docs/appointments/get.yml')
+def appointments():
+    #sql query
+    query = "SELECT * FROM appointments\n"
+    #get inputs
+    params = {
+        'aid': "" if request.args.get('appointment_id') == None else request.args.get('appointment_id'),
+        'did': "" if request.args.get('doctor_id') == None else request.args.get('doctor_id'),
+        'pid': "" if request.args.get('patient_id') == None else request.args.get('patient_id'),
+        'status': "" if request.args.get('status') == None else '%' + request.args.get('status') + '%',
+        'reason': "" if request.args.get('reason') == None else '%' + request.args.get('reason') + '%'
+    }
+    if(params['aid'] != "" or params['did'] != "" or params['pid'] != "" or params['status'] != "" or params['reason'] != ""):
+        query += ("WHERE " + ("appointment_id = :aid\n" if params['aid'] != "" else "TRUE\n"))
+        query += ("AND " + ("doctor_id = :did\n" if params['did'] != "" else "TRUE\n"))
+        query += ("AND " + ("patient_id = :pid\n" if params['pid'] != "" else "TRUE\n"))
+        query += ("AND " + ("status LIKE :status\n" if params['status'] != "" else "TRUE\n"))
+        query += ("AND " + ("reason LIKE :reason\n" if params['reason'] != "" else "TRUE\n"))
+    #execute query
+    result = db.session.execute(text(query), params)
+    json = {'appointments': []}
+    for row in result:
+        json['appointments'].append({
+            'appointment_id': row.appointment_id,
+            'doctor_id': row.doctor_id,
+            'patient_id': row.patient_id,
+            'start_time': row.start_time,
+            'end_time': row.end_time,
+            'status': row.status,
+            'location': row.location,
+            'reason': row.reason,
+            'created_at': row.created_at
+        })
+    return json, 200
+
+@app.route("/appointments/<int:appointment_id>", methods=['DELETE'])
+@swag_from('docs/appointments/delete.yml')
+def delete_appointments(appointment_id):
+    try:
+        result = db.session.execute(text("SELECT * FROM appointments WHERE appointment_id = :appointment_id\n"), {'appointment_id': appointment_id})
+        if result.rowcount > 0:
+            db.session.execute(text("DELETE FROM appointments WHERE appointment_id = :appointment_id\n"), {'appointment_id': appointment_id})
+        else:
+            return Response(status=400)
+    except Exception as e:
+        print(e)
+        return Response(status=500)
+    else:
+        db.session.commit()
+        return Response(status=200)
+
 @app.route("/patient_progress", methods=['GET'])
 @swag_from('docs/patientprogress/get.yml')
 def get_patient_progress():
@@ -174,6 +258,22 @@ def get_patient_progress():
             'date_logged': row.date_logged
         })
     return json, 200
+
+@app.route("/patient_progress/<int:progress_id>", methods=['DELETE'])
+@swag_from('docs/patientprogress/delete.yml')
+def delete_patient_progress(progress_id):
+    try:
+        result = db.session.execute(text("SELECT * FROM patient_progress WHERE progress_id = :progress_id\n"), {'progress_id': progress_id})
+        if result.rowcount > 0:
+            db.session.execute(text("DELETE FROM patient_progress WHERE progress_id = :progress_id\n"), {'progress_id': progress_id})
+        else:
+            return Response(status=400)
+    except Exception as e:
+        print(e)
+        return Response(status=500)
+    else:
+        db.session.commit()
+        return Response(status=200)
 
 @app.route("/patient_exercise_assignments", methods=['GET'])
 @swag_from('docs/patientexerciseassignments/get.yml')
@@ -208,6 +308,22 @@ def get_patient_exercise_assignments():
         })
     return json, 200
 
+@app.route("/patient_exercise_assignments/<int:assignment_id>", methods=['DELETE'])
+@swag_from('docs/patientexerciseassignments/delete.yml')
+def delete_patient_exercise_assignments(assignment_id):
+    try:
+        result = db.session.execute(text("SELECT * FROM patient_exercise_assignments WHERE assignment_id = :assignment_id\n"), {'assignment_id': assignment_id})
+        if result.rowcount > 0:
+            db.session.execute(text("DELETE FROM patient_exercise_assignments WHERE assignment_id = :assignment_id\n"), {'assignment_id': assignment_id})
+        else:
+            return Response(status=400)
+    except Exception as e:
+        print(e)
+        return Response(status=500)
+    else:
+        db.session.commit()
+        return Response(status=200)
+
 @app.route("/medications", methods=['GET'])
 @swag_from('docs/medications/get.yml')
 def get_medications():
@@ -231,6 +347,22 @@ def get_medications():
             'description': row.description
         })
     return json, 200
+
+@app.route("/medications/<int:medication_id>", methods=['DELETE'])
+@swag_from('docs/medications/delete.yml')
+def delete_medications(medication_id):
+    try:
+        result = db.session.execute(text("SELECT * FROM medications WHERE medication_id = :medication_id\n"), {'medication_id': medication_id})
+        if result.rowcount > 0:
+            db.session.execute(text("DELETE FROM medications WHERE medication_id = :medication_id\n"), {'medication_id': medication_id})
+        else:
+            return Response(status=400)
+    except Exception as e:
+        print(e)
+        return Response(status=500)
+    else:
+        db.session.commit()
+        return Response(status=200)
 
 @app.route("/inventory", methods=['GET'])
 @swag_from('docs/inventory/get.yml')
@@ -257,6 +389,22 @@ def get_inventory():
         })
     return json, 200
 
+@app.route("/inventory/<int:inventory_id>", methods=['DELETE'])
+@swag_from('docs/inventory/delete.yml')
+def delete_inventory(inventory_id):
+    try:
+        result = db.session.execute(text("SELECT * FROM inventory WHERE inventory_id = :inventory_id\n"), {'inventory_id': inventory_id})
+        if result.rowcount > 0:
+            db.session.execute(text("DELETE FROM inventory WHERE inventory_id = :inventory_id\n"), {'inventory_id': inventory_id})
+        else:
+            return Response(status=400)
+    except Exception as e:
+        print(e)
+        return Response(status=500)
+    else:
+        db.session.commit()
+        return Response(status=200)
+
 @app.route("/exercise_plans", methods=['GET'])
 @swag_from('docs/exerciseplans/get.yml')
 def get_exercise_plans():
@@ -280,6 +428,22 @@ def get_exercise_plans():
             'description': row.description
         })
     return json, 200
+
+@app.route("/exercise_plans/<int:exercise_id>", methods=['DELETE'])
+@swag_from('docs/exerciseplans/delete.yml')
+def delete_exercise_plans(exercise_id):
+    try:
+        result = db.session.execute(text("SELECT * FROM exercise_plans WHERE exercise_id = :exercise_id\n"), {'exercise_id': exercise_id})
+        if result.rowcount > 0:
+            db.session.execute(text("DELETE FROM exercise_plans WHERE exercise_id = :exercise_id\n"), {'exercise_id': exercise_id})
+        else:
+            return Response(status=400)
+    except Exception as e:
+        print(e)
+        return Response(status=500)
+    else:
+        db.session.commit()
+        return Response(status=200)
 
 @app.route("/doctor_patient_relationship", methods=['GET'])
 @swag_from('docs/doctorpatientrelationship/get.yml')
@@ -307,6 +471,22 @@ def get_doctor_patient_relationship():
             'date_assigned': row.date_assigned
         })
     return json, 200
+
+@app.route("/doctor_patient_relationship/<int:doctor_id>/<int:patient_id>", methods=['DELETE'])
+@swag_from('docs/doctorpatientrelationship/delete.yml')
+def delete_doctor_patient_relationship(doctor_id, patient_id):
+    try:
+        result = db.session.execute(text("SELECT * FROM doctor_patient_relationship WHERE doctor_id = :doctor_id AND patient_id = :patient_id\n"), {'doctor_id': doctor_id, 'patient_id': patient_id})
+        if result.rowcount > 0:
+            db.session.execute(text("DELETE FROM doctor_patient_relationship WHERE doctor_id = :doctor_id AND patient_id = :patient_id\n"), {'doctor_id': doctor_id, 'patient_id': patient_id})
+        else:
+            return Response(status=400)
+    except Exception as e:
+        print(e)
+        return Response(status=500)
+    else:
+        db.session.commit()
+        return Response(status=200)
 
 @app.route("/credit_card", methods=['GET'])
 @swag_from('docs/creditcard/get.yml')
@@ -336,6 +516,22 @@ def get_credit_card():
             'exp_date': row.exp_date
         })
     return json, 200
+
+@app.route("/credit_card/<int:creditcard_id>", methods=['DELETE'])
+@swag_from('docs/creditcard/delete.yml')
+def delete_credit_card(creditcard_id):
+    try:
+        result = db.session.execute(text("SELECT * FROM credit_card WHERE creditcard_id = :creditcard_id\n"), {'creditcard_id': creditcard_id})
+        if result.rowcount > 0:
+            db.session.execute(text("DELETE FROM credit_card WHERE creditcard_id = :creditcard_id\n"), {'creditcard_id': creditcard_id})
+        else:
+            return Response(status=400)
+    except Exception as e:
+        print(e)
+        return Response(status=500)
+    else:
+        db.session.commit()
+        return Response(status=200)
 
 @app.route("/address", methods=['GET'])
 @swag_from('docs/address/get.yml')
@@ -369,6 +565,22 @@ def get_address():
         })
     return json, 200
 
+@app.route("/address/<int:address_id>", methods=['DELETE'])
+@swag_from('docs/address/delete.yml')
+def delete_address(address_id):
+    try:
+        result = db.session.execute(text("SELECT * FROM address WHERE address_id = :address_id\n"), {'address_id': address_id})
+        if result.rowcount > 0:
+            db.session.execute(text("DELETE FROM address WHERE address_id = :address_id\n"), {'address_id': address_id})
+        else:
+            return Response(status=400)
+    except Exception as e:
+        print(e)
+        return Response(status=500)
+    else:
+        db.session.commit()
+        return Response(status=200)
+
 @app.route("/pharmacists", methods=['GET'])
 @swag_from('docs/pharmacists/get.yml')
 def get_pharmacists():
@@ -391,6 +603,22 @@ def get_pharmacists():
             'pharmacy_location': row.pharmacy_location,
         })
     return json, 200
+
+@app.route("/pharmacists/<int:pharmacist_id>", methods=['DELETE'])
+@swag_from('docs/pharmacists/delete.yml')
+def delete_pharmacists(pharmacist_id):
+    try:
+        result = db.session.execute(text("SELECT * FROM pharmacists WHERE pharmacist_id = :pharmacist_id\n"), {'pharmacist_id': pharmacist_id})
+        if result.rowcount > 0:
+            db.session.execute(text("DELETE FROM pharmacists WHERE pharmacist_id = :pharmacist_id\n"), {'pharmacist_id': pharmacist_id})
+        else:
+            return Response(status=400)
+    except Exception as e:
+        print(e)
+        return Response(status=500)
+    else:
+        db.session.commit()
+        return Response(status=200)
 
 @app.route("/forum_comments", methods=['GET'])
 @swag_from('docs/forumcomments/get.yml')
@@ -419,6 +647,22 @@ def get_forum_comments():
             'created_at': row.created_at
         })
     return json, 200
+
+@app.route("/forum_comments/<int:comment_id>", methods=['DELETE'])
+@swag_from('docs/forumcomments/delete.yml')
+def delete_forum_comments(comment_id):
+    try:
+        result = db.session.execute(text("SELECT * FROM forum_comments WHERE comment_id = :comment_id\n"), {'comment_id': comment_id})
+        if result.rowcount > 0:
+            db.session.execute(text("DELETE FROM forum_comments WHERE comment_id = :comment_id\n"), {'comment_id': comment_id})
+        else:
+            return Response(status=400)
+    except Exception as e:
+        print(e)
+        return Response(status=500)
+    else:
+        db.session.commit()
+        return Response(status=200)
 
 @app.route("/forum_posts", methods=['GET'])
 @swag_from('docs/forumposts/get.yml')
@@ -451,124 +695,21 @@ def get_forum_posts():
         })
     return json, 200
 
-@app.route("/appointments", methods=['GET'])
-@swag_from('docs/appointments/get.yml')
-def get_appointments():
-    #sql query
-    query = "SELECT * FROM appointments\n"
-    #get inputs
-    params = {
-        'aid': "" if request.args.get('appointment_id') == None else request.args.get('appointment_id'),
-        'did': "" if request.args.get('doctor_id') == None else request.args.get('doctor_id'),
-        'pid': "" if request.args.get('patient_id') == None else request.args.get('patient_id'),
-        'status': "" if request.args.get('status') == None else '%' + request.args.get('status') + '%',
-        'reason': "" if request.args.get('reason') == None else '%' + request.args.get('reason') + '%'
-    }
-    if(params['aid'] != "" or params['did'] != "" or params['pid'] != "" or params['status'] != "" or params['reason'] != ""):
-        query += ("WHERE " + ("appointment_id = :aid\n" if params['aid'] != "" else "TRUE\n"))
-        query += ("AND " + ("doctor_id = :did\n" if params['did'] != "" else "TRUE\n"))
-        query += ("AND " + ("patient_id = :pid\n" if params['pid'] != "" else "TRUE\n"))
-        query += ("AND " + ("status LIKE :status\n" if params['status'] != "" else "TRUE\n"))
-        query += ("AND " + ("reason LIKE :reason\n" if params['reason'] != "" else "TRUE\n"))
-    #execute query
-    result = db.session.execute(text(query), params)
-    json = {'appointments': []}
-    for row in result:
-        json['appointments'].append({
-            'appointment_id': row.appointment_id,
-            'doctor_id': row.doctor_id,
-            'patient_id': row.patient_id,
-            'start_time': row.start_time,
-            'end_time': row.end_time,
-            'status': row.status,
-            'location': row.location,
-            'reason': row.reason,
-            'created_at': row.created_at
-        })
-    return json, 200
-
-@app.route("/patients", methods=['GET'])
-@swag_from('docs/patients/get.yml')
-def get_patients():
-    #sql query
-    query = "SELECT * FROM patients\n"
-    #get inputs
-    params = {
-        'id': "" if request.args.get('patient_id') == None else request.args.get('patient_id'),
-    }
-    if(params['id'] != ""):
-        query += ("WHERE " + ("patient_id = :id\n" if params['id'] != "" else "TRUE\n"))
-    #execute query
-    result = db.session.execute(text(query), params)
-    json = {'patients': []}
-    for row in result:
-        json['patients'].append({
-            'patient_id': row.patient_id,
-            'address_id': row.address_id,
-            'medical_history': row.medical_history,
-            'creditcard_id': row.creditcard_id
-        })
-    return json, 200
-
-@app.route("/doctors", methods=['GET'])
-@swag_from('docs/doctors/get.yml')
-def get_doctors():
-    #sql query
-    query = "SELECT * FROM doctors\n"
-    #get inputs
-    params = {
-        'id': "" if request.args.get('doctor_id') == None else request.args.get('doctor_id'),
-        'license': "" if request.args.get('license_number') == None else request.args.get('license_number'),
-        'special': "" if request.args.get('specialization') == None else '%' + request.args.get('specialization') + '%',
-    }
-    if(params['id'] != "" or params['license'] != "" or params['special'] != ""):
-        query += ("WHERE " + ("doctor_id = :id\n" if params['id'] != "" else "TRUE\n"))
-        query += ("AND " + ("license_number = :license\n" if params['license'] != "" else "TRUE\n"))
-        query += ("AND " + ("specialization LIKE :special\n" if params['special'] != "" else "TRUE\n"))
-    #execute query
-    result = db.session.execute(text(query), params)
-    json = {'doctors': []}
-    for row in result:
-        json['doctors'].append({
-            'doctor_id': row.doctor_id,
-            'license_number': row.license_number,
-            'specialization': row.specialization,
-            'profile': row.profile
-        })
-    return json, 200
-
-@app.route("/users", methods=['GET'])
-@swag_from('docs/users/get.yml')
-def get_users():
-    #sql query
-    query = "SELECT * FROM users\n"
-    #get inputs
-    params = {
-        'id': "" if request.args.get('user_id') == None else request.args.get('user_id'),
-        'role': "" if request.args.get('role') == None else request.args.get('role'),
-        'fname': "" if request.args.get('first_name') == None else '%' + request.args.get('first_name') + '%',
-        'lname': "" if request.args.get('last_name') == None else '%' + request.args.get('last_name') + '%',
-    }
-    if(params['id'] != "" or params['role'] != "" or params['fname'] != "" or params['lname'] != ""):
-        query += ("WHERE " + ("user_id = :id\n" if params['id'] != "" else "TRUE\n"))
-        query += ("AND " + ("role = :role\n" if params['role'] != "" else "TRUE\n"))
-        query += ("AND " + ("first_name LIKE :fname\n" if params['fname'] != "" else "TRUE\n"))
-        query += ("AND " + ("last_name LIKE :lname\n" if params['lname'] != "" else "TRUE\n"))
-    #execute query
-    result = db.session.execute(text(query), params)
-    json = {'users': []}
-    for row in result:
-        json['users'].append({
-            'user_id': row.user_id,
-            'email': row.email,
-            #'password': row.password, # Actually, maybe not.
-            'first_name': row.first_name,
-            'last_name': row.last_name,
-            'phone_number': row.phone_number,
-            'role': row.role,
-            'created_at': row.created_at
-        })
-    return json, 200
+@app.route("/forum_posts/<int:post_id>", methods=['DELETE'])
+@swag_from('docs/forumposts/delete.yml')
+def delete_forum_posts(post_id):
+    try:
+        result = db.session.execute(text("SELECT * FROM forum_posts WHERE post_id = :post_id\n"), {'post_id': post_id})
+        if result.rowcount > 0:
+            db.session.execute(text("DELETE FROM forum_posts WHERE post_id = :post_id\n"), {'post_id': post_id})
+        else:
+            return Response(status=400)
+    except Exception as e:
+        print(e)
+        return Response(status=500)
+    else:
+        db.session.commit()
+        return Response(status=200)
 
 @app.route("/reviews", methods=['GET'])
 @swag_from('docs/reviews/get.yml')
@@ -608,5 +749,152 @@ def get_reviews():
     
     return json_response, 200
 
+@app.route("/reviews/<int:review_id>", methods=['DELETE'])
+@swag_from('docs/reviews/delete.yml')
+def delete_reviews(review_id):
+    try:
+        result = db.session.execute(text("SELECT * FROM reviews WHERE review_id = :review_id\n"), {'review_id': review_id})
+        if result.rowcount > 0:
+            db.session.execute(text("DELETE FROM reviews WHERE review_id = :review_id\n"), {'review_id': review_id})
+        else:
+            return Response(status=400)
+    except Exception as e:
+        print(e)
+        return Response(status=500)
+    else:
+        db.session.commit()
+        return Response(status=200)
+
+@app.route("/patients", methods=['GET'])
+@swag_from('docs/patients/get.yml')
+def get_patients():
+    #sql query
+    query = "SELECT * FROM patients\n"
+    #get inputs
+    params = {
+        'id': "" if request.args.get('patient_id') == None else request.args.get('patient_id'),
+    }
+    if(params['id'] != ""):
+        query += ("WHERE " + ("patient_id = :id\n" if params['id'] != "" else "TRUE\n"))
+    #execute query
+    result = db.session.execute(text(query), params)
+    json = {'patients': []}
+    for row in result:
+        json['patients'].append({
+            'patient_id': row.patient_id,
+            'address_id': row.address_id,
+            'medical_history': row.medical_history,
+            'creditcard_id': row.creditcard_id
+        })
+    return json, 200
+
+@app.route("/patients/<int:patient_id>", methods=['DELETE'])
+@swag_from('docs/patients/delete.yml')
+def delete_patients(patient_id):
+    try:
+        result = db.session.execute(text("SELECT * FROM patients WHERE patient_id = :patient_id\n"), {'patient_id': patient_id})
+        if result.rowcount > 0:
+            db.session.execute(text("DELETE FROM patients WHERE patient_id = :patient_id\n"), {'patient_id': patient_id})
+        else:
+            return Response(status=400)
+    except Exception as e:
+        print(e)
+        return Response(status=500)
+    else:
+        db.session.commit()
+        return Response(status=200)
+
+@app.route("/doctors", methods=['GET'])
+@swag_from('docs/doctors/get.yml')
+def get_doctors():
+    #sql query
+    query = "SELECT * FROM doctors\n"
+    #get inputs
+    params = {
+        'id': "" if request.args.get('doctor_id') == None else request.args.get('doctor_id'),
+        'license': "" if request.args.get('license_number') == None else request.args.get('license_number'),
+        'special': "" if request.args.get('specialization') == None else '%' + request.args.get('specialization') + '%',
+    }
+    if(params['id'] != "" or params['license'] != "" or params['special'] != ""):
+        query += ("WHERE " + ("doctor_id = :id\n" if params['id'] != "" else "TRUE\n"))
+        query += ("AND " + ("license_number = :license\n" if params['license'] != "" else "TRUE\n"))
+        query += ("AND " + ("specialization LIKE :special\n" if params['special'] != "" else "TRUE\n"))
+    #execute query
+    result = db.session.execute(text(query), params)
+    json = {'doctors': []}
+    for row in result:
+        json['doctors'].append({
+            'doctor_id': row.doctor_id,
+            'license_number': row.license_number,
+            'specialization': row.specialization,
+            'profile': row.profile
+        })
+    return json, 200
+
+@app.route("/doctors/<int:doctor_id>", methods=['DELETE'])
+@swag_from('docs/doctors/delete.yml')
+def delete_doctors(doctor_id):
+    try:
+        result = db.session.execute(text("SELECT * FROM doctors WHERE doctor_id = :doctor_id\n"), {'doctor_id': doctor_id})
+        if result.rowcount > 0:
+            db.session.execute(text("DELETE FROM doctors WHERE doctor_id = :doctor_id\n"), {'doctor_id': doctor_id})
+        else:
+            return Response(status=400)
+    except Exception as e:
+        print(e)
+        return Response(status=500)
+    else:
+        db.session.commit()
+        return Response(status=200)
+    
+@app.route("/users", methods=['GET'])
+@swag_from('docs/users/get.yml')
+def get_users():
+    #sql query
+    query = "SELECT * FROM users\n"
+    #get inputs
+    params = {
+        'id': "" if request.args.get('user_id') == None else request.args.get('user_id'),
+        'role': "" if request.args.get('role') == None else request.args.get('role'),
+        'fname': "" if request.args.get('first_name') == None else '%' + request.args.get('first_name') + '%',
+        'lname': "" if request.args.get('last_name') == None else '%' + request.args.get('last_name') + '%',
+    }
+    if(params['id'] != "" or params['role'] != "" or params['fname'] != "" or params['lname'] != ""):
+        query += ("WHERE " + ("user_id = :id\n" if params['id'] != "" else "TRUE\n"))
+        query += ("AND " + ("role = :role\n" if params['role'] != "" else "TRUE\n"))
+        query += ("AND " + ("first_name LIKE :fname\n" if params['fname'] != "" else "TRUE\n"))
+        query += ("AND " + ("last_name LIKE :lname\n" if params['lname'] != "" else "TRUE\n"))
+    #execute query
+    result = db.session.execute(text(query), params)
+    json = {'users': []}
+    for row in result:
+        json['users'].append({
+            'user_id': row.user_id,
+            'email': row.email,
+            #'password': row.password, # Actually, maybe not.
+            'first_name': row.first_name,
+            'last_name': row.last_name,
+            'phone_number': row.phone_number,
+            'role': row.role,
+            'created_at': row.created_at
+        })
+    return json, 200
+
+@app.route("/users/<int:user_id>", methods=['DELETE'])
+@swag_from('docs/users/delete.yml')
+def delete_users(user_id):
+    try:
+        result = db.session.execute(text("SELECT * FROM users WHERE user_id = :user_id\n"), {'user_id': user_id})
+        if result.rowcount > 0:
+            db.session.execute(text("DELETE FROM users WHERE user_id = :user_id\n"), {'user_id': user_id})
+        else:
+            return Response(status=400)
+    except Exception as e:
+        print(e)
+        return Response(status=500)
+    else:
+        db.session.commit()
+        return Response(status=200)
+    
 if __name__ == "__main__":
     app.run(debug=True)

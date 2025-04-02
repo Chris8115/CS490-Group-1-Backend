@@ -977,30 +977,8 @@ def update_review():
     
     return {"message": "Review updated successfully"}, 200
 
-<<<<<<< Updated upstream
-
-#delete routes
-@app.route("/delete_user/<int:user_id>", methods=["DELETE"])
-def delete_user(user_id):
-    try:
-        result = db.session.execute(text("SELECT * FROM users WHERE user_id = :user_id\n"), {'user_id': user_id})
-        if result.first() != None:
-            db.session.execute(text("DELETE FROM users WHERE user_id = :user_id\n"), {'user_id': user_id})
-        else:
-            return Response(status=400)
-    except Exception as e:
-        print(e)
-        return Response(status=500)
-    else:
-        db.session.commit()
-        return Response(status=200)
-        return 200
-
-@app.route("/delete_review/<int:review_id>", methods=["DELETE"])
-=======
 @app.route("/reviews/<int:review_id>", methods=['DELETE'])
 @swag_from('docs/reviews/delete.yml')
->>>>>>> Stashed changes
 def delete_reviews(review_id):
     try:
         result = db.session.execute("SELECT * FROM reviews WHERE review_id = ?\n", review_id)

@@ -750,6 +750,47 @@ def get_reviews():
     
     return json_response, 200
 
+@app.route("/reviews", methods=['PATCH'])
+@swag_from('docs/reviews/patch.yml')
+def update_review():
+    data = request.get_json(force=True)
+    
+    if 'review_id' not in data:
+        return {"error": "Missing review_id in request"}, 400
+    
+    # Check if the review exists
+    existing_review = db.session.execute(
+        text("SELECT * FROM reviews WHERE review_id = :review_id"),
+        {'review_id': data['review_id']}
+    ).first()
+    
+    if not existing_review:
+        return {"error": "Review not found"}, 404
+    
+    update_fields = []
+    params = {}
+    
+    if 'rating' in data:
+        update_fields.append("rating = :rating")
+        params['rating'] = data['rating']
+    
+    if 'review_text' in data:
+        update_fields.append("review_text = :review_text")
+        params['review_text'] = data['review_text']
+    
+    if not update_fields:
+        return {"error": "No update fields provided."}, 400
+    
+    params['review_id'] = data['review_id']
+    query = "UPDATE reviews SET " + ", ".join(update_fields) + " WHERE review_id = :review_id"
+    
+    db.session.execute(text(query), params)
+    db.session.commit()
+    
+    return {"message": "Review updated successfully"}, 200
+
+
+
 @app.route("/reviews/<int:review_id>", methods=['DELETE'])
 @swag_from('docs/reviews/delete.yml')
 def delete_reviews(review_id):

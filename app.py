@@ -750,8 +750,8 @@ def get_reviews():
     
     return json_response, 200
 
-@app.route("/reviews", methods=['PUT'])
-@swag_from('docs/reviews/update.yml')
+@app.route("/reviews", methods=['PATCH'])
+@swag_from('docs/reviews/patch.yml')
 def update_review():
     data = request.get_json(force=True)
     

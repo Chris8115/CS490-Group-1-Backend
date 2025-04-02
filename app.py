@@ -313,7 +313,7 @@ def update_appointment(appointment_id):
     }
     #input validation
     if(db.session.execute(text("SELECT * FROM appointments WHERE appointment_id = :appointment_id"), params).first() == None):
-        return ResponseMessage("Invalid appointment ID.", 400)
+        return ResponseMessage("Appointment not found.", 404)
     if all(param == None for param in list(params.values())[1:]):
         return ResponseMessage("No parameters were passed to update...", 200)
     if(params['status'] != None and params['status'].lower() not in ('canceled', 'pending', 'rejected', 'accepted')):

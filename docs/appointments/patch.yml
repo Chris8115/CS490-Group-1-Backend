@@ -9,6 +9,8 @@ responses:
         description: Appointment successfully updated.
     400:
         description: Client input validation error.
+    404:
+        description: Appointment ID not found.
     500:
         description: Server/SQLite error.
 consumes:

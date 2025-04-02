@@ -1,0 +1,22 @@
+Saved Posts records
+---
+tags:
+    - Discussion Forum
+description:
+    Deletes an instance of a Saved Posts record from the `saved_posts` table using the required `post_id` in the URL path.
+
+    example - `/saved_posts/1` deletes the saved_posts with `id = 1`.
+responses:
+    200:
+        description: Successfully deleted.
+    400:
+        description: saved_posts not found.
+    500:
+        description: Server error.
+parameters:
+    - in: path
+      name: post_id
+      required: true
+      description: The ID of the saved posts to delete
+      schema:
+        type: integer

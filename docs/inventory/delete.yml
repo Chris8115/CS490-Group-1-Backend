@@ -1,0 +1,22 @@
+Inventory records
+---
+tags:
+    - Pharmacy
+description:
+    Deletes an instance of a inventory record from the `inventory` table using the required `inventory_id` in the URL path.
+
+    example - `/inventory/1` deletes the inventory with `id = 1`.
+responses:
+    200:
+        description: Successfully deleted.
+    400:
+        description: inventory not found.
+    500:
+        description: Server error.
+parameters:
+    - in: path
+      name: inventory_id
+      required: true
+      description: The ID of the inventory to delete
+      schema:
+        type: integer

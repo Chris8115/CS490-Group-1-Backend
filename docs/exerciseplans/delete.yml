@@ -1,0 +1,22 @@
+Exercise Plans records
+---
+tags:
+    - Services
+description:
+    Deletes an instance of a exercise plans record from the `exercise_plans` table using the required `exercise_id` in the URL path.
+
+    example - `/exercise_plans/1` deletes the exercise plans with `id = 1`.
+responses:
+    200:
+        description: Successfully deleted.
+    400:
+        description: exercise plans not found.
+    500:
+        description: Server error.
+parameters:
+    - in: path
+      name: exercise_id
+      required: true
+      description: The ID of the exercise plans to delete
+      schema:
+        type: integer

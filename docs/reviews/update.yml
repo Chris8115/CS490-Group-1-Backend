@@ -1,0 +1,44 @@
+Reviews records
+---
+tags:
+  - Services
+description: >
+  Updates an instance of a Reviews record in the `reviews` table using the JSON body.
+  
+  example - A PUT request to `/reviews` with the following JSON:
+  
+  {
+      "review_id": 1,
+      "rating": 4,
+      "review_text": "Updated review text."
+  }
+  
+  updates the review with ID 1.
+responses:
+  200:
+    description: Successfully updated.
+  400:
+    description: Missing review_id or no update fields provided.
+  404:
+    description: Review not found.
+  500:
+    description: Server error.
+parameters:
+  - in: body
+    name: body
+    required: true
+    description: JSON object containing the review update fields.
+    schema:
+      type: object
+      properties:
+        review_id:
+          type: integer
+          description: The ID of the review to update.
+        rating:
+          type: integer
+          description: New numeric rating (typically values 1–5).
+        review_text:
+          type: string
+          description: New review text.
+      required:
+        - review_id

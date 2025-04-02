@@ -751,11 +751,21 @@ def get_reviews():
     return json_response, 200
 
 @app.route("/reviews", methods=['PUT'])
+@swag_from('docs/reviews/update.yml')
 def update_review():
     data = request.get_json(force=True)
     
     if 'review_id' not in data:
         return {"error": "Missing review_id in request"}, 400
+    
+    # Check if the review exists
+    existing_review = db.session.execute(
+        text("SELECT * FROM reviews WHERE review_id = :review_id"),
+        {'review_id': data['review_id']}
+    ).first()
+    
+    if not existing_review:
+        return {"error": "Review not found"}, 404
     
     update_fields = []
     params = {}
@@ -778,6 +788,8 @@ def update_review():
     db.session.commit()
     
     return {"message": "Review updated successfully"}, 200
+
+
 
 @app.route("/reviews/<int:review_id>", methods=['DELETE'])
 @swag_from('docs/reviews/delete.yml')

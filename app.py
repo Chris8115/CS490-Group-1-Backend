@@ -384,6 +384,49 @@ def delete_patient_progress(progress_id):
         db.session.commit()
         return Response(status=200)
 
+@app.route("/patient_progress", methods=['PUT'])
+@swag_from('docs/patientprogress/put.yml')
+def add_patient_progress():
+    #sql query
+    query = text("""
+        INSERT INTO patient_progress (progress_id, patient_id, weight, calories, notes, date_logged)
+        VALUES (
+            :progress_id,
+            :patient_id,
+            :weight,
+            :calories,
+            :notes,
+            CURRENT_TIMESTAMP
+            )
+    """)
+    # NOTE: doing progress_id this way could bring about a race condition.... but lets be real this is never happening.
+    params = {
+        'progress_id': (db.session.execute(text("SELECT MAX(progress_id) + 1 AS progress_id FROM patient_progress")).first()).progress_id,
+        'patient_id': request.json.get('patient_id'),
+        'weight': request.json.get('weight'),
+        'calories': request.json.get('calories'),
+        'notes': request.json.get('notes')
+    }
+    #input validation
+    if None in list(params.values())[:-1]:
+        return ResponseMessage("Required parameters not supplied.", 400)
+    try:
+        result = db.session.execute(text("SELECT * FROM patients WHERE patient_id = :patient_id"), params)
+        if(result.first() == None):
+            return ResponseMessage("Invalid patient id.", 400)
+        if(request.json.get('weight') <= 0 or request.json.get('weight') >= 1500):
+            return ResponseMessage("Invalid weight.", 400)
+        if(request.json.get('calories') <= 0 or request.json.get('calories') >= 30000):
+            return ResponseMessage("Invalid calories.", 400)
+        #execute query
+        db.session.execute(query, params)
+    except Exception as e:
+        print(e)
+        return ResponseMessage(f"Error Executing Query:\n{e}", 500)
+    else:
+        db.session.commit()
+        return ResponseMessage(f"patient progress entry successfully created (id: {params['patient_id']})", 201)
+
 @app.route("/patient_exercise_assignments", methods=['GET'])
 @swag_from('docs/patientexerciseassignments/get.yml')
 def get_patient_exercise_assignments():

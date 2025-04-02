@@ -1,0 +1,18 @@
+Patients records
+---
+tags:
+    - Patients
+description:
+    Gets all of the patients from the `patients` table with optional filters.
+    
+    example - `/patients?patient_id=2` includes the patient with an id of 2.
+responses:
+    200:
+        description: JSON array named `patients` containing all patient records.
+parameters:
+    - in: query
+      name: patient_id
+      required: false
+      description: includes results matching `patient_id` column
+      schema:
+        type: integer

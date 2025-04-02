@@ -1,0 +1,22 @@
+Medications records
+---
+tags:
+    - Pharmacy
+description:
+    Deletes an instance of a Medications record from the `medications` table using the required `medication_id` in the URL path.
+
+    example - `/medications/1` deletes the medications with `id = 1`.
+responses:
+    200:
+        description: Successfully deleted.
+    400:
+        description: medications not found.
+    500:
+        description: Server error.
+parameters:
+    - in: path
+      name: medication_id
+      required: true
+      description: The ID of the medications to delete
+      schema:
+        type: integer

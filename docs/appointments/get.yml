@@ -1,0 +1,42 @@
+Appointments records
+---
+tags:
+    - Services
+description:
+    Gets all of the appointments from the `appointments` table with optional filters.
+    
+    example - `/appointments?status=accepted&reason=surgery` includes all accepted appointments for reasons containing "surgery".
+responses:
+    200:
+        description: JSON array named `appointments` containing all appointment records.
+parameters:
+    - in: query
+      name: appointment_id
+      required: false
+      description: includes results matching `appointment_id` column
+      schema:
+        type: integer
+    - in: query
+      name: doctor_id
+      required: false
+      description: includes results matching `doctor_id` column
+      schema:
+        type: integer
+    - in: query
+      name: patient_id
+      required: false
+      description: includes results matching `patient_id` column
+      schema:
+        type: integer
+    - in: query
+      name: status
+      required: false
+      description: includes results matching `status` column (accepted, rejected, pending, canceled)
+      schema:
+        type: string
+    - in: query
+      name: reason
+      required: false
+      description: includes results like `reason` column
+      schema:
+        type: string

@@ -1,0 +1,30 @@
+Patient Progress records
+---
+tags:
+    - Patients
+description:
+    Gets all of the patient progress reports from the `patient_progress` table with optional filters.
+    
+    example - `/patient_progress?date_logged=2025-03-06&patient_id=2` gets the progress report for patient with an id = 2 on March 6th, 2025.
+responses:
+    200:
+        description: JSON that contains all of the patient progress records.
+parameters:
+    - in: query
+      name: progress_id
+      required: false
+      description: includes results matching `progress_id` column
+      schema:
+        type: integer
+    - in: query
+      name: patient_id
+      required: false
+      description: includes results matching `patient_id` column
+      schema:
+        type: integer
+    - in: query
+      name: date_logged
+      required: false
+      description: includes results like `date_logged` column (A datetime of format mm-dd-yyyy hh:mm:ss)
+      schema:
+        type: string

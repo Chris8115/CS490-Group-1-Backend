@@ -1,0 +1,30 @@
+Credit Cards records
+---
+tags:
+    - Services
+description:
+    Gets all of the credit cards from the `credit_card` table with optional filters.
+    
+    example - `/credit_card?card_ending=2088` gets the credit card that ends in x2088.
+responses:
+    200:
+        description: JSON that contains all of the credit card records.
+parameters:
+    - in: query
+      name: creditcard_id
+      required: false
+      description: includes results matching `creditcard_id` column
+      schema:
+        type: integer
+    - in: query
+      name: card_ending
+      required: false
+      description: includes results with `cardnumber` ending in `card_ending` **(length must be <= 4)**
+      schema:
+        type: string
+    - in: query
+      name: exp_date
+      required: false
+      description: includes results like `exp_date` column (A date of format mm/dd/yyyy)
+      schema:
+        type: string

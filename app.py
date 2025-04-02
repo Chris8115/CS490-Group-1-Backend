@@ -326,9 +326,9 @@ def update_appointment(appointment_id):
         return ResponseMessage("Invalid Start Time. Format: (yyyy-mm-dd hh:mm:ss)", 400)
     if(params['end_time'] != None and re.search(valid_datetime, params['end_time']) == None):
         return ResponseMessage("Invalid End Time. Format: (yyyy-mm-dd hh:mm:ss)", 400)
-    if(params['doctor_id'] != None and db.session.execute(text("SELECT * FROM doctors WHERE doctor_id = :doctor_id")).first() == None):
+    if(params['doctor_id'] != None and db.session.execute(text("SELECT * FROM doctors WHERE doctor_id = :doctor_id"), params).first() == None):
         return ResponseMessage("Invalid doctor ID.", 400)
-    if(params['patient_id'] != None and db.session.execute(text("SELECT * FROM patients WHERE patient_id = :patient_id")).first() == None):
+    if(params['patient_id'] != None and db.session.execute(text("SELECT * FROM patients WHERE patient_id = :patient_id"), params).first() == None):
         return ResponseMessage("Invalid patient ID.", 400)
     try:
         db.session.execute(query, params)

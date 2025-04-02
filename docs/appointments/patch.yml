@@ -1,0 +1,54 @@
+Appointments records
+---
+tags:
+    - Services
+description:
+    Updates appointment information. All fields are optional.
+responses:
+    200:
+        description: Appointment successfully updated.
+    400:
+        description: Client input validation error.
+    404:
+        description: Appointment ID not found.
+    500:
+        description: Server/SQLite error.
+consumes:
+  - application/json
+parameters:
+    - in: path
+      name: appointment_id
+      required: true
+      description: appointment ID to update
+      schema:
+        type: integer
+    - in: body
+      name: appointment
+      required: true
+      description: | 
+        Appointment information
+      schema:
+        type: object
+        properties: 
+          patient_id: 
+            type: integer
+            description: Patient ID
+          doctor_id: 
+            type: integer
+            description: Doctor ID
+          start_time: 
+            type: string
+            description: Appointment start time (`yyyy-mm-dd hh:mm:ss`)
+          end_time: 
+            type: string
+            description: Appointment end time (`yyyy-mm-dd hh:mm:ss`)
+          status: 
+            type: string
+            description: Status of types (`accepted`, `rejected`, `pending`, `canceled`)
+          location: 
+            type: string
+            description: Appointment location
+          reason: 
+            type: string
+            description: Appointment Reason
+

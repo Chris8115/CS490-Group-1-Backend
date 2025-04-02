@@ -5,6 +5,7 @@ from sqlalchemy.sql.functions import func
 from sqlalchemy import desc, text
 from sqlalchemy.dialects import mysql
 from flasgger import Swagger, swag_from
+import re
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///craze.db'
@@ -229,6 +230,114 @@ def delete_appointments(appointment_id):
     else:
         db.session.commit()
         return Response(status=200)
+
+@app.route("/appointments", methods=['PUT'])
+@swag_from('docs/appointments/put.yml')
+def add_appointment():
+    #sql query
+    query = text("""
+        INSERT INTO appointments (appointment_id, doctor_id, patient_id, start_time, end_time, status, location, reason, created_at)
+        VALUES (
+            :appointment_id,
+            :doctor_id,
+            :patient_id,
+            DATETIME(:start_time),
+            DATETIME(:end_time),
+            :status,
+            :location,
+            :reason,
+            CURRENT_TIMESTAMP)
+    """)
+    # NOTE: doing appointment_id this way could bring about a race condition.... but lets be real this is never happening.
+    params = {
+        'appointment_id': (db.session.execute(text("SELECT MAX(appointment_id) + 1 AS appointment_id FROM appointments")).first()).appointment_id,
+        'doctor_id': request.json.get('doctor_id'),
+        'patient_id': request.json.get('patient_id'),
+        'start_time': request.json.get('start_time'),
+        'end_time': request.json.get('end_time'),
+        'status': request.json.get('status'),
+        'location': request.json.get('location'),
+        'reason': request.json.get('reason')
+    }
+    #input validation
+    if None in params.values():
+        return ResponseMessage("Required parameters not supplied.", 400)
+    if(params['status'].lower() not in ('canceled', 'pending', 'rejected', 'accepted')):
+        return ResponseMessage("Invalid status field. Must be ('canceled', 'pending', 'rejected', 'accepted')", 400)
+    valid_datetime = r"^\d{4}-\d{2}-\d{2} [0-5][0-9]:[0-5][0-9]:[0-5][0-9]$"
+    valid_address = r"\d{1,5}(\s\w.)?\s(\b\w*\b\s){1,2}\w*\.?" #dangerous regex
+    if(re.search(valid_address, params['location']) == None):
+        return ResponseMessage("Invalid Address. (Developer note, if you think this is a mistake please say something)", 400)
+    if(None in (re.search(valid_datetime, params['start_time']), re.search(valid_datetime, params['end_time']))):
+        return ResponseMessage("Invalid Datetime. Format: (yyyy-mm-dd hh:mm:ss)", 400)
+    try:
+        result = db.session.execute(text("SELECT * FROM patients WHERE patient_id = :patient_id"), params)
+        if(result.first() == None):
+            return ResponseMessage("Invalid patient id.", 400)
+        result = db.session.execute(text("SELECT * FROM doctors WHERE doctor_id = :doctor_id"), params)
+        if(result.first() == None):
+            return ResponseMessage("Invalid doctor id.", 400)
+        #execute query
+        db.session.execute(query, params)
+    except Exception as e:
+        print(e)
+        return ResponseMessage(f"Error Executing Query:\n{e}", 500)
+    else:
+        db.session.commit()
+        return ResponseMessage(f"Appointment entry successfully created (id: {params['appointment_id']})", 201)
+
+@app.route("/appointments/<int:appointment_id>", methods=['PATCH'])
+@swag_from("docs/appointments/patch.yml")
+def update_appointment(appointment_id):
+    #sql query
+    query = text(f"""
+        UPDATE appointments SET
+            doctor_id = {':doctor_id' if request.json.get('doctor_id') != None else 'doctor_id'},
+            patient_id = {':patient_id' if request.json.get('patient_id') != None else 'patient_id'},
+            start_time = {':start_time' if request.json.get('start_time') != None else 'start_time'},
+            end_time = {':end_time' if request.json.get('end_time') != None else 'end_time'},
+            status = {':status' if request.json.get('status') != None else 'status'},
+            location = {':location' if request.json.get('location') != None else 'location'},
+            reason = {':reason' if request.json.get('reason') != None else 'reason'}
+        WHERE appointment_id = :appointment_id
+    """)
+    params = {
+        'appointment_id': appointment_id,
+        'doctor_id': request.json.get('doctor_id'),
+        'patient_id': request.json.get('patient_id'),
+        'start_time': request.json.get('start_time'),
+        'end_time': request.json.get('end_time'),
+        'status': request.json.get('status'),
+        'location': request.json.get('location'),
+        'reason': request.json.get('reason')
+    }
+    #input validation
+    if(db.session.execute(text("SELECT * FROM appointments WHERE appointment_id = :appointment_id"), params).first() == None):
+        return ResponseMessage("Appointment not found.", 404)
+    if all(param == None for param in list(params.values())[1:]):
+        return ResponseMessage("No parameters were passed to update...", 200)
+    if(params['status'] != None and params['status'].lower() not in ('canceled', 'pending', 'rejected', 'accepted')):
+        return ResponseMessage("Invalid status field. Must be ('canceled', 'pending', 'rejected', 'accepted')", 400)
+    valid_datetime = r"^\d{4}-\d{2}-\d{2} [0-5][0-9]:[0-5][0-9]:[0-5][0-9]$"
+    valid_address = r"\d{1,5}(\s\w.)?\s(\b\w*\b\s){1,2}\w*\.?" #dangerous regex
+    if(params['location'] != None and re.search(valid_address, params['location']) == None):
+        return ResponseMessage("Invalid Address. (Developer note, if you think this is a mistake please say something)", 400)
+    if(params['start_time'] != None and re.search(valid_datetime, params['start_time']) == None):
+        return ResponseMessage("Invalid Start Time. Format: (yyyy-mm-dd hh:mm:ss)", 400)
+    if(params['end_time'] != None and re.search(valid_datetime, params['end_time']) == None):
+        return ResponseMessage("Invalid End Time. Format: (yyyy-mm-dd hh:mm:ss)", 400)
+    if(params['doctor_id'] != None and db.session.execute(text("SELECT * FROM doctors WHERE doctor_id = :doctor_id"), params).first() == None):
+        return ResponseMessage("Invalid doctor ID.", 400)
+    if(params['patient_id'] != None and db.session.execute(text("SELECT * FROM patients WHERE patient_id = :patient_id"), params).first() == None):
+        return ResponseMessage("Invalid patient ID.", 400)
+    try:
+        db.session.execute(query, params)
+    except Exception as e:
+        print(e)
+        return ResponseMessage(f"Server/SQL Error. Exeption: \n{e}", 500)
+    else:
+        db.session.commit()
+        return ResponseMessage("Appointment Successfully Updated.", 200) 
 
 @app.route("/patient_progress", methods=['GET'])
 @swag_from('docs/patientprogress/get.yml')
@@ -938,5 +1047,8 @@ def delete_users(user_id):
         db.session.commit()
         return Response(status=200)
     
+def ResponseMessage(message, code):
+    return {'message': message}, code
+
 if __name__ == "__main__":
     app.run(debug=True)

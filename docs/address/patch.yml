@@ -1,0 +1,56 @@
+Address records
+---
+tags:
+    - Services
+description: >
+  Updates an existing address record in the `address` table using the JSON body.
+  
+  Example: A PATCH request to `/address/123` with the following JSON:
+  
+  {
+    "city": "Newark",
+    "country": "USA",
+    "address": "323 Dr Martin Luther King Jr Blvd",
+    "zip": "07102",
+    "address2": ""
+  }
+  
+  updates the address record with ID 123.
+responses:
+  200:
+    description: Address updated successfully.
+  400:
+    description: No update fields provided.
+  404:
+    description: Address not found.
+  500:
+    description: Error updating address.
+parameters:
+  - in: path
+    name: address_id
+    required: true
+    description: The ID of the address to update.
+    schema:
+      type: integer
+  - in: body
+    name: body
+    required: true
+    description: JSON object containing one or more fields to update for the address.
+    schema:
+      type: object
+      properties:
+        city:
+          type: string
+          description: Updated city name.
+        country:
+          type: string
+          description: Updated country name.
+        address:
+          type: string
+          description: Updated street address.
+        zip:
+          type: integer
+          description: Updated zip code.
+        address2:
+          type: string
+          description: Updated secondary address information.

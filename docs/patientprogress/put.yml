@@ -6,7 +6,7 @@ description:
     Creates an patient progress record
 responses:
     201:
-        description: Appointment successfully created.
+        description: patient progress successfully created.
     400:
         description: Client input validation error.
     500:

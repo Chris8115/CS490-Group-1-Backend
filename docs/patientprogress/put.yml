@@ -1,0 +1,41 @@
+Patient Progress records
+---
+tags:
+    - Patients
+description:
+    Creates an patient progress record
+responses:
+    201:
+        description: patient progress successfully created.
+    400:
+        description: Client input validation error.
+    500:
+        description: Server/SQLite error.
+consumes:
+  - application/json
+parameters:
+    - in: body
+      name: patient_progress
+      required: true
+      description: | 
+        patient progress information
+      schema:
+        type: object
+        required:
+          - patient_id
+          - weight
+          - calories
+        properties: 
+          patient_id: 
+            type: integer
+            description: patient ID
+          weight: 
+            type: integer
+            description: weight
+          calories: 
+            type: integer
+            description: calories
+          Notes: 
+            type: string
+            description: notes
+

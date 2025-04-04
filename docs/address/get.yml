@@ -35,6 +35,12 @@ parameters:
       schema:
         type: string
     - in: query
+      name: state
+      required: false
+      description: includes results matching `state` column (2 character abbrev.)
+      schema:
+        type: string
+    - in: query
       name: zip
       required: false
       description: includes results matching `zip` column

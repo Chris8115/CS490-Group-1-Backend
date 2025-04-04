@@ -1090,6 +1090,193 @@ def delete_users(user_id):
         db.session.commit()
         return Response(status=200)
     
+@app.route("/users/<string:role>", methods=['PUT'])
+@swag_from('docs/users/put.yml')
+def create_user(role):
+    #sql query
+    user_query = text("""
+        INSERT INTO users (user_id, email, password, first_name, last_name, phone_number, role, created_at)
+        VALUES (
+            :user_id,
+            :email,
+            :password,
+            :first_name,
+            :last_name,
+            :phone_number,
+            :role,
+            CURRENT_TIMESTAMP)
+    """)
+    patient_query = text("""
+        INSERT INTO patients (patient_id, address_id, medical_history, creditcard_id)
+        VALUES (
+            :patient_id,
+            :address_id,
+            :medical_history,
+            :creditcard_id
+        )
+    """)
+    pharmacist_query = text("""
+        INSERT INTO pharmacists (pharmacist_id, pharmacy_location)
+        VALUES (:pharmacist_id, :pharmacy_location)
+    """)
+    doctor_query = text("""
+        INSERT INTO doctors (doctor_id, license_number, specialization, profile)
+        VALUES (
+            :doctor_id,
+            :license_number,
+            :specialization,
+            :profile
+        )
+    """)
+    creditcard_query = text("""
+        INSERT INTO credit_card (creditcard_id, cardnumber, cvv, exp_date)
+        VALUES (
+            :creditcard_id,
+            :cardnumber,
+            :cvv,
+            :exp_date
+        )
+    """)
+    address_query = text("""
+        INSERT INTO address (address_id, city, country, address2, address, zip, state)
+        VALUES (
+            :address_id,
+            :city, 
+            :country,
+            :address2,
+            :address,
+            :zip,
+            :state
+        )
+    """)
+    # NOTE: doing appointment_id this way could bring about a race condition.... but lets be real this is never happening.
+    user_json = request.json.get('user')
+    doctor_json = request.json.get('doctor')
+    patient_json = request.json.get('patient')
+    pharmacist_json = request.json.get('pharmacist')
+    address_json = request.json.get("address")
+    creditcard_json = request.json.get("credit_card")
+    
+    user_params = {
+        'user_id': (db.session.execute(text("SELECT MAX(user_id) + 1 AS user_id FROM users")).first()).user_id,
+        'email': user_json.get('email'),
+        'password': user_json.get('password'),
+        'first_name': user_json.get('first_name'),
+        'last_name': user_json.get('last_name'),
+        'phone_number': user_json.get('phone_number'),
+        'role': role,
+    }
+    doctor_params = {
+        'doctor_id': user_params['user_id'],
+        'license_number': doctor_json.get('license_number'),
+        'specialization': doctor_json.get('specialization'),
+        'profile': doctor_json.get('profile') if doctor_json.get('profile') != "" else "N/A",
+    } if doctor_json != None else None 
+    pharmacist_params = {
+        'pharmacist_id': user_params['user_id'],
+        'pharmacy_location': pharmacist_json.get('pharmacy_location'),
+    } if pharmacist_json != None else None 
+    address_params = {
+        'address_id': (db.session.execute(text("SELECT MAX(address_id) + 1 AS address_id FROM address")).first()).address_id,
+        'address2': address_json.get('address2'),
+        'state': address_json.get('state'),
+        'city': address_json.get('city'),
+        'country': address_json.get('country'),
+        'address': address_json.get('address'),
+        'zip': address_json.get('zip'),
+    } if address_json != None else None 
+    creditcard_params = {
+        'creditcard_id': (db.session.execute(text("SELECT MAX(creditcard_id) + 1 AS creditcard_id FROM credit_card")).first()).creditcard_id,
+        'cardnumber': creditcard_json.get('cardnumber'),
+        'cvv': creditcard_json.get('cvv'),
+        'exp_date': creditcard_json.get('exp_date'),
+    } if creditcard_json != None else None 
+    patient_params = {
+        'patient_id': user_params['user_id'],
+        'address_id': address_params['address_id'],
+        'medical_history': patient_json.get('medical_history'),
+        'creditcard_id': creditcard_params['creditcard_id'],
+    } if patient_json != None else None 
+    #input validation
+    valid_email = r"^.+\d*@.+[.][a-zA-Z]{2,4}$" # tried looking up a real email regex and its a nightmare. this will suffice. hopefully.
+    valid_phone = r"^\d{10}$"
+    valid_license = r"^\d{9}$"
+    valid_address = r"\d{1,5}(\s\w.)?\s(\b\w*\b\s){1,2}\w*\.?" #dangerous regex
+    valid_zip = r"^([A-A]{1,2}\d{1,3}|\d{1,3}[A-A]{1,2}|\d{1,5})$"
+    valid_cardnum = r"^\d{14,18}$"
+    valid_cvv = r"^\d{3}$"
+    valid_date = r"\d{4}-\d{2}-\d{2}"
+    if None in list(user_params.values())[1:]:
+        return ResponseMessage("Required parameters missing from user fields.", 400)
+    user_params['phone_number'] = re.sub(r"(-|\s|\)|\()", "", user_params['phone_number'])
+    user_params['role'] = user_params['role'].lower()
+    if(re.search(valid_email, user_params['email']) == None):
+        return ResponseMessage("Invalid email.", 400)
+    if(len(user_params['password']) < 4):
+        return ResponseMessage("Password must be at least 4 characters.", 400)
+    if(len(user_params['first_name']) < 1 or len(user_params['last_name']) < 1):
+        return ResponseMessage("Name fields must be non-empty.", 400)
+    if(re.search(valid_phone, user_params['phone_number']) == None):
+        return ResponseMessage("Invalid phone number.", 400)
+    if(user_params['role'] not in ('doctor', 'patient', 'pharmacist')):
+        return ResponseMessage("Invalid user role. (must be 'doctor', 'patient', or 'pharmacist')", 400)
+    #input validation based on role
+    if(user_params['role'] == 'doctor'):
+        if(re.search(valid_license, str(doctor_params['license_number'])) == None):
+            return ResponseMessage("Invalid license number, must be 9 digits", 400)
+        if(len(doctor_params['specialization']) == 0):
+            return ResponseMessage("Specialization must be nonempty", 400)
+    elif(user_params['role'] == 'patient'):
+        #user fields
+        if(None in patient_params.values()):
+            return ResponseMessage("Required parameters missing from patient fields.", 400)
+        if(patient_params['medical_history'] == ""):
+            return ResponseMessage("Unless newborn babies are beginning their weight loss journey young, medical history should be non-empty", 400)
+        #address fields
+        if(None in list(address_params.values())[3:]):
+            return ResponseMessage("Required parameters missing from address fields.", 400)
+        address_params['address2'] = "" if address_params['address2'] == None else address_params['address2']
+        address_params['state'] = "" if address_params['state'] == None else address_params['state'].upper()
+        if(re.search(valid_address, address_params['address']) == None):
+            return ResponseMessage("Invalid street address format.", 400)
+        if(len(address_params['city']) == 0):
+            return ResponseMessage("City must be non-empty", 400)
+        if(len(address_params['country']) == 0):
+            return ResponseMessage("Country must be non-empty", 400)
+        if(re.search(valid_zip, str(address_params['zip'])) == None):
+            return ResponseMessage("Invalid zip code format.", 400)
+        #credit card fields
+        if(None in list(creditcard_params.values())[1:]):
+            return ResponseMessage("Required parameters missing from credit card fields.", 400)
+        if(re.search(valid_date, creditcard_params['exp_date']) == None):
+            return ResponseMessage("Invalid expiration date.", 400)
+        if(re.search(valid_cardnum, str(creditcard_params['cardnumber'])) == None):
+            return ResponseMessage("Invalid creditcard number.", 400)
+        if(re.search(valid_cvv, str(creditcard_params['cvv'])) == None):
+            return ResponseMessage("Invalid credit card CVV.", 400)
+    elif(user_params['role'] == 'pharmacist'):
+        if None in pharmacist_params.values():
+            return ResponseMessage("Required parameters missing from pharmacist fields.", 400)
+        if(re.search(valid_address, pharmacist_params['pharmacy_location']) == None):
+            return ResponseMessage("Invalid address.", 400)
+    #execute query
+    try:
+        db.session.execute(user_query, user_params)
+        if(user_params['role'] == 'pharmacist'):
+            db.session.execute(pharmacist_query, pharmacist_params)
+        elif(user_params['role'] == 'doctor'):
+            db.session.execute(doctor_query, doctor_params)
+        elif(user_params['role'] == 'patient'):
+            db.session.execute(address_query, address_params)
+            db.session.execute(creditcard_query, creditcard_params)
+            db.session.execute(patient_query, patient_params)
+    except Exception as e:
+        print(e)
+        return ResponseMessage(f"Server/SQL Error. Exception: \n{e}", 500)
+    else:
+        db.session.commit()
+        return ResponseMessage(f"User succesfully created. (id: {user_params['user_id']})", 201)
+        
 def ResponseMessage(message, code):
     return {'message': message}, code
 

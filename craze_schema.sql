@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS "address" (
 	"address2"	TEXT,
 	"address"	TEXT NOT NULL,
 	"zip"	INTEGER NOT NULL,
+	"state"	TEXT NOT NULL DEFAULT ,
 	CONSTRAINT "address_pk" PRIMARY KEY("address_id")
 );
 CREATE TABLE IF NOT EXISTS "appointments" (

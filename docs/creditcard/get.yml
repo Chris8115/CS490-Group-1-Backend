@@ -25,6 +25,6 @@ parameters:
     - in: query
       name: exp_date
       required: false
-      description: includes results like `exp_date` column (A date of format mm/dd/yyyy)
+      description: includes results like `exp_date` column (A date of format yyyy-mm-dd)
       schema:
         type: string

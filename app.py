@@ -697,10 +697,12 @@ def get_address():
         'city': "" if request.args.get('city') == None else '%' + request.args.get('city') + '%',
         'addr': "" if request.args.get('address') == None else '%' + request.args.get('address') + '%',
         'addr2': "" if request.args.get('address2') == None else '%' + request.args.get('address2') + '%',
+        'state': "" if request.args.get('state') == None else request.args.get('state'),
     }
     if(params['aid'] != "" or params['zip'] != "" or params['city'] != "" or params['addr'] != "" or params['addr2'] != ""):
         query += ("WHERE " + ("address_id = :aid\n" if params['aid'] != "" else "TRUE\n"))
         query += ("AND " + ("zip = :zip\n" if params['zip'] != "" else "TRUE\n"))
+        query += ("AND " + ("state = :state\n" if params['state'] != "" else "TRUE\n"))
         query += ("AND " + ("city LIKE :city\n" if params['city'] != "" else "TRUE\n"))
         query += ("AND " + ("address LIKE :addr\n" if params['addr'] != "" else "TRUE\n"))
         query += ("AND " + ("address2 LIKE :addr2\n" if params['addr2'] != "" else "TRUE\n"))
@@ -713,6 +715,7 @@ def get_address():
             'city': row.city,
             'address2': row.address2,
             'address': row.address,
+            'state': row.state,
             'zip': row.zip
         })
     return json, 200

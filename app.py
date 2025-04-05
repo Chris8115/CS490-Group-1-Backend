@@ -211,6 +211,8 @@ def update_prescriptions(prescription_id):
         return ResponseMessage("Prescription not found.", 404)
     if all(param == None for param in list(params.values())[1:]):
         return ResponseMessage("No parameters were passed to update...", 200)
+    if request.json.get('quantity') <= 0:
+        return ResponseMessage("Quantity must be >0", 400)
     if(params['status'] != None and params['status'].lower() not in ('canceled', 'pending', 'rejected', 'accepted')):
         return ResponseMessage("Invalid status field. Must be ('canceled', 'pending', 'rejected', 'accepted')", 400)
     valid_datetime = r"^\d{4}-\d{2}-\d{2} [0-5][0-9]:[0-5][0-9]:[0-5][0-9]$"
@@ -269,6 +271,8 @@ def put_prescriptions():
         return ResponseMessage("Invalid Datetime. Format: (yyyy-mm-dd hh:mm:ss)", 400)
     if (request.json.get('status')).lower() not in ["accepted", "rejected", "pending", "canceled"]:
         return ResponseMessage("Invalid Status. Format: (`accepted`, `rejected`, `pending`, `canceled`)", 400)
+    if request.json.get('quantity') <= 0:
+        return ResponseMessage("Quantity must be > 0", 400)
     try:
         result = db.session.execute(text("SELECT * FROM patients WHERE patient_id = :patient_id"), params)
         if(result.first() == None):

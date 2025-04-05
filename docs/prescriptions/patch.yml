@@ -3,17 +3,25 @@ Prescriptions records
 tags:
     - Pharmacy
 description:
-    Creates prescription record
+    Updates prescription record. All fields are optional.
 responses:
-    201:
-        description: Prescription successfully created.
+    200:
+        description: prescription successfully updated.
     400:
         description: Client input validation error.
+    404:
+        description: prescription ID not found.
     500:
         description: Server/SQLite error.
 consumes:
   - application/json
 parameters:
+    - in: path
+      name: prescription_id
+      required: true
+      description: prescription ID to update
+      schema:
+        type: integer
     - in: body
       name: prescription
       required: true
@@ -21,37 +29,29 @@ parameters:
         Prescription information
       schema:
         type: object
-        required: 
-          - doctor_id
-          - medication_id
-          - patient_id
-          - pharmacist_id
-          - status
-          - date_prescribed
-          - instructions
-          - quantity
         properties: 
+          patient_id: 
+            type: integer
+            description: Patient ID
           doctor_id: 
             type: integer
             description: Doctor ID
           medication_id: 
             type: integer
-            description: medication ID
-          patient_id: 
-            type: integer
-            description: Patient ID
-          pharmacist_id: 
-            type: integer
-            description: Pharmacist ID
-          status: 
-            type: string
-            description: Status of types (`accepted`, `rejected`, `pending`, `canceled`)
+            description: Medication ID
           date_prescribed: 
             type: string
             description: Prescription prescribed time (`yyyy-mm-dd hh:mm:ss`)
-          instructions:
+          status: 
+            type: string
+            description: Status of types (`accepted`, `rejected`, `pending`, `canceled`)
+          instructions: 
             type: string
             description: Instructions
-          quantity:
-            type: integer
+          quantity: 
+            type: string
             description: quantity
+          pharmacist_id: 
+            type: integer
+            description: Pharmacist ID
+

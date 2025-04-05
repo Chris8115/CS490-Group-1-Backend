@@ -179,6 +179,60 @@ def delete_prescriptions(prescription_id):
         db.session.commit()
         return Response(status=200)
 
+@app.route("/prescriptions/<int:prescription_id>", methods=['PATCH'])
+@swag_from('docs/prescriptions/patch.yml')
+def update_prescriptions(prescription_id):
+    #sql query
+    query = text(f"""
+        UPDATE prescriptions SET
+            doctor_id = {':doctor_id' if request.json.get('doctor_id') != None else 'doctor_id'},
+            patient_id = {':patient_id' if request.json.get('patient_id') != None else 'patient_id'},
+            medication_id = {':medication_id' if request.json.get('medication_id') != None else 'medication_id'},
+            instructions = {':instructions' if request.json.get('instructions') != None else 'instructions'},
+            status = {':status' if request.json.get('status') != None else 'status'},
+            date_prescribed = {':date_prescribed' if request.json.get('date_prescribed') != None else 'date_prescribed'},
+            quantity = {':quantity' if request.json.get('quantity') != None else 'quantity'},
+            pharmacist_id = {':pharmacist_id' if request.json.get('pharmacist_id') != None else 'pharmacist_id'}
+        WHERE prescription_id = :prescription_id
+    """)
+    params = {
+        'prescription_id': prescription_id,
+        'doctor_id': request.json.get('doctor_id'),
+        'patient_id': request.json.get('patient_id'),
+        'medication_id': request.json.get('medication_id'),
+        'instructions': request.json.get('instructions'),
+        'status': request.json.get('status'),
+        'date_prescribed': request.json.get('date_prescribed'),
+        'quantity': request.json.get('quantity'),
+        'pharmacist_id': request.json.get('pharmacist_id')
+    }
+    #input validation
+    if(db.session.execute(text("SELECT * FROM prescriptions WHERE prescription_id = :prescription_id"), params).first() == None):
+        return ResponseMessage("Prescription not found.", 404)
+    if all(param == None for param in list(params.values())[1:]):
+        return ResponseMessage("No parameters were passed to update...", 200)
+    if(params['status'] != None and params['status'].lower() not in ('canceled', 'pending', 'rejected', 'accepted')):
+        return ResponseMessage("Invalid status field. Must be ('canceled', 'pending', 'rejected', 'accepted')", 400)
+    valid_datetime = r"^\d{4}-\d{2}-\d{2} [0-5][0-9]:[0-5][0-9]:[0-5][0-9]$"
+    if(params['date_prescribed'] != None and re.search(valid_datetime, params['date_prescribed']) == None):
+        return ResponseMessage("Invalid Start Time. Format: (yyyy-mm-dd hh:mm:ss)", 400)
+    if(params['doctor_id'] != None and db.session.execute(text("SELECT * FROM doctors WHERE doctor_id = :doctor_id"), params).first() == None):
+        return ResponseMessage("Invalid doctor ID.", 400)
+    if(params['patient_id'] != None and db.session.execute(text("SELECT * FROM patients WHERE patient_id = :patient_id"), params).first() == None):
+        return ResponseMessage("Invalid patient ID.", 400)
+    if(params['medication_id'] != None and db.session.execute(text("SELECT * FROM medications WHERE medication_id = :medication_id"), params).first() == None):
+        return ResponseMessage("Invalid medication ID.", 400)
+    if(params['pharmacist_id'] != None and db.session.execute(text("SELECT * FROM pharmacists WHERE pharmacist_id = :pharmacist_id"), params).first() == None):
+        return ResponseMessage("Invalid pharmacist ID.", 400)
+    try:
+        db.session.execute(query, params)
+    except Exception as e:
+        print(e)
+        return ResponseMessage(f"Server/SQL Error. Exeption: \n{e}", 500)
+    else:
+        db.session.commit()
+        return ResponseMessage("Prescription Successfully Updated.", 200) 
+
 @app.route("/prescriptions", methods=['PUT'])
 @swag_from('docs/prescriptions/put.yml')
 def put_prescriptions():
@@ -235,7 +289,7 @@ def put_prescriptions():
         return ResponseMessage(f"Error Executing Query:\n{e}", 500)
     else:
         db.session.commit()
-        return ResponseMessage(f"Appointment entry successfully created (id: {params['prescription_id']})", 201)
+        return ResponseMessage(f"Prescription entry successfully created (id: {params['prescription_id']})", 201)
 
 @app.route("/appointments", methods=['GET'])
 @swag_from('docs/appointments/get.yml')

@@ -179,6 +179,122 @@ def delete_prescriptions(prescription_id):
         db.session.commit()
         return Response(status=200)
 
+@app.route("/prescriptions/<int:prescription_id>", methods=['PATCH'])
+@swag_from('docs/prescriptions/patch.yml')
+def update_prescriptions(prescription_id):
+    #sql query
+    query = text(f"""
+        UPDATE prescriptions SET
+            doctor_id = {':doctor_id' if request.json.get('doctor_id') != None else 'doctor_id'},
+            patient_id = {':patient_id' if request.json.get('patient_id') != None else 'patient_id'},
+            medication_id = {':medication_id' if request.json.get('medication_id') != None else 'medication_id'},
+            instructions = {':instructions' if request.json.get('instructions') != None else 'instructions'},
+            status = {':status' if request.json.get('status') != None else 'status'},
+            date_prescribed = {':date_prescribed' if request.json.get('date_prescribed') != None else 'date_prescribed'},
+            quantity = {':quantity' if request.json.get('quantity') != None else 'quantity'},
+            pharmacist_id = {':pharmacist_id' if request.json.get('pharmacist_id') != None else 'pharmacist_id'}
+        WHERE prescription_id = :prescription_id
+    """)
+    params = {
+        'prescription_id': prescription_id,
+        'doctor_id': request.json.get('doctor_id'),
+        'patient_id': request.json.get('patient_id'),
+        'medication_id': request.json.get('medication_id'),
+        'instructions': request.json.get('instructions'),
+        'status': request.json.get('status'),
+        'date_prescribed': request.json.get('date_prescribed'),
+        'quantity': request.json.get('quantity'),
+        'pharmacist_id': request.json.get('pharmacist_id')
+    }
+    #input validation
+    if(db.session.execute(text("SELECT * FROM prescriptions WHERE prescription_id = :prescription_id"), params).first() == None):
+        return ResponseMessage("Prescription not found.", 404)
+    if all(param == None for param in list(params.values())[1:]):
+        return ResponseMessage("No parameters were passed to update...", 200)
+    if request.json.get('quantity') <= 0:
+        return ResponseMessage("Quantity must be >0", 400)
+    if(params['status'] != None and params['status'].lower() not in ('canceled', 'pending', 'rejected', 'accepted')):
+        return ResponseMessage("Invalid status field. Must be ('canceled', 'pending', 'rejected', 'accepted')", 400)
+    valid_datetime = r"^\d{4}-\d{2}-\d{2} [0-5][0-9]:[0-5][0-9]:[0-5][0-9]$"
+    if(params['date_prescribed'] != None and re.search(valid_datetime, params['date_prescribed']) == None):
+        return ResponseMessage("Invalid Start Time. Format: (yyyy-mm-dd hh:mm:ss)", 400)
+    if(params['doctor_id'] != None and db.session.execute(text("SELECT * FROM doctors WHERE doctor_id = :doctor_id"), params).first() == None):
+        return ResponseMessage("Invalid doctor ID.", 400)
+    if(params['patient_id'] != None and db.session.execute(text("SELECT * FROM patients WHERE patient_id = :patient_id"), params).first() == None):
+        return ResponseMessage("Invalid patient ID.", 400)
+    if(params['medication_id'] != None and db.session.execute(text("SELECT * FROM medications WHERE medication_id = :medication_id"), params).first() == None):
+        return ResponseMessage("Invalid medication ID.", 400)
+    if(params['pharmacist_id'] != None and db.session.execute(text("SELECT * FROM pharmacists WHERE pharmacist_id = :pharmacist_id"), params).first() == None):
+        return ResponseMessage("Invalid pharmacist ID.", 400)
+    try:
+        db.session.execute(query, params)
+    except Exception as e:
+        print(e)
+        return ResponseMessage(f"Server/SQL Error. Exeption: \n{e}", 500)
+    else:
+        db.session.commit()
+        return ResponseMessage("Prescription Successfully Updated.", 200) 
+
+@app.route("/prescriptions", methods=['PUT'])
+@swag_from('docs/prescriptions/put.yml')
+def put_prescriptions():
+    query = text("""
+        INSERT INTO prescriptions (prescription_id, doctor_id, patient_id, medication_id, instructions, date_prescribed, status, quantity, pharmacist_id)
+        VALUES (
+            :prescription_id,
+            :doctor_id,
+            :patient_id,
+            :medication_id,
+            :instructions,
+            DATETIME(:date_prescribed),
+            :status,
+            :quantity,
+            :pharmacist_id)
+    """)
+    # NOTE: doing prescription_id this way could bring about a race condition.... but lets be real this is never happening.
+    params = {
+        'prescription_id': (db.session.execute(text("SELECT MAX(prescription_id) + 1 AS prescription_id FROM prescriptions")).first()).prescription_id,
+        'doctor_id': request.json.get('doctor_id'),
+        'patient_id': request.json.get('patient_id'),
+        'medication_id': request.json.get('medication_id'),
+        'instructions': request.json.get('instructions'),
+        'date_prescribed': request.json.get('date_prescribed'),
+        'status': request.json.get('status'),
+        'quantity': request.json.get('quantity'),
+        'pharmacist_id': request.json.get('pharmacist_id')
+    }
+    #input validation
+    if None in params.values():
+        return ResponseMessage("Required parameters not supplied.", 400)
+    valid_datetime = r"^\d{4}-\d{2}-\d{2} [0-5][0-9]:[0-5][0-9]:[0-5][0-9]$"
+    if((re.search(valid_datetime, request.json.get('date_prescribed'))) is None):
+        return ResponseMessage("Invalid Datetime. Format: (yyyy-mm-dd hh:mm:ss)", 400)
+    if (request.json.get('status')).lower() not in ["accepted", "rejected", "pending", "canceled"]:
+        return ResponseMessage("Invalid Status. Format: (`accepted`, `rejected`, `pending`, `canceled`)", 400)
+    if request.json.get('quantity') <= 0:
+        return ResponseMessage("Quantity must be > 0", 400)
+    try:
+        result = db.session.execute(text("SELECT * FROM patients WHERE patient_id = :patient_id"), params)
+        if(result.first() == None):
+            return ResponseMessage("Invalid patient id.", 400)
+        result = db.session.execute(text("SELECT * FROM doctors WHERE doctor_id = :doctor_id"), params)
+        if(result.first() == None):
+            return ResponseMessage("Invalid doctor id.", 400)
+        result = db.session.execute(text("SELECT * FROM pharmacists WHERE pharmacist_id = :pharmacist_id"), params)
+        if(result.first() == None):
+            return ResponseMessage("Invalid pharmacist id.", 400)
+        result = db.session.execute(text("SELECT * FROM medications WHERE medication_id = :medication_id"), params)
+        if(result.first() == None):
+            return ResponseMessage("Invalid medication id.", 400)
+        #execute query
+        db.session.execute(query, params)
+    except Exception as e:
+        print(e)
+        return ResponseMessage(f"Error Executing Query:\n{e}", 500)
+    else:
+        db.session.commit()
+        return ResponseMessage(f"Prescription entry successfully created (id: {params['prescription_id']})", 201)
+
 @app.route("/appointments", methods=['GET'])
 @swag_from('docs/appointments/get.yml')
 def appointments():

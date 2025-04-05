@@ -1,15 +1,17 @@
 BEGIN TRANSACTION;
-CREATE TABLE IF NOT EXISTS "address" (
+DROP TABLE IF EXISTS "address";
+CREATE TABLE "address" (
 	"address_id"	INTEGER NOT NULL,
 	"city"	TEXT NOT NULL,
 	"country"	TEXT NOT NULL,
 	"address2"	TEXT,
 	"address"	TEXT NOT NULL,
 	"zip"	INTEGER NOT NULL,
-	"state"	TEXT NOT NULL DEFAULT ,
+	"state"	TEXT NOT NULL DEFAULT 'N/A',
 	CONSTRAINT "address_pk" PRIMARY KEY("address_id")
 );
-CREATE TABLE IF NOT EXISTS "appointments" (
+DROP TABLE IF EXISTS "appointments";
+CREATE TABLE "appointments" (
 	"appointment_id"	INTEGER NOT NULL,
 	"doctor_id"	INTEGER,
 	"patient_id"	INTEGER,
@@ -23,14 +25,16 @@ CREATE TABLE IF NOT EXISTS "appointments" (
 	CONSTRAINT "doctor_id" FOREIGN KEY("doctor_id") REFERENCES "users"("user_id"),
 	CONSTRAINT "patient_id" FOREIGN KEY("patient_id") REFERENCES "users"("user_id")
 );
-CREATE TABLE IF NOT EXISTS "credit_card" (
+DROP TABLE IF EXISTS "credit_card";
+CREATE TABLE "credit_card" (
 	"creditcard_id"	INTEGER NOT NULL,
 	"cardnumber"	INTEGER NOT NULL,
 	"cvv"	INTEGER NOT NULL,
 	"exp_date"	DATE NOT NULL,
 	CONSTRAINT "credit_credit_pk" PRIMARY KEY("creditcard_id")
 );
-CREATE TABLE IF NOT EXISTS "doctor_patient_relationship" (
+DROP TABLE IF EXISTS "doctor_patient_relationship";
+CREATE TABLE "doctor_patient_relationship" (
 	"doctor_id"	INTEGER,
 	"patient_id"	INTEGER,
 	"status"	TEXT NOT NULL,
@@ -38,7 +42,8 @@ CREATE TABLE IF NOT EXISTS "doctor_patient_relationship" (
 	CONSTRAINT "doctor_id" FOREIGN KEY("doctor_id") REFERENCES "users"("user_id"),
 	CONSTRAINT "patient_id" FOREIGN KEY("patient_id") REFERENCES "users"("user_id")
 );
-CREATE TABLE IF NOT EXISTS "doctors" (
+DROP TABLE IF EXISTS "doctors";
+CREATE TABLE "doctors" (
 	"doctor_id"	INTEGER NOT NULL,
 	"license_number"	INTEGER NOT NULL,
 	"specialization"	TEXT NOT NULL,
@@ -46,13 +51,15 @@ CREATE TABLE IF NOT EXISTS "doctors" (
 	PRIMARY KEY("doctor_id"),
 	CONSTRAINT "doctor_id" FOREIGN KEY("doctor_id") REFERENCES "users"("user_id")
 );
-CREATE TABLE IF NOT EXISTS "exercise_plans" (
+DROP TABLE IF EXISTS "exercise_plans";
+CREATE TABLE "exercise_plans" (
 	"exercise_id"	INTEGER NOT NULL,
 	"title"	TEXT NOT NULL,
 	"description"	TEXT NOT NULL,
 	CONSTRAINT "exercise_plans_pk" PRIMARY KEY("exercise_id")
 );
-CREATE TABLE IF NOT EXISTS "forum_comments" (
+DROP TABLE IF EXISTS "forum_comments";
+CREATE TABLE "forum_comments" (
 	"comment_id"	INTEGER NOT NULL,
 	"post_id"	INTEGER,
 	"user_id"	INTEGER,
@@ -62,7 +69,8 @@ CREATE TABLE IF NOT EXISTS "forum_comments" (
 	CONSTRAINT "post_id" FOREIGN KEY("post_id") REFERENCES "forum_posts"("post_id"),
 	CONSTRAINT "user_id" FOREIGN KEY("user_id") REFERENCES "users"("user_id")
 );
-CREATE TABLE IF NOT EXISTS "forum_posts" (
+DROP TABLE IF EXISTS "forum_posts";
+CREATE TABLE "forum_posts" (
 	"post_id"	INTEGER NOT NULL,
 	"user_id"	INTEGER,
 	"title"	TEXT NOT NULL,
@@ -72,7 +80,8 @@ CREATE TABLE IF NOT EXISTS "forum_posts" (
 	CONSTRAINT "forum_posts_pk" PRIMARY KEY("post_id"),
 	CONSTRAINT "user_id" FOREIGN KEY("user_id") REFERENCES "users"("user_id")
 );
-CREATE TABLE IF NOT EXISTS "inventory" (
+DROP TABLE IF EXISTS "inventory";
+CREATE TABLE "inventory" (
 	"inventory_id"	INTEGER NOT NULL,
 	"medication_id"	INTEGER NOT NULL,
 	"stock"	INTEGER NOT NULL,
@@ -80,13 +89,15 @@ CREATE TABLE IF NOT EXISTS "inventory" (
 	CONSTRAINT "inventory_pk" PRIMARY KEY("inventory_id"),
 	CONSTRAINT "medication_id" FOREIGN KEY("medication_id") REFERENCES "medications"("medication_id")
 );
-CREATE TABLE IF NOT EXISTS "medications" (
+DROP TABLE IF EXISTS "medications";
+CREATE TABLE "medications" (
 	"medication_id"	INTEGER NOT NULL,
 	"name"	TEXT NOT NULL,
 	"description"	TEXT NOT NULL,
 	CONSTRAINT "medications_pk" PRIMARY KEY("medication_id")
 );
-CREATE TABLE IF NOT EXISTS "patient_exercise_assignments" (
+DROP TABLE IF EXISTS "patient_exercise_assignments";
+CREATE TABLE "patient_exercise_assignments" (
 	"assignment_id"	INTEGER NOT NULL,
 	"patient_id"	INTEGER,
 	"doctor_id"	INTEGER,
@@ -98,7 +109,8 @@ CREATE TABLE IF NOT EXISTS "patient_exercise_assignments" (
 	FOREIGN KEY("exercise_id") REFERENCES "exercise_plans"("exercise_id"),
 	CONSTRAINT "patient_id" FOREIGN KEY("patient_id") REFERENCES "users"("user_id")
 );
-CREATE TABLE IF NOT EXISTS "patient_progress" (
+DROP TABLE IF EXISTS "patient_progress";
+CREATE TABLE "patient_progress" (
 	"progress_id"	INTEGER NOT NULL,
 	"patient_id"	INTEGER,
 	"date_logged"	TIMESTAMP NOT NULL,
@@ -108,22 +120,26 @@ CREATE TABLE IF NOT EXISTS "patient_progress" (
 	CONSTRAINT "patient_progress_pk" PRIMARY KEY("progress_id"),
 	CONSTRAINT "patient_id" FOREIGN KEY("patient_id") REFERENCES "users"("user_id")
 );
-CREATE TABLE IF NOT EXISTS "patients" (
+DROP TABLE IF EXISTS "patients";
+CREATE TABLE "patients" (
 	"patient_id"	INTEGER NOT NULL,
 	"address_id"	INTEGER NOT NULL,
 	"medical_history"	TEXT NOT NULL,
 	"creditcard_id"	INTEGER NOT NULL,
+	"ssn"	INTEGER NOT NULL DEFAULT 0,
 	PRIMARY KEY("patient_id"),
 	CONSTRAINT "address_id" FOREIGN KEY("address_id") REFERENCES "address"("address_id"),
 	CONSTRAINT "creditcard_id" FOREIGN KEY("creditcard_id") REFERENCES "credit_card"("creditcard_id"),
 	CONSTRAINT "patient_id" FOREIGN KEY("patient_id") REFERENCES "users"("user_id")
 );
-CREATE TABLE IF NOT EXISTS "pharmacists" (
+DROP TABLE IF EXISTS "pharmacists";
+CREATE TABLE "pharmacists" (
 	"pharmacist_id"	INTEGER NOT NULL,
 	"pharmacy_location"	TEXT NOT NULL,
 	CONSTRAINT "pharmacists_pk" PRIMARY KEY("pharmacist_id")
 );
-CREATE TABLE IF NOT EXISTS "prescriptions" (
+DROP TABLE IF EXISTS "prescriptions";
+CREATE TABLE "prescriptions" (
 	"prescription_id"	INTEGER NOT NULL,
 	"doctor_id"	INTEGER,
 	"patient_id"	INTEGER,
@@ -139,7 +155,8 @@ CREATE TABLE IF NOT EXISTS "prescriptions" (
 	FOREIGN KEY("patient_id") REFERENCES "patients"("patient_id"),
 	FOREIGN KEY("pharmacist_id") REFERENCES "pharmacists"("pharmacist_id")
 );
-CREATE TABLE IF NOT EXISTS "reviews" (
+DROP TABLE IF EXISTS "reviews";
+CREATE TABLE "reviews" (
 	"review_id"	INTEGER NOT NULL,
 	"patient_id"	INTEGER,
 	"doctor_id"	INTEGER,
@@ -150,14 +167,16 @@ CREATE TABLE IF NOT EXISTS "reviews" (
 	CONSTRAINT "doctor_id" FOREIGN KEY("doctor_id") REFERENCES "users"("user_id"),
 	CONSTRAINT "patient_id" FOREIGN KEY("patient_id") REFERENCES "users"("user_id")
 );
-CREATE TABLE IF NOT EXISTS "saved_posts" (
+DROP TABLE IF EXISTS "saved_posts";
+CREATE TABLE "saved_posts" (
 	"user_id"	INTEGER,
 	"post_id"	INTEGER,
 	"saved_at"	TIMESTAMP NOT NULL,
 	CONSTRAINT "post_id" FOREIGN KEY("post_id") REFERENCES "forum_posts"("post_id"),
 	CONSTRAINT "user_id" FOREIGN KEY("user_id") REFERENCES "users"("user_id")
 );
-CREATE TABLE IF NOT EXISTS "transactions" (
+DROP TABLE IF EXISTS "transactions";
+CREATE TABLE "transactions" (
 	"transaction_id"	INTEGER NOT NULL,
 	"patient_id"	INTEGER,
 	"doctor_id"	INTEGER,
@@ -171,7 +190,8 @@ CREATE TABLE IF NOT EXISTS "transactions" (
 	CONSTRAINT "doctor_id" FOREIGN KEY("doctor_id") REFERENCES "doctors"("doctor_id"),
 	CONSTRAINT "customer_id" FOREIGN KEY("patient_id") REFERENCES "patients"("patient_id")
 );
-CREATE TABLE IF NOT EXISTS "users" (
+DROP TABLE IF EXISTS "users";
+CREATE TABLE "users" (
 	"user_id"	INTEGER NOT NULL,
 	"email"	TEXT NOT NULL,
 	"password"	TEXT NOT NULL,

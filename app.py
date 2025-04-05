@@ -266,6 +266,8 @@ def add_appointment():
         return ResponseMessage("Invalid status field. Must be ('canceled', 'pending', 'rejected', 'accepted')", 400)
     valid_datetime = r"^\d{4}-\d{2}-\d{2} [0-5][0-9]:[0-5][0-9]:[0-5][0-9]$"
     valid_address = r"\d{1,5}(\s\w.)?\s(\b\w*\b\s){1,2}\w*\.?" #dangerous regex
+    if(len(params['reason']) == 0):
+        return ResponseMessage("Reason must be non-empty.", 400)
     if(re.search(valid_address, params['location']) == None):
         return ResponseMessage("Invalid Address. (Developer note, if you think this is a mistake please say something)", 400)
     if(None in (re.search(valid_datetime, params['start_time']), re.search(valid_datetime, params['end_time']))):
@@ -320,6 +322,8 @@ def update_appointment(appointment_id):
         return ResponseMessage("Invalid status field. Must be ('canceled', 'pending', 'rejected', 'accepted')", 400)
     valid_datetime = r"^\d{4}-\d{2}-\d{2} [0-5][0-9]:[0-5][0-9]:[0-5][0-9]$"
     valid_address = r"\d{1,5}(\s\w.)?\s(\b\w*\b\s){1,2}\w*\.?" #dangerous regex
+    if(params['reason'] != None and len(params['reason']) == 0):
+        return ResponseMessage("Reason must be non-empty.", 400)
     if(params['location'] != None and re.search(valid_address, params['location']) == None):
         return ResponseMessage("Invalid Address. (Developer note, if you think this is a mistake please say something)", 400)
     if(params['start_time'] != None and re.search(valid_datetime, params['start_time']) == None):

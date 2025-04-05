@@ -720,7 +720,7 @@ def get_address():
             'address2': row.address2,
             'address': row.address,
             'state': row.state,
-            'zip': row.zip
+            'zip': row.zip.zfill(5)
         })
     return json, 200
 
@@ -974,9 +974,11 @@ def get_patients():
     #get inputs
     params = {
         'id': "" if request.args.get('patient_id') == None else request.args.get('patient_id'),
+        'ssn': "" if request.args.get('ssn') == None else request.args.get('ssn')
     }
     if(params['id'] != ""):
         query += ("WHERE " + ("patient_id = :id\n" if params['id'] != "" else "TRUE\n"))
+        query += ("AND " + ("ssn = :ssn\n" if params['ssn'] != "" else "TRUE\n"))
     #execute query
     result = db.session.execute(text(query), params)
     json = {'patients': []}
@@ -985,7 +987,8 @@ def get_patients():
             'patient_id': row.patient_id,
             'address_id': row.address_id,
             'medical_history': row.medical_history,
-            'creditcard_id': row.creditcard_id
+            'creditcard_id': row.creditcard_id,
+            'ssn': f"x{row.ssn[-4:]}" # Last 4 digits for security.
         })
     return json, 200
 
@@ -1114,12 +1117,13 @@ def create_user(role):
             CURRENT_TIMESTAMP)
     """)
     patient_query = text("""
-        INSERT INTO patients (patient_id, address_id, medical_history, creditcard_id)
+        INSERT INTO patients (patient_id, address_id, medical_history, creditcard_id, ssn)
         VALUES (
             :patient_id,
             :address_id,
             :medical_history,
-            :creditcard_id
+            :creditcard_id,
+            :ssn
         )
     """)
     pharmacist_query = text("""
@@ -1203,13 +1207,14 @@ def create_user(role):
         'address_id': address_params['address_id'],
         'medical_history': patient_json.get('medical_history'),
         'creditcard_id': creditcard_params['creditcard_id'],
+        'ssn': patient_json.get('ssn')
     } if patient_json != None else None 
     #input validation
     valid_email = r"^.+\d*@.+[.][a-zA-Z]{2,4}$" # tried looking up a real email regex and its a nightmare. this will suffice. hopefully.
     valid_phone = r"^\d{10}$"
     valid_license = r"^\d{9}$"
     valid_address = r"\d{1,5}(\s\w.)?\s(\b\w*\b\s){1,2}\w*\.?" #dangerous regex
-    valid_zip = r"^([A-A]{1,2}\d{1,3}|\d{1,3}[A-A]{1,2}|\d{1,5})$"
+    valid_zip = r"^\d{1,5}$"
     valid_cardnum = r"^\d{14,18}$"
     valid_cvv = r"^\d{3}$"
     valid_date = r"\d{4}-\d{2}-\d{2}"
@@ -1239,6 +1244,8 @@ def create_user(role):
             return ResponseMessage("Required parameters missing from patient fields.", 400)
         if(patient_params['medical_history'] == ""):
             return ResponseMessage("Unless newborn babies are beginning their weight loss journey young, medical history should be non-empty", 400)
+        if(re.search(valid_license, patient_params['ssn']) == None):
+            return ResponseMessage("Invalid SSN.", 400)
         #address fields
         if(None in list(address_params.values())[3:]):
             return ResponseMessage("Required parameters missing from address fields.", 400)

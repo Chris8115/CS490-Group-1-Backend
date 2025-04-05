@@ -16,3 +16,9 @@ parameters:
       description: includes results matching `patient_id` column
       schema:
         type: integer
+    - in: query
+      name: ssn
+      required: false
+      description: includes results matching `ssn` column
+      schema:
+        type: integer

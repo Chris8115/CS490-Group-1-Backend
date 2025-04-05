@@ -77,10 +77,14 @@ parameters:
             description: patient information
             required:
               - medical_history
+              - ssn
             properties: 
               medical_history:
                 type: string
                 description: Patient medical history
+              ssn:
+                type: integer
+                description: Patient Social Security Number
           pharmacist: 
             type: object
             description: pharmacist information

@@ -1244,7 +1244,7 @@ def create_user(role):
             return ResponseMessage("Required parameters missing from patient fields.", 400)
         if(patient_params['medical_history'] == ""):
             return ResponseMessage("Unless newborn babies are beginning their weight loss journey young, medical history should be non-empty", 400)
-        if(re.search(valid_license, patient_params['ssn']) == None):
+        if(re.search(valid_license, str(patient_params['ssn'])) == None):
             return ResponseMessage("Invalid SSN.", 400)
         #address fields
         if(None in list(address_params.values())[3:]):
@@ -1257,7 +1257,7 @@ def create_user(role):
             return ResponseMessage("City must be non-empty", 400)
         if(len(address_params['country']) == 0):
             return ResponseMessage("Country must be non-empty", 400)
-        if(re.search(valid_zip, str(address_params['zip'])) == None):
+        if(re.search(valid_zip, str(address_params['zip'])) == None or address_params['zip'] == 0):
             return ResponseMessage("Invalid zip code format.", 400)
         #credit card fields
         if(None in list(creditcard_params.values())[1:]):

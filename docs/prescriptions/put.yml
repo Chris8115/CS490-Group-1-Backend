@@ -1,0 +1,57 @@
+Prescriptions records
+---
+tags:
+    - Pharmacy
+description:
+    Creates prescription record
+responses:
+    201:
+        description: Prescription successfully created.
+    400:
+        description: Client input validation error.
+    500:
+        description: Server/SQLite error.
+consumes:
+  - application/json
+parameters:
+    - in: body
+      name: appointment
+      required: true
+      description: | 
+        Prescription information
+      schema:
+        type: object
+        required: 
+          - doctor_id
+          - medication_id
+          - patient_id
+          - pharmacist_id
+          - status
+          - date_prescribed
+          - instructions
+          - quantity
+        properties: 
+          doctor_id: 
+            type: integer
+            description: Doctor ID
+          medication_id: 
+            type: integer
+            description: medication ID
+          patient_id: 
+            type: integer
+            description: Patient ID
+          pharmacist_id: 
+            type: integer
+            description: Pharmacist ID
+          status: 
+            type: string
+            description: Status of types (`accepted`, `rejected`, `pending`, `canceled`)
+          date_prescribed: 
+            type: string
+            description: Appointment start time (`yyyy-mm-dd hh:mm:ss`)
+          instructions:
+            type: string
+            description: Instructions
+          quantity:
+            type: integer
+            description: quantity

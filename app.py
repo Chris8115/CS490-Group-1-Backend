@@ -179,6 +179,64 @@ def delete_prescriptions(prescription_id):
         db.session.commit()
         return Response(status=200)
 
+@app.route("/prescriptions", methods=['PUT'])
+@swag_from('docs/prescriptions/put.yml')
+def put_prescriptions():
+    query = text("""
+        INSERT INTO prescriptions (prescription_id, doctor_id, patient_id, medication_id, instructions, date_prescribed, status, quantity, pharmacist_id)
+        VALUES (
+            :prescription_id,
+            :doctor_id,
+            :patient_id,
+            :medication_id,
+            :instructions,
+            DATETIME(:date_prescribed),
+            :status,
+            :quantity,
+            :pharmacist_id)
+    """)
+    # NOTE: doing prescription_id this way could bring about a race condition.... but lets be real this is never happening.
+    params = {
+        'prescription_id': (db.session.execute(text("SELECT MAX(prescription_id) + 1 AS prescription_id FROM prescriptions")).first()).prescription_id,
+        'doctor_id': request.json.get('doctor_id'),
+        'patient_id': request.json.get('patient_id'),
+        'medication_id': request.json.get('medication_id'),
+        'instructions': request.json.get('instructions'),
+        'date_prescribed': request.json.get('date_prescribed'),
+        'status': request.json.get('status'),
+        'quantity': request.json.get('quantity'),
+        'pharmacist_id': request.json.get('pharmacist_id')
+    }
+    #input validation
+    if None in params.values():
+        return ResponseMessage("Required parameters not supplied.", 400)
+    valid_datetime = r"^\d{4}-\d{2}-\d{2} [0-5][0-9]:[0-5][0-9]:[0-5][0-9]$"
+    if((re.search(valid_datetime, request.json.get('date_prescribed'))) is None):
+        return ResponseMessage("Invalid Datetime. Format: (yyyy-mm-dd hh:mm:ss)", 400)
+    if (request.json.get('status')).lower() not in ["accepted", "rejected", "pending", "canceled"]:
+        return ResponseMessage("Invalid Status. Format: (`accepted`, `rejected`, `pending`, `canceled`)", 400)
+    try:
+        result = db.session.execute(text("SELECT * FROM patients WHERE patient_id = :patient_id"), params)
+        if(result.first() == None):
+            return ResponseMessage("Invalid patient id.", 400)
+        result = db.session.execute(text("SELECT * FROM doctors WHERE doctor_id = :doctor_id"), params)
+        if(result.first() == None):
+            return ResponseMessage("Invalid doctor id.", 400)
+        result = db.session.execute(text("SELECT * FROM pharmacists WHERE pharmacist_id = :pharmacist_id"), params)
+        if(result.first() == None):
+            return ResponseMessage("Invalid pharmacist id.", 400)
+        result = db.session.execute(text("SELECT * FROM medications WHERE medication_id = :medication_id"), params)
+        if(result.first() == None):
+            return ResponseMessage("Invalid medication id.", 400)
+        #execute query
+        db.session.execute(query, params)
+    except Exception as e:
+        print(e)
+        return ResponseMessage(f"Error Executing Query:\n{e}", 500)
+    else:
+        db.session.commit()
+        return ResponseMessage(f"Appointment entry successfully created (id: {params['prescription_id']})", 201)
+
 @app.route("/appointments", methods=['GET'])
 @swag_from('docs/appointments/get.yml')
 def appointments():

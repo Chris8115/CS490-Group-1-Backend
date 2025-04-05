@@ -976,7 +976,7 @@ def get_patients():
         'id': "" if request.args.get('patient_id') == None else request.args.get('patient_id'),
         'ssn': "" if request.args.get('ssn') == None else request.args.get('ssn')
     }
-    if(params['id'] != ""):
+    if(params['id'] != "" or params['ssn'] != ""):
         query += ("WHERE " + ("patient_id = :id\n" if params['id'] != "" else "TRUE\n"))
         query += ("AND " + ("ssn = :ssn\n" if params['ssn'] != "" else "TRUE\n"))
     #execute query
@@ -988,7 +988,7 @@ def get_patients():
             'address_id': row.address_id,
             'medical_history': row.medical_history,
             'creditcard_id': row.creditcard_id,
-            'ssn': f"x{row.ssn[-4:]}" # Last 4 digits for security.
+            'ssn': f"x{str(row.ssn)[-4:]}" # Last 4 digits for security.
         })
     return json, 200
 

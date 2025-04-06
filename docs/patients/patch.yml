@@ -1,0 +1,52 @@
+Patients records
+---
+tags:
+  - Patients
+description: >
+  Updates an existing patient record in the `patients` table using the JSON body.
+  
+  Example: A PATCH request to `/patients/1` with the following JSON:
+  
+  {
+    "address_id": 2,
+    "medical_history": "Updated medical history text.",
+    "creditcard_id": 3,
+    "ssn": "123456789"
+  }
+  
+  updates the patient record with ID 1.
+responses:
+  200:
+    description: Patient updated successfully.
+  400:
+    description: No update fields provided.
+  404:
+    description: Patient not found.
+  500:
+    description: Error updating patient.
+parameters:
+  - in: path
+    name: patient_id
+    required: true
+    description: The ID of the patient to update.
+    schema:
+      type: integer
+  - in: body
+    name: body
+    required: true
+    description: JSON object containing one or more fields to update for the patient.
+    schema:
+      type: object
+      properties:
+        address_id:
+          type: integer
+          description: Updated address ID.
+        medical_history:
+          type: string
+          description: Updated medical history.
+        creditcard_id:
+          type: integer
+          description: Updated credit card ID.
+        ssn:
+          type: string
+          description: Updated SSN.

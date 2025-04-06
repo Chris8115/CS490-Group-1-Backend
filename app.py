@@ -833,6 +833,7 @@ def get_address():
         json['address'].append({
             'address_id': row.address_id,
             'city': row.city,
+            'country': row.country,
             'address2': row.address2,
             'address': row.address,
             'state': row.state,
@@ -856,6 +857,57 @@ def delete_address(address_id):
     else:
         db.session.commit()
         return Response(status=200)
+    
+@app.route("/address/<int:address_id>", methods=['PATCH'])
+@swag_from('docs/address/patch.yml')
+def patch_address(address_id):
+    data = request.get_json(force=True)
+    
+    # Check if the address exists first
+    existing = db.session.execute(
+        text("SELECT * FROM address WHERE address_id = :address_id"),
+        {'address_id': address_id}
+    ).first()
+    
+    if not existing:
+        return {"error": "Address not found"}, 404
+
+    update_fields = []
+    params = {}
+    
+    if 'city' in data:
+        update_fields.append("city = :city")
+        params['city'] = data['city']
+    if 'country' in data:
+        update_fields.append("country = :country")
+        params['country'] = data['country']
+    if 'address' in data:
+        update_fields.append("address = :address")
+        params['address'] = data['address']
+    if 'zip' in data:
+        update_fields.append("zip = :zip")
+        params['zip'] = data['zip']
+    if 'address2' in data:
+        update_fields.append("address2 = :address2")
+        params['address2'] = data['address2']
+    
+    if not update_fields:
+        return {"error": "No update fields provided."}, 400
+
+    params['address_id'] = address_id
+    query = "UPDATE address SET " + ", ".join(update_fields) + " WHERE address_id = :address_id"
+    
+    try:
+        db.session.execute(text(query), params)
+        db.session.commit()
+    except Exception as e:
+        print(e)
+        return {"error": "Error updating address"}, 500
+
+    return {"message": "Address updated successfully"}, 200
+
+
+
 
 @app.route("/pharmacists", methods=['GET'])
 @swag_from('docs/pharmacists/get.yml')

@@ -1,0 +1,48 @@
+Doctors records
+---
+tags:
+  - Doctors
+description: >
+  Updates an existing doctor's record in the `doctors` table using the JSON body.
+  
+  Example: A PATCH request to `/doctors/1` with the following JSON:
+  
+  {
+    "license_number": "ABC123",
+    "specialization": "Cardiology",
+    "profile": "Updated doctor profile information."
+  }
+  
+  updates the doctor record with ID 1.
+responses:
+  200:
+    description: Doctor updated successfully.
+  400:
+    description: No update fields provided.
+  404:
+    description: Doctor not found.
+  500:
+    description: Error updating doctor.
+parameters:
+  - in: path
+    name: doctor_id
+    required: true
+    description: The ID of the doctor to update.
+    schema:
+      type: integer
+  - in: body
+    name: body
+    required: true
+    description: JSON object containing one or more fields to update for the doctor.
+    schema:
+      type: object
+      properties:
+        license_number:
+          type: string
+          description: Updated license number.
+        specialization:
+          type: string
+          description: Updated specialization.
+        profile:
+          type: string
+          description: Updated doctor profile information.

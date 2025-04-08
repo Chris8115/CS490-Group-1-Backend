@@ -1,0 +1,37 @@
+Credit Cards records
+---
+tags:
+    - Services
+description:
+    Creates credit card record
+responses:
+    201:
+        description: credit card successfully created.
+    400:
+        description: Client input validation error.
+    500:
+        description: Server/SQLite error.
+consumes:
+  - application/json
+parameters:
+    - in: body
+      name: credit card
+      required: true
+      description: | 
+        credit card information
+      schema:
+        type: object
+        required: 
+          - cardnumber
+          - cvv
+          - exp_date
+        properties: 
+          cardnumber: 
+            type: integer
+            description: cardnumber
+          cvv: 
+            type: integer
+            description: cvv
+          exp_date: 
+            type: string
+            description: exp_date

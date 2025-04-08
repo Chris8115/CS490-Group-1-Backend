@@ -805,6 +805,45 @@ def delete_credit_card(creditcard_id):
         db.session.commit()
         return Response(status=200)
 
+@app.route("/credit_card", methods=['PUT'])
+@swag_from('docs/creditcard/put.yml')
+def add_creditcard():
+    print("hello")
+    #sql query
+    query = text("""
+        INSERT INTO credit_card (creditcard_id, cardnumber, cvv, exp_date)
+        VALUES (
+            :creditcard_id,
+            :cardnumber,
+            :cvv,
+            :exp_date
+            )
+    """)
+    # NOTE: doing creditcard_id this way could bring about a race condition.... but lets be real this is never happening.
+    params = {
+        'creditcard_id': (db.session.execute(text("SELECT MAX(creditcard_id) + 1 AS creditcard_id FROM credit_card")).first()).creditcard_id,
+        'cardnumber': request.json.get('cardnumber'),
+        'cvv': request.json.get('cvv'),
+        'exp_date': request.json.get('exp_date')
+    }
+    #input validation
+    if None in list(params.values()):
+        return ResponseMessage("Required parameters not supplied.", 400)
+    try:
+        temp_str = str(request.json.get('cardnumber'))
+        if(len(temp_str) <= 0 or len(temp_str) >= 20):
+            return ResponseMessage("Invalid cardnumber.", 400)
+        if(len(request.json.get('cvv')) != 3):
+            return ResponseMessage("Invalid cvv", 400)
+        #execute query
+        db.session.execute(query, params)
+    except Exception as e:
+        print(e)
+        return ResponseMessage(f"Error Executing Query:\n{e}", 500)
+    else:
+        db.session.commit()
+        return ResponseMessage(f"credit card entry successfully created (id: {params['creditcard_id']})", 201)
+
 @app.route("/address", methods=['GET'])
 @swag_from('docs/address/get.yml')
 def get_address():

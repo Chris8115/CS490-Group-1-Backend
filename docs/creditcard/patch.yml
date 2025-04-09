@@ -8,8 +8,9 @@ description: >
   Example: A PATCH request to `/credit_card/1` with the following JSON:
   
   {
-    "cardnumber": "1111111111111111",
-    "exp_date": "12/25"
+    "cardnumber": "4111111111111111",
+    "exp_date": "2025-12-31",
+    "cvv": "123"
   }
   
   updates the credit card record with ID 1.
@@ -17,7 +18,7 @@ responses:
   200:
     description: Credit card updated successfully.
   400:
-    description: No update fields provided.
+    description: No update fields provided or invalid input format.
   404:
     description: Credit card not found.
   500:
@@ -38,7 +39,10 @@ parameters:
       properties:
         cardnumber:
           type: string
-          description: Updated credit card number.
+          description: Updated credit card number (must be 14 to 18 digits).
         exp_date:
           type: string
-          description: Updated expiration date.
+          description: Updated expiration date in YYYY-MM-DD format.
+        cvv:
+          type: string
+          description: Updated CVV (must be exactly 3 digits).

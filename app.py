@@ -807,11 +807,27 @@ def delete_credit_card(creditcard_id):
         db.session.commit()
         return Response(status=200)
     
+valid_cardnum = r"^\d{14,18}$"
+valid_cvv = r"^\d{3}$"
+valid_date = r"^\d{4}-\d{2}-\d{2}$"
+
 @app.route("/credit_card/<int:creditcard_id>", methods=['PATCH'])
 @swag_from('docs/creditcard/patch.yml')
 def patch_credit_card(creditcard_id):
     data = request.get_json(force=True)
     
+    if 'cardnumber' in data:
+        if not re.match(valid_cardnum, data['cardnumber']):
+            return {"error": "Invalid card number format. It must contain between 14 and 18 digits."}, 400
+    
+    if 'exp_date' in data:
+        if not re.match(valid_date, data['exp_date']):
+            return {"error": "Invalid expiration date format. Expected YYYY-MM-DD."}, 400
+    
+    if 'cvv' in data:
+        if not re.match(valid_cvv, data['cvv']):
+            return {"error": "Invalid CVV format. It must be exactly 3 digits."}, 400
+
     existing = db.session.execute(
         text("SELECT * FROM credit_card WHERE creditcard_id = :creditcard_id"),
         {'creditcard_id': creditcard_id}
@@ -829,6 +845,9 @@ def patch_credit_card(creditcard_id):
     if 'exp_date' in data:
         update_fields.append("exp_date = :exp_date")
         params['exp_date'] = data['exp_date']
+    if 'cvv' in data:
+        update_fields.append("cvv = :cvv")
+        params['cvv'] = data['cvv']
     
     if not update_fields:
         return {"error": "No update fields provided."}, 400
@@ -844,6 +863,7 @@ def patch_credit_card(creditcard_id):
         return {"error": "Error updating credit card"}, 500
 
     return {"message": "Credit card updated successfully"}, 200
+
 
 
 @app.route("/address", methods=['GET'])

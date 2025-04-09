@@ -1,0 +1,48 @@
+Credit Cards records
+---
+tags:
+    - Services
+description: >
+  Updates an existing credit card record in the `credit_card` table using the JSON body.
+  
+  Example: A PATCH request to `/credit_card/1` with the following JSON:
+  
+  {
+    "cardnumber": "4111111111111111",
+    "exp_date": "2025-12-31",
+    "cvv": "123"
+  }
+  
+  updates the credit card record with ID 1.
+responses:
+  200:
+    description: Credit card updated successfully.
+  400:
+    description: No update fields provided or invalid input format.
+  404:
+    description: Credit card not found.
+  500:
+    description: Error updating credit card.
+parameters:
+  - in: path
+    name: creditcard_id
+    required: true
+    description: The ID of the credit card to update.
+    schema:
+      type: integer
+  - in: body
+    name: body
+    required: true
+    description: JSON object containing the fields to update for the credit card.
+    schema:
+      type: object
+      properties:
+        cardnumber:
+          type: string
+          description: Updated credit card number (must be 14 to 18 digits).
+        exp_date:
+          type: string
+          description: Updated expiration date in YYYY-MM-DD format.
+        cvv:
+          type: string
+          description: Updated CVV (must be exactly 3 digits).

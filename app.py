@@ -806,6 +806,45 @@ def delete_credit_card(creditcard_id):
     else:
         db.session.commit()
         return Response(status=200)
+    
+@app.route("/credit_card/<int:creditcard_id>", methods=['PATCH'])
+@swag_from('docs/creditcard/patch.yml')
+def patch_credit_card(creditcard_id):
+    data = request.get_json(force=True)
+    
+    existing = db.session.execute(
+        text("SELECT * FROM credit_card WHERE creditcard_id = :creditcard_id"),
+        {'creditcard_id': creditcard_id}
+    ).first()
+    
+    if not existing:
+        return {"error": "Credit card not found"}, 404
+
+    update_fields = []
+    params = {}
+    
+    if 'cardnumber' in data:
+        update_fields.append("cardnumber = :cardnumber")
+        params['cardnumber'] = data['cardnumber']
+    if 'exp_date' in data:
+        update_fields.append("exp_date = :exp_date")
+        params['exp_date'] = data['exp_date']
+    
+    if not update_fields:
+        return {"error": "No update fields provided."}, 400
+
+    params['creditcard_id'] = creditcard_id
+    query = "UPDATE credit_card SET " + ", ".join(update_fields) + " WHERE creditcard_id = :creditcard_id"
+    
+    try:
+        db.session.execute(text(query), params)
+        db.session.commit()
+    except Exception as e:
+        print(e)
+        return {"error": "Error updating credit card"}, 500
+
+    return {"message": "Credit card updated successfully"}, 200
+
 
 @app.route("/address", methods=['GET'])
 @swag_from('docs/address/get.yml')

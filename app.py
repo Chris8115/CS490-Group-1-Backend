@@ -1175,6 +1175,52 @@ def delete_patients(patient_id):
     else:
         db.session.commit()
         return Response(status=200)
+    
+@app.route("/patients/<int:patient_id>", methods=['PATCH'])
+@swag_from('docs/patients/patch.yml')
+def patch_patients(patient_id):
+    data = request.get_json(force=True)
+    
+    # Check if the patient exists
+    existing = db.session.execute(
+        text("SELECT * FROM patients WHERE patient_id = :patient_id"),
+        {'patient_id': patient_id}
+    ).first()
+    
+    if not existing:
+        return {"error": "Patient not found"}, 404
+
+    update_fields = []
+    params = {}
+    
+    if 'address_id' in data:
+        update_fields.append("address_id = :address_id")
+        params['address_id'] = data['address_id']
+    if 'medical_history' in data:
+        update_fields.append("medical_history = :medical_history")
+        params['medical_history'] = data['medical_history']
+    if 'creditcard_id' in data:
+        update_fields.append("creditcard_id = :creditcard_id")
+        params['creditcard_id'] = data['creditcard_id']
+    if 'ssn' in data:
+        update_fields.append("ssn = :ssn")
+        params['ssn'] = data['ssn']
+    
+    if not update_fields:
+        return {"error": "No update fields provided."}, 400
+
+    params['patient_id'] = patient_id
+    query = "UPDATE patients SET " + ", ".join(update_fields) + " WHERE patient_id = :patient_id"
+    
+    try:
+        db.session.execute(text(query), params)
+        db.session.commit()
+    except Exception as e:
+        print(e)
+        return {"error": "Error updating patient"}, 500
+
+    return {"message": "Patient updated successfully"}, 200
+
 
 @app.route("/doctors", methods=['GET'])
 @swag_from('docs/doctors/get.yml')
@@ -1218,6 +1264,49 @@ def delete_doctors(doctor_id):
     else:
         db.session.commit()
         return Response(status=200)
+    
+@app.route("/doctors/<int:doctor_id>", methods=['PATCH'])
+@swag_from('docs/doctors/patch.yml')
+def patch_doctor(doctor_id):
+    data = request.get_json(force=True)
+    
+    # Check if the doctor exists
+    existing = db.session.execute(
+        text("SELECT * FROM doctors WHERE doctor_id = :doctor_id"),
+        {'doctor_id': doctor_id}
+    ).first()
+    
+    if not existing:
+        return {"error": "Doctor not found"}, 404
+
+    update_fields = []
+    params = {}
+    
+    if 'license_number' in data:
+        update_fields.append("license_number = :license_number")
+        params['license_number'] = data['license_number']
+    if 'specialization' in data:
+        update_fields.append("specialization = :specialization")
+        params['specialization'] = data['specialization']
+    if 'profile' in data:
+        update_fields.append("profile = :profile")
+        params['profile'] = data['profile']
+    
+    if not update_fields:
+        return {"error": "No update fields provided."}, 400
+    
+    params['doctor_id'] = doctor_id
+    query = "UPDATE doctors SET " + ", ".join(update_fields) + " WHERE doctor_id = :doctor_id"
+    
+    try:
+        db.session.execute(text(query), params)
+        db.session.commit()
+    except Exception as e:
+        print(e)
+        return {"error": "Error updating doctor"}, 500
+
+    return {"message": "Doctor updated successfully"}, 200
+
     
 @app.route("/users", methods=['GET'])
 @swag_from('docs/users/get.yml')

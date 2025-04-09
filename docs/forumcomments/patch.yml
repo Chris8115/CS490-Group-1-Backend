@@ -1,0 +1,40 @@
+Forum Comments records
+---
+tags:
+    - Discussion Forum
+description: >
+  Updates an existing forum comment in the `forum_comments` table using the JSON body.
+  
+  Example: A PATCH request to `/forum_comments/1` with the following JSON:
+  
+  {
+    "comment_text": "Updated comment text."
+  }
+  
+  updates the comment with ID 1.
+responses:
+  200:
+    description: Comment updated successfully.
+  400:
+    description: No update fields provided.
+  404:
+    description: Comment not found.
+  500:
+    description: Error updating comment.
+parameters:
+  - in: path
+    name: comment_id
+    required: true
+    description: The ID of the comment to update.
+    schema:
+      type: integer
+  - in: body
+    name: body
+    required: true
+    description: JSON object containing the field to update for the comment.
+    schema:
+      type: object
+      properties:
+        comment_text:
+          type: string
+          description: Updated comment text.

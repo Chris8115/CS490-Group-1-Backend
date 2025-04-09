@@ -993,6 +993,42 @@ def delete_forum_comments(comment_id):
     else:
         db.session.commit()
         return Response(status=200)
+    
+@app.route("/forum_comments/<int:comment_id>", methods=['PATCH'])
+@swag_from('docs/forumcomments/patch.yml')
+def patch_forum_comments(comment_id):
+    data = request.get_json(force=True)
+    
+    existing = db.session.execute(
+        text("SELECT * FROM forum_comments WHERE comment_id = :comment_id"),
+        {'comment_id': comment_id}
+    ).first()
+    
+    if not existing:
+        return {"error": "Comment not found"}, 404
+    
+    update_fields = []
+    params = {}
+    
+    if 'comment_text' in data:
+        update_fields.append("comment_text = :comment_text")
+        params['comment_text'] = data['comment_text']
+    
+    if not update_fields:
+        return {"error": "No update fields provided."}, 400
+    
+    params['comment_id'] = comment_id
+    query = "UPDATE forum_comments SET " + ", ".join(update_fields) + " WHERE comment_id = :comment_id"
+    
+    try:
+        db.session.execute(text(query), params)
+        db.session.commit()
+    except Exception as e:
+        print(e)
+        return {"error": "Error updating comment"}, 500
+    
+    return {"message": "Comment updated successfully"}, 200
+
 
 @app.route("/forum_posts", methods=['GET'])
 @swag_from('docs/forumposts/get.yml')

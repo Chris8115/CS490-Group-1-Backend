@@ -1011,6 +1011,8 @@ def patch_forum_comments(comment_id):
     params = {}
     
     if 'comment_text' in data:
+        if not data['comment_text'].strip():
+            return {"error": "comment_text cannot be empty."}, 400
         update_fields.append("comment_text = :comment_text")
         params['comment_text'] = data['comment_text']
     

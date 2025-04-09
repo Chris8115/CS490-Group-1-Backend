@@ -199,6 +199,7 @@ CREATE TABLE "users" (
 	"last_name"	TEXT NOT NULL,
 	"phone_number"	TEXT NOT NULL,
 	"role"	TEXT NOT NULL,
+	"eula"	TEXT NOT NULL DEFAULT 'signed',
 	"created_at"	TIMESTAMP NOT NULL,
 	CONSTRAINT "users_pk" PRIMARY KEY("user_id")
 );

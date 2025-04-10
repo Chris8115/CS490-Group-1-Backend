@@ -583,6 +583,82 @@ def get_patient_exercise_assignments():
         })
     return json, 200
 
+@app.route("/patient_exercise_assignments/<int:assignment_id>", methods=['PATCH'])
+@swag_from('docs/patientexerciseassignments/patch.yml')
+def patch_patient_exercise_assignments(assignment_id):
+    data = request.get_json(force=True)
+    
+    existing = db.session.execute(
+        text("SELECT * FROM patient_exercise_assignments WHERE assignment_id = :assignment_id"),
+        {'assignment_id': assignment_id}
+    ).first()
+    
+    if not existing:
+        return {"error": "Patient exercise assignment not found"}, 404
+
+    update_fields = []
+    params = {}
+    
+    if 'patient_id' in data:
+        update_fields.append("patient_id = :patient_id")
+        params['patient_id'] = data['patient_id']
+    if 'doctor_id' in data:
+        update_fields.append("doctor_id = :doctor_id")
+        params['doctor_id'] = data['doctor_id']
+    if 'exercise_id' in data:
+        update_fields.append("exercise_id = :exercise_id")
+        params['exercise_id'] = data['exercise_id']
+    if 'instructions' in data:
+        update_fields.append("instructions = :instructions")
+        params['instructions'] = data['instructions']
+    
+    if not update_fields:
+        return {"error": "No update fields provided."}, 400
+
+    params['assignment_id'] = assignment_id
+    query = "UPDATE patient_exercise_assignments SET " + ", ".join(update_fields) + " WHERE assignment_id = :assignment_id"
+    
+    try:
+        db.session.execute(text(query), params)
+        db.session.commit()
+    except Exception as e:
+        print(e)
+        return {"error": "Error updating patient exercise assignment"}, 500
+
+    return {"message": "Patient exercise assignment updated successfully"}, 200
+
+
+@app.route("/patient_exercise_assignments", methods=['POST'])
+@swag_from('docs/patientexerciseassignments/post.yml')
+def post_patient_exercise_assignments():
+    data = request.get_json(force=True)
+    
+    if 'patient_id' not in data or 'doctor_id' not in data or 'exercise_id' not in data:
+        return {"error": "Missing required fields: patient_id, doctor_id, and exercise_id"}, 400
+
+    from datetime import datetime
+    query = """
+        INSERT INTO patient_exercise_assignments (patient_id, doctor_id, exercise_id, instructions, assigned_at)
+        VALUES (:patient_id, :doctor_id, :exercise_id, :instructions, :assigned_at)
+    """
+    params = {
+        'patient_id': data['patient_id'],
+        'doctor_id': data['doctor_id'],
+        'exercise_id': data['exercise_id'],
+        'instructions': data.get('instructions', ""),
+        'assigned_at': datetime.utcnow()
+    }
+    
+    try:
+        db.session.execute(text(query), params)
+        db.session.commit()
+    except Exception as e:
+        print(e)
+        return {"error": "Error creating patient exercise assignment"}, 500
+
+    return {"message": "Patient exercise assignment created successfully"}, 201
+
+
 @app.route("/patient_exercise_assignments/<int:assignment_id>", methods=['DELETE'])
 @swag_from('docs/patientexerciseassignments/delete.yml')
 def delete_patient_exercise_assignments(assignment_id):

@@ -1,4 +1,4 @@
-from flask import Flask, request, Response, jsonify ,render_template
+from flask import Flask, request, Response, jsonify, render_template, redirect, url_for
 from flask_restful import Api, Resource, abort, reqparse
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.sql.functions import func
@@ -7,6 +7,7 @@ from sqlalchemy.dialects import mysql
 from flasgger import Swagger, swag_from
 from flask_cors import CORS
 import re
+from flask_login import LoginManager, UserMixin, login_user, LoginManager, login_required, logout_user, current_user
 
 app = Flask(__name__)
 CORS(app, origins="http://localhost:3000") 
@@ -19,10 +20,34 @@ app.config['SWAGGER'] = {
     'doc_dir': './docs/',
     'uiversion': 3,
 }
+app.config['SECRET_KEY'] = 'CRAZE' #super duper secret 🤫
 db = SQLAlchemy(app)
 #API docs stuff
 api = Api(app)
 swag = Swagger(app)
+
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = "login"
+
+@login_manager.user_loader
+def load_user(user_id):
+    return db.session.get(Users, int(user_id))
+
+class Users(db.Model, UserMixin):
+    user_id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.Text, nullable=False)
+    password = db.Column(db.Text, nullable=False)
+    first_name = db.Column(db.Text, nullable=False)
+    last_name = db.Column(db.Text, nullable=False)
+    phone_number = db.Column(db.Integer, nullable=False)
+    role = db.Column(db.Text, nullable=False)
+    eula = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.Text, nullable=False)
+    def get_id(self):
+        return str(self.user_id)
+        
+        
 
 @app.route("/")
 def home():
@@ -31,6 +56,24 @@ def home():
 @app.route("/docs")
 def docs():
     return render_template("build/html/index.html")
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    next = request.args.get('next')
+    user = Users.query.filter_by(email=request.args.get('email')).first()
+    print(user)
+    if user == None:
+        return ResponseMessage("Invalid user credentials.", 401)
+    elif(user.password != request.args.get('password')):
+        return ResponseMessage("Invalid password.", 400)
+    else:
+        login_user(user, remember=True)
+        return {'user_id': current_user.user_id, 'role': current_user.role, 'message':'Login successful.'}
+
+@app.route('/login_check')
+@login_required
+def login_check():
+    return "<h1>Logged in!</h1>"
 
 @app.route("/transactions", methods=['GET'])
 @swag_from('docs/transactions/get.yml')

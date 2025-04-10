@@ -316,6 +316,7 @@ def appointments():
         query += ("AND " + ("patient_id = :pid\n" if params['pid'] != "" else "TRUE\n"))
         query += ("AND " + ("status LIKE :status\n" if params['status'] != "" else "TRUE\n"))
         query += ("AND " + ("reason LIKE :reason\n" if params['reason'] != "" else "TRUE\n"))
+        query += ("ORDER BY start_time DESC")
     #execute query
     result = db.session.execute(text(query), params)
     json = {'appointments': []}

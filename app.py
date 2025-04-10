@@ -58,8 +58,10 @@ def docs():
     return render_template("build/html/index.html")
 
 @app.route('/login', methods=['GET', 'POST'])
+@swag_from("docs/auth/login.yml", methods=['GET', 'POST'])
 def login():
     next = request.args.get('next')
+    remember = request.args.get('remember')
     user = Users.query.filter_by(email=request.args.get('email')).first()
     print(user)
     if user == None:
@@ -67,8 +69,15 @@ def login():
     elif(user.password != request.args.get('password')):
         return ResponseMessage("Invalid password.", 400)
     else:
-        login_user(user, remember=True)
+        login_user(user, remember or False)
         return {'user_id': current_user.user_id, 'role': current_user.role, 'message':'Login successful.'}
+
+@app.route('/logout', methods=['GET', 'POST'])
+@login_required
+@swag_from('docs/auth/logout.yml', methods=['GET', 'POST'])
+def logout():
+    logout_user()
+    return ResponseMessage("User Logged out.", 200)
 
 @app.route('/login_check')
 @login_required
@@ -76,8 +85,10 @@ def login_check():
     return "<h1>Logged in!</h1>"
 
 @app.route("/transactions", methods=['GET'])
+@login_required
 @swag_from('docs/transactions/get.yml')
 def get_transactions():
+    print(current_user)
     #sql query
     query = "SELECT * FROM transactions\n"
     #get inputs

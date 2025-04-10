@@ -477,6 +477,7 @@ def get_patient_progress():
         query += ("WHERE " + ("progress_id = :progid\n" if params['progid'] != "" else "TRUE\n"))
         query += ("AND " + ("patient_id = :pid\n" if params['pid'] != "" else "TRUE\n"))
         query += ("AND " + ("date_logged LIKE :datetime\n" if params['datetime'] != "" else "TRUE\n"))
+        query += ("ORDER BY date_logged DESC\n")
     #execute query
     result = db.session.execute(text(query), params)
     json = {'patient_progress': []}

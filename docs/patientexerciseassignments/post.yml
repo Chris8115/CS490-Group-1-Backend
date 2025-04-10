@@ -1,0 +1,48 @@
+Patient Exercise Assignments records
+---
+tags:
+    - Patients
+description: >
+  Creates a new patient exercise assignment record in the `patient_exercise_assignments` table using the JSON body.
+  
+  Example: A POST request to `/patient_exercise_assignments` with the following JSON:
+  
+  {
+    "patient_id": 101,
+    "doctor_id": 5,
+    "exercise_id": 3,
+    "instructions": "Perform the routine for 30 minutes daily."
+  }
+  
+  creates a new assignment record and automatically sets the assigned_at timestamp.
+responses:
+  201:
+    description: Patient exercise assignment created successfully.
+  400:
+    description: Missing required fields.
+  500:
+    description: Error creating patient exercise assignment.
+parameters:
+  - in: body
+    name: body
+    required: true
+    description: JSON object containing the new patient exercise assignment.
+    schema:
+      type: object
+      properties:
+        patient_id:
+          type: integer
+          description: ID of the patient.
+        doctor_id:
+          type: integer
+          description: ID of the doctor assigning the exercise.
+        exercise_id:
+          type: integer
+          description: ID of the exercise.
+        instructions:
+          type: string
+          description: Additional instructions for the exercise assignment.
+      required:
+        - patient_id
+        - doctor_id
+        - exercise_id

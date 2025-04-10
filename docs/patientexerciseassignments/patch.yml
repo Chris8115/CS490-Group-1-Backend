@@ -1,0 +1,52 @@
+Patient Exercise Assignments records
+---
+tags:
+    - Patients
+description: >
+  Updates an existing patient exercise assignment in the `patient_exercise_assignments` table using the JSON body.
+  
+  Example: A PATCH request to `/patient_exercise_assignments/1` with the following JSON:
+  
+  {
+    "instructions": "Updated instructions for exercise routine",
+    "patient_id": 101,
+    "doctor_id": 5,
+    "exercise_id": 3
+  }
+  
+  updates the assignment record with ID 1.
+responses:
+  200:
+    description: Patient exercise assignment updated successfully.
+  400:
+    description: No update fields provided.
+  404:
+    description: Patient exercise assignment not found.
+  500:
+    description: Error updating patient exercise assignment.
+parameters:
+  - in: path
+    name: assignment_id
+    required: true
+    description: The ID of the patient exercise assignment to update.
+    schema:
+      type: integer
+  - in: body
+    name: body
+    required: true
+    description: JSON object containing the fields to update for the patient exercise assignment.
+    schema:
+      type: object
+      properties:
+        patient_id:
+          type: integer
+          description: Updated patient ID.
+        doctor_id:
+          type: integer
+          description: Updated doctor ID.
+        exercise_id:
+          type: integer
+          description: Updated exercise ID.
+        instructions:
+          type: string
+          description: Updated exercise instructions.

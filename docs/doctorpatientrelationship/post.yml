@@ -1,0 +1,45 @@
+Doctor Patient Relationships records
+---
+tags:
+    - Services
+description: >
+  Creates a new doctor–patient relationship record in the `doctor_patient_relationship` table using the JSON body.
+  The `date_assigned` field is automatically set to the current date and time.
+  
+  Example: A POST request to `/doctor_patient_relationship` with the following JSON:
+  
+  {
+    "doctor_id": 1,
+    "patient_id": 2,
+    "status": "pending"
+  }
+  
+  creates a new doctor–patient relationship record.
+responses:
+  201:
+    description: Doctor patient relationship created successfully.
+  400:
+    description: Missing required fields or empty status provided.
+  500:
+    description: Error creating doctor patient relationship.
+parameters:
+  - in: body
+    name: body
+    required: true
+    description: JSON object containing the fields for the new doctor–patient relationship.
+    schema:
+      type: object
+      properties:
+        doctor_id:
+          type: integer
+          description: The doctor's ID.
+        patient_id:
+          type: integer
+          description: The patient's ID.
+        status:
+          type: string
+          description: Initial relationship status (e.g., "pending", "active").
+      required:
+        - doctor_id
+        - patient_id
+        - status

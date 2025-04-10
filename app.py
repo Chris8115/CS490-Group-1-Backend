@@ -1177,6 +1177,38 @@ def get_reviews():
     
     return json_response, 200
 
+@app.route("/reviews", methods=['POST'])
+@swag_from('docs/reviews/post.yml')
+def post_review():
+    data = request.get_json(force=True)
+    
+    # Validate required fields
+    if 'patient_id' not in data or 'doctor_id' not in data or 'rating' not in data:
+        return {"error": "Missing required fields: patient_id, doctor_id, and rating"}, 400
+    
+    from datetime import datetime
+    query = """
+        INSERT INTO reviews (patient_id, doctor_id, rating, review_text, created_at)
+        VALUES (:patient_id, :doctor_id, :rating, :review_text, :created_at)
+    """
+    params = {
+        'patient_id': data['patient_id'],
+        'doctor_id': data['doctor_id'],
+        'rating': data['rating'],
+        'review_text': data.get('review_text', ""),
+        'created_at': datetime.utcnow()
+    }
+    
+    try:
+        db.session.execute(text(query), params)
+        db.session.commit()
+    except Exception as e:
+        print(e)
+        return {"error": "Error creating review"}, 500
+
+    return {"message": "Review created successfully"}, 201
+
+
 @app.route("/reviews", methods=['PATCH'])
 @swag_from('docs/reviews/patch.yml')
 def update_review():

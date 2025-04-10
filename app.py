@@ -838,6 +838,61 @@ def delete_doctor_patient_relationship(doctor_id, patient_id):
     else:
         db.session.commit()
         return Response(status=200)
+    
+from datetime import datetime
+
+@app.route("/doctor_patient_relationship/<int:doctor_id>/<int:patient_id>", methods=['PATCH'])
+@swag_from('docs/doctorpatientrelationship/patch.yml')
+def patch_doctor_patient_relationship(doctor_id, patient_id):
+    data = request.get_json(force=True)
+    
+    # Check if the relationship exists.
+    existing = db.session.execute(
+        text("SELECT * FROM doctor_patient_relationship WHERE doctor_id = :doctor_id AND patient_id = :patient_id"),
+        {'doctor_id': doctor_id, 'patient_id': patient_id}
+    ).first()
+    
+    if not existing:
+        return {"error": "Doctor patient relationship not found"}, 404
+
+    update_fields = []
+    params = {}
+    
+    # Allow updating status only.
+    if 'status' in data:
+        if not data['status'].strip():
+            return {"error": "Status cannot be empty."}, 400
+        update_fields.append("status = :status")
+        params['status'] = data['status']
+    
+    # Ensure at least one updatable field (other than date_assigned) is provided.
+    if not update_fields:
+        return {"error": "No update fields provided."}, 400
+
+    # Automatically update date_assigned to current date and time.
+    update_fields.append("date_assigned = :date_assigned")
+    params['date_assigned'] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    
+    params['doctor_id'] = doctor_id
+    params['patient_id'] = patient_id
+    
+    query = (
+        "UPDATE doctor_patient_relationship SET " +
+        ", ".join(update_fields) +
+        " WHERE doctor_id = :doctor_id AND patient_id = :patient_id"
+    )
+    
+    try:
+        db.session.execute(text(query), params)
+        db.session.commit()
+    except Exception as e:
+        print(e)
+        return {"error": "Error updating doctor patient relationship"}, 500
+    
+    return {"message": "Doctor patient relationship updated successfully"}, 200
+
+
+
 
 @app.route("/credit_card", methods=['GET'])
 @swag_from('docs/creditcard/get.yml')

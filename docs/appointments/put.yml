@@ -27,7 +27,6 @@ parameters:
           - start_time
           - end_time
           - status
-          - location
           - reason
         properties: 
           patient_id: 

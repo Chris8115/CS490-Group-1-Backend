@@ -367,6 +367,9 @@ def add_appointment():
             CURRENT_TIMESTAMP)
     """)
     # NOTE: doing appointment_id this way could bring about a race condition.... but lets be real this is never happening.
+    location = request.json.get('location')
+    if location is None:
+        location = ""
     params = {
         'appointment_id': (db.session.execute(text("SELECT MAX(appointment_id) + 1 AS appointment_id FROM appointments")).first()).appointment_id,
         'doctor_id': request.json.get('doctor_id'),
@@ -374,20 +377,17 @@ def add_appointment():
         'start_time': request.json.get('start_time'),
         'end_time': request.json.get('end_time'),
         'status': request.json.get('status'),
-        'location': request.json.get('location'),
+        'location': location,
         'reason': request.json.get('reason')
     }
     #input validation
-    if None in params.values():
+    if None in [request.json.get('doctor_id'), request.json.get('patient_id'), request.json.get('start_time'), request.json.get('end_time'), request.json.get('status'), request.json.get('reason')]:
         return ResponseMessage("Required parameters not supplied.", 400)
     if(params['status'].lower() not in ('canceled', 'pending', 'rejected', 'accepted')):
         return ResponseMessage("Invalid status field. Must be ('canceled', 'pending', 'rejected', 'accepted')", 400)
     valid_datetime = r"^\d{4}-\d{2}-\d{2} [0-5][0-9]:[0-5][0-9]:[0-5][0-9]$"
-    valid_address = r"\d{1,5}(\s\w.)?\s(\b\w*\b\s){1,2}\w*\.?" #dangerous regex
     if(len(params['reason']) == 0):
         return ResponseMessage("Reason must be non-empty.", 400)
-    if(re.search(valid_address, params['location']) == None):
-        return ResponseMessage("Invalid Address. (Developer note, if you think this is a mistake please say something)", 400)
     if(None in (re.search(valid_datetime, params['start_time']), re.search(valid_datetime, params['end_time']))):
         return ResponseMessage("Invalid Datetime. Format: (yyyy-mm-dd hh:mm:ss)", 400)
     try:
@@ -397,6 +397,9 @@ def add_appointment():
         result = db.session.execute(text("SELECT * FROM doctors WHERE doctor_id = :doctor_id"), params)
         if(result.first() == None):
             return ResponseMessage("Invalid doctor id.", 400)
+        result = db.session.execute(text("SELECT 1 FROM appointments WHERE doctor_id = :doctor_id AND start_time < :end_time AND end_time > :start_time AND appointment_id != :appointment_id"), params)
+        if result:
+            return ResponseMessage("This doctor already has an overlapping appointment at the given time.", 400)
         #execute query
         db.session.execute(query, params)
     except Exception as e:
@@ -442,6 +445,9 @@ def update_appointment(appointment_id):
     valid_address = r"\d{1,5}(\s\w.)?\s(\b\w*\b\s){1,2}\w*\.?" #dangerous regex
     if(params['reason'] != None and len(params['reason']) == 0):
         return ResponseMessage("Reason must be non-empty.", 400)
+    result = db.session.execute(text("SELECT 1 FROM appointments WHERE doctor_id = :doctor_id AND start_time < :end_time AND end_time > :start_time AND appointment_id != :appointment_id"), params)
+    if result:
+        return ResponseMessage("This doctor already has an overlapping appointment at the given time.", 400)
     if(params['location'] != None and re.search(valid_address, params['location']) == None):
         return ResponseMessage("Invalid Address. (Developer note, if you think this is a mistake please say something)", 400)
     if(params['start_time'] != None and re.search(valid_datetime, params['start_time']) == None):

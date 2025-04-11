@@ -99,8 +99,9 @@ def logout():
 
 @app.route('/login_check')
 @login_required
+@swag_from('docs/auth/login_check.yml')
 def login_check():
-    return "<h1>Logged in!</h1>"
+    return ResponseMessage(f"User is logged in. ID: {current_user.get_id()}", 200)
 
 @app.route("/transactions", methods=['GET'])
 @login_required

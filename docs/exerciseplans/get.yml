@@ -3,6 +3,7 @@ Exercise Plans records
 tags:
     - Services
 description:
+    Login Required
     Gets all of the exercise plans from the `exercise_plans` table with optional filters.
     
     example - `/exercise_plans?title=push-up` gets all exercise plans with titles including "push-up".

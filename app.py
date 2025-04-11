@@ -141,6 +141,7 @@ def get_transactions():
     return json, 200
 
 @app.route("/transactions/<int:transaction_id>", methods=['DELETE'])
+@login_required
 @swag_from('docs/transactions/delete.yml')
 def delete_transaction(transaction_id):
     try:
@@ -157,6 +158,7 @@ def delete_transaction(transaction_id):
         return Response(status=200)
 
 @app.route("/saved_posts", methods=['GET'])
+@login_required
 @swag_from('docs/savedposts/get.yml')
 def get_saved_posts():
     #sql query
@@ -183,6 +185,7 @@ def get_saved_posts():
     return json, 200
 
 @app.route("/saved_posts/<int:post_id>", methods=['DELETE'])
+@login_required
 @swag_from('docs/savedposts/delete.yml')
 def delete_saved_posts(post_id):
     try:
@@ -371,6 +374,7 @@ def put_prescriptions():
         return ResponseMessage(f"Prescription entry successfully created (id: {params['prescription_id']})", 201)
 
 @app.route("/appointments", methods=['GET'])
+@login_required
 @swag_from('docs/appointments/get.yml')
 def appointments():
     #sql query
@@ -407,6 +411,7 @@ def appointments():
     return json, 200
 
 @app.route("/appointments/<int:appointment_id>", methods=['DELETE'])
+@login_required
 @swag_from('docs/appointments/delete.yml')
 def delete_appointments(appointment_id):
     try:
@@ -423,6 +428,7 @@ def delete_appointments(appointment_id):
         return Response(status=200)
 
 @app.route("/appointments", methods=['PUT'])
+@login_required
 @swag_from('docs/appointments/put.yml')
 def add_appointment():
     #sql query
@@ -480,6 +486,7 @@ def add_appointment():
         return ResponseMessage(f"Appointment entry successfully created (id: {params['appointment_id']})", 201)
 
 @app.route("/appointments/<int:appointment_id>", methods=['PATCH'])
+@login_required
 @swag_from("docs/appointments/patch.yml")
 def update_appointment(appointment_id):
     #sql query
@@ -535,6 +542,7 @@ def update_appointment(appointment_id):
         return ResponseMessage("Appointment Successfully Updated.", 200) 
 
 @app.route("/patient_progress", methods=['GET'])
+@login_required
 @swag_from('docs/patientprogress/get.yml')
 def get_patient_progress():
     #sql query
@@ -564,6 +572,7 @@ def get_patient_progress():
     return json, 200
 
 @app.route("/patient_progress/<int:progress_id>", methods=['DELETE'])
+@login_required
 @swag_from('docs/patientprogress/delete.yml')
 def delete_patient_progress(progress_id):
     try:
@@ -580,6 +589,7 @@ def delete_patient_progress(progress_id):
         return Response(status=200)
 
 @app.route("/patient_progress", methods=['PUT'])
+@login_required
 @swag_from('docs/patientprogress/put.yml')
 def add_patient_progress():
     #sql query
@@ -623,6 +633,7 @@ def add_patient_progress():
         return ResponseMessage(f"patient progress entry successfully created (id: {params['patient_id']})", 201)
 
 @app.route("/patient_exercise_assignments", methods=['GET'])
+@login_required
 @swag_from('docs/patientexerciseassignments/get.yml')
 def get_patient_exercise_assignments():
     #sql query
@@ -656,6 +667,7 @@ def get_patient_exercise_assignments():
     return json, 200
 
 @app.route("/patient_exercise_assignments/<int:assignment_id>", methods=['DELETE'])
+@login_required
 @swag_from('docs/patientexerciseassignments/delete.yml')
 def delete_patient_exercise_assignments(assignment_id):
     try:
@@ -753,6 +765,7 @@ def delete_inventory(inventory_id):
         return Response(status=200)
 
 @app.route("/exercise_plans", methods=['GET'])
+@login_required
 @swag_from('docs/exerciseplans/get.yml')
 def get_exercise_plans():
     #sql query
@@ -777,6 +790,7 @@ def get_exercise_plans():
     return json, 200
 
 @app.route("/exercise_plans/<int:exercise_id>", methods=['DELETE'])
+@login_required
 @swag_from('docs/exerciseplans/delete.yml')
 def delete_exercise_plans(exercise_id):
     try:

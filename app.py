@@ -1,4 +1,4 @@
-from flask import Flask, request, Response, jsonify ,render_template
+from flask import Flask, request, Response, jsonify , render_template
 from flask_restful import Api, Resource, abort, reqparse
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.sql.functions import func
@@ -6,6 +6,8 @@ from sqlalchemy import desc, text
 from sqlalchemy.dialects import mysql
 from flasgger import Swagger, swag_from
 from flask_cors import CORS
+from werkzeug.utils import secure_filename
+import os
 import re
 
 app = Flask(__name__)
@@ -20,6 +22,11 @@ app.config['SWAGGER'] = {
     'uiversion': 3,
 }
 db = SQLAlchemy(app)
+UPLOAD_FOLDER = 'idents'
+ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 #API docs stuff
 api = Api(app)
 swag = Swagger(app)
@@ -1656,9 +1663,17 @@ def delete_users(user_id):
 @app.route("/users/<string:role>", methods=['PUT'])
 @swag_from('docs/users/put.yml')
 def create_user(role):
+    file = request.files.get('identification')
+    identification_path = ""
+
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(filepath)
+        identification_path = filepath
     #sql query
     user_query = text("""
-        INSERT INTO users (user_id, email, password, first_name, last_name, phone_number, role, created_at)
+        INSERT INTO users (user_id, email, password, first_name, last_name, phone_number, role, created_at, identification)
         VALUES (
             :user_id,
             :email,
@@ -1667,7 +1682,8 @@ def create_user(role):
             :last_name,
             :phone_number,
             :role,
-            CURRENT_TIMESTAMP)
+            CURRENT_TIMESTAMP,
+            :identification)
     """)
     patient_query = text("""
         INSERT INTO patients (patient_id, address_id, medical_history, creditcard_id, ssn)
@@ -1720,7 +1736,6 @@ def create_user(role):
     pharmacist_json = request.json.get('pharmacist')
     address_json = request.json.get("address")
     creditcard_json = request.json.get("credit_card")
-    
     user_params = {
         'user_id': (db.session.execute(text("SELECT MAX(user_id) + 1 AS user_id FROM users")).first()).user_id,
         'email': user_json.get('email'),
@@ -1729,6 +1744,7 @@ def create_user(role):
         'last_name': user_json.get('last_name'),
         'phone_number': user_json.get('phone_number'),
         'role': role,
+        'identification': identification_path
     }
     doctor_params = {
         'doctor_id': user_params['user_id'],

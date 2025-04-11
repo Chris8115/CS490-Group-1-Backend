@@ -3,6 +3,7 @@ Exercise Plans records
 tags:
     - Services
 description:
+    Login Required
     Deletes an instance of a exercise plans record from the `exercise_plans` table using the required `exercise_id` in the URL path.
 
     example - `/exercise_plans/1` deletes the exercise plans with `id = 1`.

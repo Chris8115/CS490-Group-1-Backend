@@ -3,6 +3,7 @@ Transactions records
 tags:
     - Services
 description:
+    Login Required.
     Gets all of the transaction records from the `transactions` table with optional filters.
     
     example - `/transactions?creditcard_id=3` gets all transactions paid for by a credit card with an id = 3

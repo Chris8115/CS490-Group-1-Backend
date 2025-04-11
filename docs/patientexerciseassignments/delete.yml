@@ -3,6 +3,7 @@ Patient Exercise Assignments records
 tags:
     - Patients
 description:
+    Login Required
     Deletes an instance of a patient exercise assignment record from the `patient_exercise_assignments` table using the required `assignment_id` in the URL path.
 
     example - `/patient_exercise_assignments/1` deletes the patient exercise assignment with `id = 1`.

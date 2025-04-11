@@ -3,6 +3,7 @@ Patient Progress records
 tags:
     - Patients
 description:
+    Login Required
     Creates an patient progress record
 responses:
     201:

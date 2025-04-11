@@ -3,6 +3,7 @@ Appointments records
 tags:
     - Services
 description:
+    Login Required
     Deletes an instance of a appointments record from the `appointments` table using the required `appointment_id` in the URL path.
 
     example - `/appointments/1` deletes the appointments with `id = 1`.

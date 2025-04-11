@@ -3,6 +3,7 @@ Appointments records
 tags:
     - Services
 description:
+    Login Required
     Gets all of the appointments from the `appointments` table with optional filters.
     
     example - `/appointments?status=accepted&reason=surgery` includes all accepted appointments for reasons containing "surgery".

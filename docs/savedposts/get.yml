@@ -3,6 +3,7 @@ Saved Posts records
 tags:
     - Discussion Forum
 description:
+    Login Required
     Gets all of the discussion posts users have saved from the `saved_posts` table with optional filters.
     
     example - `/saved_posts?user_id=11&saved_at=2025` gets all of the posts the user with an id = 11 saved in the year 2025.

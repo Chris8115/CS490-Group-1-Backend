@@ -3,6 +3,7 @@ Patient Exercise Assignments records
 tags:
     - Patients
 description:
+    Login Required
     Gets all of the patient exercise assignment entries from the `patient_exercise_assignments` table with optional filters.
     
     example - `/patient_exercise_assignments?doctor_id=4&patient_id=5` gets all assignments from the doctor with `doctor_id` = 4 and the patient with `patient_id` = 5.

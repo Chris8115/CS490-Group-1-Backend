@@ -3,7 +3,7 @@ Login
 tags:
     - Web Functionality
 description:
-    Create a user session
+    Create a user session. 
 responses:
     200:
         description: JSON consisting of user ID, role, and message saying login successful
@@ -22,3 +22,9 @@ parameters:
       description: User password
       schema:
         type: string
+    - in: query
+      name: remember
+      required: true
+      description: Remember user.
+      schema:
+        type: boolean

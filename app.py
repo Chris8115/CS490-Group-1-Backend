@@ -10,7 +10,7 @@ import re
 from flask_login import LoginManager, UserMixin, login_user, LoginManager, login_required, logout_user, current_user
 
 app = Flask(__name__)
-CORS(app, origins="http://localhost:3000") 
+CORS(app, supports_credentials=True, origins=["http://localhost:3000"]) 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///craze.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SWAGGER'] = {

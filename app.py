@@ -313,8 +313,8 @@ def update_prescriptions(prescription_id):
         db.session.commit()
         return ResponseMessage("Prescription Successfully Updated.", 200) 
 
-@app.route("/prescriptions", methods=['PUT'])
-@swag_from('docs/prescriptions/put.yml')
+@app.route("/prescriptions", methods=['POST'])
+@swag_from('docs/prescriptions/post.yml')
 def put_prescriptions():
     query = text("""
         INSERT INTO prescriptions (prescription_id, doctor_id, patient_id, medication_id, instructions, date_prescribed, status, quantity, pharmacist_id)
@@ -428,9 +428,9 @@ def delete_appointments(appointment_id):
         db.session.commit()
         return Response(status=200)
 
-@app.route("/appointments", methods=['PUT'])
+@app.route("/appointments", methods=['POST'])
 @login_required
-@swag_from('docs/appointments/put.yml')
+@swag_from('docs/appointments/post.yml')
 def add_appointment():
     #sql query
     query = text("""
@@ -590,9 +590,9 @@ def delete_patient_progress(progress_id):
         db.session.commit()
         return Response(status=200)
 
-@app.route("/patient_progress", methods=['PUT'])
+@app.route("/patient_progress", methods=['POST'])
 @login_required
-@swag_from('docs/patientprogress/put.yml')
+@swag_from('docs/patientprogress/post.yml')
 def add_patient_progress():
     #sql query
     query = text("""
@@ -1740,8 +1740,8 @@ def delete_users(user_id):
         db.session.commit()
         return Response(status=200)
     
-@app.route("/users/<string:role>", methods=['PUT'])
-@swag_from('docs/users/put.yml')
+@app.route("/users/<string:role>", methods=['POST'])
+@swag_from('docs/users/post.yml')
 def create_user(role):
     #sql query
     user_query = text("""

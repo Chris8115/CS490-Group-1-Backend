@@ -485,7 +485,12 @@ def add_appointment():
         result = db.session.execute(text("SELECT * FROM doctors WHERE doctor_id = :doctor_id"), params)
         if(result.first() == None):
             return ResponseMessage("Invalid doctor id.", 400)
-        #add appointment time validation
+        result = db.session.execute(text("SELECT start_time, end_time FROM appointments WHERE doctor_id = :doctor_id"), params)
+        startA = request.json.get('start_time')
+        endA = request.json.get('end_time')
+        for times in result:
+            if (startA < times.end_time) and (times.start_time < endA):
+                return ResponseMessage("Invalid timeslot.", 400)
         #execute query
         db.session.execute(query, params)
     except Exception as e:
@@ -534,7 +539,12 @@ def update_appointment(appointment_id):
         return ResponseMessage("Reason must be non-empty.", 400)
     if(params['location'] != None and len(params['location']) == 0):
         return ResponseMessage("location must be non-empty.", 400)
-    #add appointment time validation
+    result = db.session.execute(text("SELECT start_time, end_time FROM appointments WHERE doctor_id = :doctor_id"), params)
+    startA = request.json.get('start_time')
+    endA = request.json.get('end_time')
+    for times in result:
+        if (startA < times.end_time) and (times.start_time < endA):
+            return ResponseMessage("Invalid timeslot.", 400)
     if(params['start_time'] != None and re.search(valid_datetime, params['start_time']) == None):
         return ResponseMessage("Invalid Start Time. Format: (yyyy-mm-dd hh:mm:ss)", 400)
     if(params['end_time'] != None and re.search(valid_datetime, params['end_time']) == None):

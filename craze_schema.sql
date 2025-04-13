@@ -20,6 +20,7 @@ CREATE TABLE "appointments" (
 	"status"	TEXT NOT NULL,
 	"location"	TEXT NOT NULL,
 	"reason"	TEXT NOT NULL,
+	"details"    TEXT NOT NULL,
 	"created_at"	TIMESTAMP NOT NULL,
 	CONSTRAINT "appointments_pk" PRIMARY KEY("appointment_id"),
 	CONSTRAINT "doctor_id" FOREIGN KEY("doctor_id") REFERENCES "users"("user_id"),

@@ -634,7 +634,7 @@ def add_patient_progress():
             return ResponseMessage("Invalid patient id.", 400)
         if(request.json.get('weight') <= 0 or request.json.get('weight') >= 1500):
             return ResponseMessage("Invalid weight.", 400)
-        if(request.json.get('weight') <= 0 or request.json.get('weight') >= 1500):
+        if(request.json.get('weight_goal') <= 0 or request.json.get('weight_goal') >= 1500):
             return ResponseMessage("Invalid weight goal.", 400)
         if(request.json.get('calories') <= 0 or request.json.get('calories') >= 30000):
             return ResponseMessage("Invalid calories.", 400)

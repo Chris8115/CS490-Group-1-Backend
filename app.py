@@ -1359,7 +1359,7 @@ def add_forum_posts():
         result = db.session.execute(text("SELECT * FROM users WHERE user_id = :user_id"), params)
         if(result.first() == None):
             return ResponseMessage("Invalid user_id.", 400)
-        if (request.json.get('post_type') != "discussion" and request.json.get('post_type') != "Exercise Plan"):
+        if (request.json.get('post_type').lower() != "discussion" and request.json.get('post_type').lower() != "Exercise Plan"):
             return ResponseMessage("Invalid post_type.", 400)
         if(len(str(request.json.get('comment_text'))) <= 0):
             return ResponseMessage("Invalid comment text.", 400)
@@ -1387,6 +1387,39 @@ def delete_forum_posts(post_id):
     else:
         db.session.commit()
         return Response(status=200)
+
+@app.route("/forum_posts/<int:post_id>", methods=['PATCH'])
+@swag_from('docs/forumposts/patch.yml')
+def update_forum_posts(post_id):
+        #sql query
+    query = text(f"""
+        UPDATE forum_posts SET
+            title = {':title' if request.json.get('title') != None else 'title'},
+            content = {':content' if request.json.get('content') != None else 'content'},
+            post_type = {':post_type' if request.json.get('post_type') != None else 'post_type'}
+        WHERE post_id = :post_id
+    """)
+    params = {
+        'post_id': post_id,
+        'title': request.json.get('title'),
+        'content': request.json.get('content'),
+        'post_type': request.json.get('post_type')
+    }
+    #input validation
+    if(db.session.execute(text("SELECT * FROM forum_posts WHERE post_id = :post_id"), params).first() == None):
+        return ResponseMessage("post not found.", 404)
+    if (request.json.get('post_type').lower() != "discussion" and request.json.get('post_type').lower() != "exercise plan"):
+        return ResponseMessage("Invalid post_type.", 400)
+    if(len(str(request.json.get('comment_text'))) <= 0):
+        return ResponseMessage("Invalid comment text.", 400)
+    try:
+        db.session.execute(query, params)
+    except Exception as e:
+        print(e)
+        return ResponseMessage(f"Server/SQL Error. Exeption: \n{e}", 500)
+    else:
+        db.session.commit()
+        return ResponseMessage("Post Successfully Updated.", 200) 
 
 @app.route("/reviews", methods=['GET'])
 @swag_from('docs/reviews/get.yml')

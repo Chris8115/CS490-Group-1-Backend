@@ -3,6 +3,7 @@ Appointments records
 tags:
     - Services
 description:
+    Login Required
     Updates appointment information. All fields are optional.
 responses:
     200:

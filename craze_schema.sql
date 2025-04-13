@@ -115,6 +115,7 @@ CREATE TABLE "patient_progress" (
 	"patient_id"	INTEGER,
 	"date_logged"	TIMESTAMP NOT NULL,
 	"weight"	REAL NOT NULL,
+	"weight_goal"	INTEGER NOT NULL DEFAULT 200,
 	"calories"	REAL NOT NULL,
 	"notes"	TEXT,
 	CONSTRAINT "patient_progress_pk" PRIMARY KEY("progress_id"),

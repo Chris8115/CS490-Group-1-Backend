@@ -38,6 +38,6 @@ parameters:
     - in: query
       name: assigned_at
       required: false
-      description: includes results like `assigned_at` column (A date of format mm/dd/yyyy)
+      description: includes results like `assigned_at` column (A date of format yyyy-mm-dd)
       schema:
         type: string

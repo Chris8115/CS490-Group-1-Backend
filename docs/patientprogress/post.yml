@@ -34,13 +34,12 @@ parameters:
           weight: 
             type: integer
             description: weight
+          weight_goal: 
+            type: integer
+            description: weight goal
           calories: 
             type: integer
             description: calories
           notes: 
             type: string
             description: notes
-          weight_goal: 
-            type: string
-            description: weight goal
-

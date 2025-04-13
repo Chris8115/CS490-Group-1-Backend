@@ -645,7 +645,7 @@ def add_patient_progress():
         return ResponseMessage(f"Error Executing Query:\n{e}", 500)
     else:
         db.session.commit()
-        return ResponseMessage(f"patient progress entry successfully created (id: {params['patient_id']})", 201)
+        return ResponseMessage(f"patient progress entry successfully created (id: {params['progress_id']})", 201)
 
 @app.route("/patient_exercise_assignments", methods=['GET'])
 @login_required

@@ -511,9 +511,7 @@ def update_appointment(appointment_id):
             reason = {':reason' if request.json.get('reason') != None else 'reason'}
         WHERE appointment_id = :appointment_id
     """)
-    location = request.json.get('location')
-    if location is None:
-        location = ""
+    
     params = {
         'appointment_id': appointment_id,
         'doctor_id': request.json.get('doctor_id'),
@@ -521,7 +519,7 @@ def update_appointment(appointment_id):
         'start_time': request.json.get('start_time'),
         'end_time': request.json.get('end_time'),
         'status': request.json.get('status'),
-        'location': location,
+        'location': request.json.get('location'),
         'reason': request.json.get('reason')
     }
     #input validation
@@ -534,6 +532,8 @@ def update_appointment(appointment_id):
     valid_datetime = r"^\d{4}-\d{2}-\d{2} [0-5][0-9]:[0-5][0-9]:[0-5][0-9]$"
     if(params['reason'] != None and len(params['reason']) == 0):
         return ResponseMessage("Reason must be non-empty.", 400)
+    if(params['location'] != None and len(params['location']) == 0):
+        return ResponseMessage("location must be non-empty.", 400)
     #add appointment time validation
     if(params['start_time'] != None and re.search(valid_datetime, params['start_time']) == None):
         return ResponseMessage("Invalid Start Time. Format: (yyyy-mm-dd hh:mm:ss)", 400)

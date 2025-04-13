@@ -463,10 +463,9 @@ def add_appointment():
     if(params['status'].lower() not in ('canceled', 'pending', 'rejected', 'accepted')):
         return ResponseMessage("Invalid status field. Must be ('canceled', 'pending', 'rejected', 'accepted')", 400)
     valid_datetime = r"^\d{4}-\d{2}-\d{2} [0-5][0-9]:[0-5][0-9]:[0-5][0-9]$"
-    valid_address = r"\d{1,5}(\s\w.)?\s(\b\w*\b\s){1,2}\w*\.?" #dangerous regex
     if(len(params['reason']) == 0):
         return ResponseMessage("Reason must be non-empty.", 400)
-    if(re.search(valid_address, params['location']) == None):
+    if(len(params['location']) == 0):
         return ResponseMessage("Invalid Address. (Developer note, if you think this is a mistake please say something)", 400)
     if(None in (re.search(valid_datetime, params['start_time']), re.search(valid_datetime, params['end_time']))):
         return ResponseMessage("Invalid Datetime. Format: (yyyy-mm-dd hh:mm:ss)", 400)

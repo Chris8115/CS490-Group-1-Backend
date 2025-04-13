@@ -40,9 +40,6 @@ parameters:
           start_time: 
             type: string
             description: Appointment start time (`yyyy-mm-dd hh:mm:ss`)
-          end_time: 
-            type: string
-            description: Appointment end time (`yyyy-mm-dd hh:mm:ss`)
           status: 
             type: string
             description: Status of types (`accepted`, `rejected`, `pending`, `canceled`)

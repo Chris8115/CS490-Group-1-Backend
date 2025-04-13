@@ -1,0 +1,47 @@
+Doctor Patient Relationships records
+---
+tags:
+    - Services
+description: >
+  Updates an existing doctor–patient relationship record in the `doctor_patient_relationship` table using the JSON body.
+  The `date_assigned` field is automatically updated to the current date and time.
+  
+  Example: A PATCH request to `/doctor_patient_relationship/1/2` with the following JSON:
+  
+  {
+    "status": "active"
+  }
+  
+  updates the relationship record between the doctor with ID 1 and the patient with ID 2.
+responses:
+  200:
+    description: Doctor patient relationship updated successfully.
+  400:
+    description: No update fields provided or required fields are empty.
+  404:
+    description: Doctor patient relationship not found.
+  500:
+    description: Error updating doctor patient relationship.
+parameters:
+  - in: path
+    name: doctor_id
+    required: true
+    description: The ID of the doctor.
+    schema:
+      type: integer
+  - in: path
+    name: patient_id
+    required: true
+    description: The ID of the patient.
+    schema:
+      type: integer
+  - in: body
+    name: body
+    required: true
+    description: JSON object containing the fields to update for the doctor–patient relationship.
+    schema:
+      type: object
+      properties:
+        status:
+          type: string
+          description: Updated relationship status (e.g., "active", "pending", etc.).

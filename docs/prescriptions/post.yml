@@ -26,8 +26,6 @@ parameters:
           - medication_id
           - patient_id
           - pharmacist_id
-          - status
-          - date_prescribed
           - instructions
           - quantity
         properties: 
@@ -43,12 +41,6 @@ parameters:
           pharmacist_id: 
             type: integer
             description: Pharmacist ID
-          status: 
-            type: string
-            description: Status of types (`accepted`, `rejected`, `pending`, `canceled`)
-          date_prescribed: 
-            type: string
-            description: Prescription prescribed time (`yyyy-mm-dd hh:mm:ss`)
           instructions:
             type: string
             description: Instructions

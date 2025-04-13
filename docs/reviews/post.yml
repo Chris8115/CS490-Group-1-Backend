@@ -1,0 +1,48 @@
+Reviews records
+---
+tags:
+  - Services
+description: >
+  Creates a new review in the `reviews` table using the JSON body.
+  
+  Example: A POST request to `/reviews` with the following JSON:
+  
+  {
+    "patient_id": 100,
+    "doctor_id": 1,
+    "rating": 5,
+    "review_text": "Great experience with the service."
+  }
+  
+  creates a new review record.
+responses:
+  201:
+    description: Review created successfully.
+  400:
+    description: Missing required fields.
+  500:
+    description: Error creating review.
+parameters:
+  - in: body
+    name: body
+    required: true
+    description: JSON object containing the review fields.
+    schema:
+      type: object
+      properties:
+        patient_id:
+          type: integer
+          description: The ID of the patient creating the review.
+        doctor_id:
+          type: integer
+          description: The ID of the doctor being reviewed.
+        rating:
+          type: integer
+          description: The rating given to the doctor (typically 1-5).
+        review_text:
+          type: string
+          description: The text content of the review (optional).
+      required:
+        - patient_id
+        - doctor_id
+        - rating

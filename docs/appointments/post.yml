@@ -3,6 +3,7 @@ Appointments records
 tags:
     - Services
 description:
+    Login Required
     Creates an appointment record
 responses:
     201:

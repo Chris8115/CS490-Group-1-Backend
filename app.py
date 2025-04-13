@@ -1150,7 +1150,7 @@ def get_address():
             'address2': row.address2,
             'address': row.address,
             'state': row.state,
-            'zip': row.zip.zfill(5)
+            'zip': str(row.zip).zfill(5)
         })
     return json, 200
 

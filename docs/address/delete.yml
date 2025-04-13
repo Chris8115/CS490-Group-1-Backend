@@ -1,7 +1,7 @@
 Address records
 ---
 tags:
-    - Services
+    - Patients
 description:
     Deletes an instance of a addresses record from the `address` table using the required `address_id` in the URL path.
 

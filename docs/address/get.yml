@@ -1,7 +1,7 @@
 Address records
 ---
 tags:
-    - Services
+    - Patients
 description:
     Gets all of the addresses from the `address` table with optional filters.
     

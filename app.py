@@ -6,6 +6,7 @@ from sqlalchemy import desc, text
 from sqlalchemy.dialects import mysql
 from flasgger import Swagger, swag_from
 from flask_cors import CORS
+import pika
 import re
 from flask_login import LoginManager, UserMixin, login_user, LoginManager, login_required, logout_user, current_user
 
@@ -46,9 +47,15 @@ class Users(db.Model, UserMixin):
     created_at = db.Column(db.Text, nullable=False)
     def get_id(self):
         return str(self.user_id)
-        
-        
 
+def order_prescription(medication_id):
+    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+    channel = connection.channel()
+    channel.queue_declare(queue='orders')
+    channel.basic_publish(exchange='', routing_key='orders', body=str(medication_id))
+    print(f"Ordered medication ID: {medication_id}")
+    connection.close()
+      
 @app.route("/")
 def home():
     return "<h1>It works!</h1>"
@@ -324,8 +331,8 @@ def put_prescriptions():
             :patient_id,
             :medication_id,
             :instructions,
-            DATETIME(:date_prescribed),
-            :status,
+            CURRENT_TIMESTAMP,
+            'pending',
             :quantity,
             :pharmacist_id)
     """)
@@ -336,19 +343,19 @@ def put_prescriptions():
         'patient_id': request.json.get('patient_id'),
         'medication_id': request.json.get('medication_id'),
         'instructions': request.json.get('instructions'),
-        'date_prescribed': request.json.get('date_prescribed'),
-        'status': request.json.get('status'),
+        #'date_prescribed': request.json.get('date_prescribed'),
+        #'status': request.json.get('status'),
         'quantity': request.json.get('quantity'),
         'pharmacist_id': request.json.get('pharmacist_id')
     }
     #input validation
     if None in params.values():
         return ResponseMessage("Required parameters not supplied.", 400)
-    valid_datetime = r"^\d{4}-\d{2}-\d{2} [0-5][0-9]:[0-5][0-9]:[0-5][0-9]$"
-    if((re.search(valid_datetime, request.json.get('date_prescribed'))) is None):
-        return ResponseMessage("Invalid Datetime. Format: (yyyy-mm-dd hh:mm:ss)", 400)
-    if (request.json.get('status')).lower() not in ["accepted", "rejected", "pending", "canceled"]:
-        return ResponseMessage("Invalid Status. Format: (`accepted`, `rejected`, `pending`, `canceled`)", 400)
+    #valid_datetime = r"^\d{4}-\d{2}-\d{2} [0-5][0-9]:[0-5][0-9]:[0-5][0-9]$"
+    #if((re.search(valid_datetime, request.json.get('date_prescribed'))) is None):
+    #    return ResponseMessage("Invalid Datetime. Format: (yyyy-mm-dd hh:mm:ss)", 400)
+    #if (request.json.get('status')).lower() not in ["accepted", "rejected", "pending", "canceled"]:
+    #    return ResponseMessage("Invalid Status. Format: (`accepted`, `rejected`, `pending`, `canceled`)", 400)
     if request.json.get('quantity') <= 0:
         return ResponseMessage("Quantity must be > 0", 400)
     try:
@@ -371,6 +378,7 @@ def put_prescriptions():
         return ResponseMessage(f"Error Executing Query:\n{e}", 500)
     else:
         db.session.commit()
+        order_prescription(f"{params['medication_id']},{params['patient_id']}")
         return ResponseMessage(f"Prescription entry successfully created (id: {params['prescription_id']})", 201)
 
 @app.route("/appointments", methods=['GET'])

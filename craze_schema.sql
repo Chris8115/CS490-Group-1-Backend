@@ -49,6 +49,7 @@ CREATE TABLE "doctors" (
 	"license_number"	INTEGER NOT NULL,
 	"specialization"	TEXT NOT NULL,
 	"profile"	TEXT NOT NULL,
+	"office"	INTEGER DEFAULT -1 NOT NULL,
 	PRIMARY KEY("doctor_id"),
 	CONSTRAINT "doctor_id" FOREIGN KEY("doctor_id") REFERENCES "users"("user_id")
 );

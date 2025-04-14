@@ -574,6 +574,7 @@ def get_patient_progress():
             'progress_id': row.progress_id,
             'patient_id': row.patient_id,
             'weight': row.weight,
+            'weight_goal': row.weight_goal,
             'calories': row.calories,
             'notes': row.notes,
             'date_logged': row.date_logged
@@ -603,11 +604,12 @@ def delete_patient_progress(progress_id):
 def add_patient_progress():
     #sql query
     query = text("""
-        INSERT INTO patient_progress (progress_id, patient_id, weight, calories, notes, date_logged)
+        INSERT INTO patient_progress (progress_id, patient_id, weight, weight_goal, calories, notes, date_logged)
         VALUES (
             :progress_id,
             :patient_id,
             :weight,
+            :weight_goal,
             :calories,
             :notes,
             CURRENT_TIMESTAMP
@@ -619,6 +621,7 @@ def add_patient_progress():
         'patient_id': request.json.get('patient_id'),
         'weight': request.json.get('weight'),
         'calories': request.json.get('calories'),
+        'weight_goal': request.json.get('weight_goal'),
         'notes': request.json.get('notes')
     }
     #input validation
@@ -630,6 +633,8 @@ def add_patient_progress():
             return ResponseMessage("Invalid patient id.", 400)
         if(request.json.get('weight') <= 0 or request.json.get('weight') >= 1500):
             return ResponseMessage("Invalid weight.", 400)
+        if(request.json.get('weight_goal') <= 0 or request.json.get('weight_goal') >= 1500):
+            return ResponseMessage("Invalid weight goal.", 400)
         if(request.json.get('calories') <= 0 or request.json.get('calories') >= 30000):
             return ResponseMessage("Invalid calories.", 400)
         #execute query
@@ -639,7 +644,7 @@ def add_patient_progress():
         return ResponseMessage(f"Error Executing Query:\n{e}", 500)
     else:
         db.session.commit()
-        return ResponseMessage(f"patient progress entry successfully created (id: {params['patient_id']})", 201)
+        return ResponseMessage(f"patient progress entry successfully created (id: {params['progress_id']})", 201)
 
 @app.route("/patient_exercise_assignments", methods=['GET'])
 @login_required

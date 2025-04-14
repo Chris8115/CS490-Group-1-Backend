@@ -3,6 +3,7 @@ Saved Posts records
 tags:
     - Discussion Forum
 description:
+    Login Required
     Deletes an instance of a Saved Posts record from the `saved_posts` table using the required `post_id` in the URL path.
 
     example - `/saved_posts/1` deletes the saved_posts with `id = 1`.

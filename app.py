@@ -1,4 +1,4 @@
-from flask import Flask, request, Response, jsonify , render_template
+from flask import Flask, request, Response, jsonify, render_template
 from flask_restful import Api, Resource, abort, reqparse
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.sql.functions import func
@@ -8,11 +8,13 @@ from flasgger import Swagger, swag_from
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 import os
+import pika
 import re
+from flask_login import LoginManager, UserMixin, login_user, LoginManager, login_required, logout_user, current_user
 import json
 
 app = Flask(__name__)
-CORS(app, origins="http://localhost:3000") 
+CORS(app, supports_credentials=True, origins=["http://localhost:3000"]) 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///craze.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SWAGGER'] = {
@@ -22,6 +24,7 @@ app.config['SWAGGER'] = {
     'doc_dir': './docs/',
     'uiversion': 3,
 }
+app.config['SECRET_KEY'] = 'CRAZE' #super duper secret 🤫
 db = SQLAlchemy(app)
 UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads')
 if not os.path.exists(UPLOAD_FOLDER):
@@ -37,6 +40,35 @@ def allowed_file(filename):
 api = Api(app)
 swag = Swagger(app)
 
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = "login"
+
+@login_manager.user_loader
+def load_user(user_id):
+    return db.session.get(Users, int(user_id))
+
+class Users(db.Model, UserMixin):
+    user_id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.Text, nullable=False)
+    password = db.Column(db.Text, nullable=False)
+    first_name = db.Column(db.Text, nullable=False)
+    last_name = db.Column(db.Text, nullable=False)
+    phone_number = db.Column(db.Integer, nullable=False)
+    role = db.Column(db.Text, nullable=False)
+    eula = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.Text, nullable=False)
+    def get_id(self):
+        return str(self.user_id)
+
+def order_prescription(medication_id):
+    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+    channel = connection.channel()
+    channel.queue_declare(queue='orders')
+    channel.basic_publish(exchange='', routing_key='orders', body=str(medication_id))
+    print(f"Ordered medication ID: {medication_id}")
+    connection.close()
+      
 @app.route("/")
 def home():
     return "<h1>It works!</h1>"
@@ -45,9 +77,57 @@ def home():
 def docs():
     return render_template("build/html/index.html")
 
+@app.route('/login', methods=['GET', 'POST'])
+@swag_from("docs/auth/login_get.yml", methods=['GET'])
+@swag_from("docs/auth/login_post.yml", methods=['POST'])
+def login():
+    next = request.args.get('next')
+    valid_email = r"^.+\d*@.+[.][a-zA-Z]{2,4}$"
+    params = {
+        'email': None,
+        'password': None,
+        'remember': False
+    }
+    if(request.method == 'GET'):
+        params['email'] = request.args.get('email')
+        params['password'] = request.args.get('password')
+        params['remember'] = request.args.get('remember') if request.args.get('remember') != None else False
+    elif(request.method == 'POST'):
+        json = request.json
+        params['email'] = json.get('email')
+        params['password'] = json.get('password')
+        params['remember'] = json.get('remember') if json.get('remember') != None else False
+    if(None in ( params['email'], params['password'])):
+        return ResponseMessage("Required credentials not sent.", 400)
+    if(re.search(valid_email, params['email']) == None):
+        return ResponseMessage("Invalid email address.", 400)
+    user = Users.query.filter_by(email=params['email']).first()
+    if user == None:
+        return ResponseMessage("Invalid user credentials.", 401)
+    elif(user.password != params['password']):
+        return ResponseMessage("Invalid password.", 400)
+    else:
+        login_user(user, params['remember'] or False)
+        return {'user_id': current_user.user_id, 'role': current_user.role, 'message':'Login successful.'}
+
+@app.route('/logout', methods=['GET', 'POST'])
+@login_required
+@swag_from('docs/auth/logout.yml', methods=['GET', 'POST'])
+def logout():
+    logout_user()
+    return ResponseMessage("User Logged out.", 200)
+
+@app.route('/login_check')
+@login_required
+@swag_from('docs/auth/login_check.yml')
+def login_check():
+    return ResponseMessage(f"User is logged in. ID: {current_user.get_id()}", 200)
+
 @app.route("/transactions", methods=['GET'])
+@login_required
 @swag_from('docs/transactions/get.yml')
 def get_transactions():
+    print(current_user)
     #sql query
     query = "SELECT * FROM transactions\n"
     #get inputs
@@ -81,6 +161,7 @@ def get_transactions():
     return json, 200
 
 @app.route("/transactions/<int:transaction_id>", methods=['DELETE'])
+@login_required
 @swag_from('docs/transactions/delete.yml')
 def delete_transaction(transaction_id):
     try:
@@ -97,6 +178,7 @@ def delete_transaction(transaction_id):
         return Response(status=200)
 
 @app.route("/saved_posts", methods=['GET'])
+@login_required
 @swag_from('docs/savedposts/get.yml')
 def get_saved_posts():
     #sql query
@@ -123,6 +205,7 @@ def get_saved_posts():
     return json, 200
 
 @app.route("/saved_posts/<int:post_id>", methods=['DELETE'])
+@login_required
 @swag_from('docs/savedposts/delete.yml')
 def delete_saved_posts(post_id):
     try:
@@ -250,8 +333,8 @@ def update_prescriptions(prescription_id):
         db.session.commit()
         return ResponseMessage("Prescription Successfully Updated.", 200) 
 
-@app.route("/prescriptions", methods=['PUT'])
-@swag_from('docs/prescriptions/put.yml')
+@app.route("/prescriptions", methods=['POST'])
+@swag_from('docs/prescriptions/post.yml')
 def put_prescriptions():
     query = text("""
         INSERT INTO prescriptions (prescription_id, doctor_id, patient_id, medication_id, instructions, date_prescribed, status, quantity, pharmacist_id)
@@ -261,8 +344,8 @@ def put_prescriptions():
             :patient_id,
             :medication_id,
             :instructions,
-            DATETIME(:date_prescribed),
-            :status,
+            CURRENT_TIMESTAMP,
+            'pending',
             :quantity,
             :pharmacist_id)
     """)
@@ -273,19 +356,19 @@ def put_prescriptions():
         'patient_id': request.json.get('patient_id'),
         'medication_id': request.json.get('medication_id'),
         'instructions': request.json.get('instructions'),
-        'date_prescribed': request.json.get('date_prescribed'),
-        'status': request.json.get('status'),
+        #'date_prescribed': request.json.get('date_prescribed'),
+        #'status': request.json.get('status'),
         'quantity': request.json.get('quantity'),
         'pharmacist_id': request.json.get('pharmacist_id')
     }
     #input validation
     if None in params.values():
         return ResponseMessage("Required parameters not supplied.", 400)
-    valid_datetime = r"^\d{4}-\d{2}-\d{2} [0-5][0-9]:[0-5][0-9]:[0-5][0-9]$"
-    if((re.search(valid_datetime, request.json.get('date_prescribed'))) is None):
-        return ResponseMessage("Invalid Datetime. Format: (yyyy-mm-dd hh:mm:ss)", 400)
-    if (request.json.get('status')).lower() not in ["accepted", "rejected", "pending", "canceled"]:
-        return ResponseMessage("Invalid Status. Format: (`accepted`, `rejected`, `pending`, `canceled`)", 400)
+    #valid_datetime = r"^\d{4}-\d{2}-\d{2} [0-5][0-9]:[0-5][0-9]:[0-5][0-9]$"
+    #if((re.search(valid_datetime, request.json.get('date_prescribed'))) is None):
+    #    return ResponseMessage("Invalid Datetime. Format: (yyyy-mm-dd hh:mm:ss)", 400)
+    #if (request.json.get('status')).lower() not in ["accepted", "rejected", "pending", "canceled"]:
+    #    return ResponseMessage("Invalid Status. Format: (`accepted`, `rejected`, `pending`, `canceled`)", 400)
     if request.json.get('quantity') <= 0:
         return ResponseMessage("Quantity must be > 0", 400)
     try:
@@ -308,9 +391,11 @@ def put_prescriptions():
         return ResponseMessage(f"Error Executing Query:\n{e}", 500)
     else:
         db.session.commit()
+        order_prescription(f"{params['medication_id']},{params['patient_id']}")
         return ResponseMessage(f"Prescription entry successfully created (id: {params['prescription_id']})", 201)
 
 @app.route("/appointments", methods=['GET'])
+@login_required
 @swag_from('docs/appointments/get.yml')
 def appointments():
     #sql query
@@ -348,6 +433,7 @@ def appointments():
     return json, 200
 
 @app.route("/appointments/<int:appointment_id>", methods=['DELETE'])
+@login_required
 @swag_from('docs/appointments/delete.yml')
 def delete_appointments(appointment_id):
     try:
@@ -363,8 +449,9 @@ def delete_appointments(appointment_id):
         db.session.commit()
         return Response(status=200)
 
-@app.route("/appointments", methods=['PUT'])
-@swag_from('docs/appointments/put.yml')
+@app.route("/appointments", methods=['POST'])
+@login_required
+@swag_from('docs/appointments/post.yml')
 def add_appointment():
     #sql query
     query = text("""
@@ -397,10 +484,9 @@ def add_appointment():
     if(params['status'].lower() not in ('canceled', 'pending', 'rejected', 'accepted')):
         return ResponseMessage("Invalid status field. Must be ('canceled', 'pending', 'rejected', 'accepted')", 400)
     valid_datetime = r"^\d{4}-\d{2}-\d{2} [0-5][0-9]:[0-5][0-9]:[0-5][0-9]$"
-    valid_address = r"\d{1,5}(\s\w.)?\s(\b\w*\b\s){1,2}\w*\.?" #dangerous regex
     if(len(params['reason']) == 0):
         return ResponseMessage("Reason must be non-empty.", 400)
-    if(re.search(valid_address, params['location']) == None):
+    if(len(params['location']) == 0):
         return ResponseMessage("Invalid Address. (Developer note, if you think this is a mistake please say something)", 400)
     if(None in (re.search(valid_datetime, params['start_time']), re.search(valid_datetime, params['end_time']))):
         return ResponseMessage("Invalid Datetime. Format: (yyyy-mm-dd hh:mm:ss)", 400)
@@ -421,6 +507,7 @@ def add_appointment():
         return ResponseMessage(f"Appointment entry successfully created (id: {params['appointment_id']})", 201)
 
 @app.route("/appointments/<int:appointment_id>", methods=['PATCH'])
+@login_required
 @swag_from("docs/appointments/patch.yml")
 def update_appointment(appointment_id):
     #sql query
@@ -476,6 +563,7 @@ def update_appointment(appointment_id):
         return ResponseMessage("Appointment Successfully Updated.", 200) 
 
 @app.route("/patient_progress", methods=['GET'])
+@login_required
 @swag_from('docs/patientprogress/get.yml')
 def get_patient_progress():
     #sql query
@@ -506,6 +594,7 @@ def get_patient_progress():
     return json, 200
 
 @app.route("/patient_progress/<int:progress_id>", methods=['DELETE'])
+@login_required
 @swag_from('docs/patientprogress/delete.yml')
 def delete_patient_progress(progress_id):
     try:
@@ -521,8 +610,9 @@ def delete_patient_progress(progress_id):
         db.session.commit()
         return Response(status=200)
 
-@app.route("/patient_progress", methods=['PUT'])
-@swag_from('docs/patientprogress/put.yml')
+@app.route("/patient_progress", methods=['POST'])
+@login_required
+@swag_from('docs/patientprogress/post.yml')
 def add_patient_progress():
     #sql query
     query = text("""
@@ -565,6 +655,7 @@ def add_patient_progress():
         return ResponseMessage(f"patient progress entry successfully created (id: {params['patient_id']})", 201)
 
 @app.route("/patient_exercise_assignments", methods=['GET'])
+@login_required
 @swag_from('docs/patientexerciseassignments/get.yml')
 def get_patient_exercise_assignments():
     #sql query
@@ -674,6 +765,7 @@ def post_patient_exercise_assignments():
 
 
 @app.route("/patient_exercise_assignments/<int:assignment_id>", methods=['DELETE'])
+@login_required
 @swag_from('docs/patientexerciseassignments/delete.yml')
 def delete_patient_exercise_assignments(assignment_id):
     try:
@@ -771,6 +863,7 @@ def delete_inventory(inventory_id):
         return Response(status=200)
 
 @app.route("/exercise_plans", methods=['GET'])
+@login_required
 @swag_from('docs/exerciseplans/get.yml')
 def get_exercise_plans():
     #sql query
@@ -795,6 +888,7 @@ def get_exercise_plans():
     return json, 200
 
 @app.route("/exercise_plans/<int:exercise_id>", methods=['DELETE'])
+@login_required
 @swag_from('docs/exerciseplans/delete.yml')
 def delete_exercise_plans(exercise_id):
     try:
@@ -1076,7 +1170,7 @@ def get_address():
             'address2': row.address2,
             'address': row.address,
             'state': row.state,
-            'zip': row.zip.zfill(5)
+            'zip': str(row.zip).zfill(5)
         })
     return json, 200
 
@@ -1666,8 +1760,8 @@ def delete_users(user_id):
         db.session.commit()
         return Response(status=200)
     
-@app.route("/users/<string:role>", methods=['PUT'])
-@swag_from('docs/users/put.yml')
+@app.route("/users/<string:role>", methods=['POST'])
+@swag_from('docs/users/post.yml')
 def create_user(role):
     file = request.files.get('identification')
     identification_path = ""

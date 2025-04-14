@@ -3,6 +3,7 @@ Transactions records
 tags:
     - Services
 description:
+    Login Required
     Deletes an instance of a transaction record from the `transactions` table using the required `transaction_id` in the URL path.
 
     example - `/transactions/1` deletes the transaction with `id = 1`.

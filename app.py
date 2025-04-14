@@ -9,6 +9,7 @@ from flask_cors import CORS
 from werkzeug.utils import secure_filename
 import os
 import re
+import json
 
 app = Flask(__name__)
 CORS(app, origins="http://localhost:3000") 
@@ -22,11 +23,16 @@ app.config['SWAGGER'] = {
     'uiversion': 3,
 }
 db = SQLAlchemy(app)
-UPLOAD_FOLDER = 'idents'
+UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads')
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg'}
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 #API docs stuff
 api = Api(app)
 swag = Swagger(app)
@@ -1665,10 +1671,11 @@ def delete_users(user_id):
 def create_user(role):
     file = request.files.get('identification')
     identification_path = ""
-
+    user_id = (db.session.execute(text("SELECT MAX(user_id) + 1 AS user_id FROM users")).first()).user_id
     if file and allowed_file(file.filename):
-        filename = secure_filename(file.filename)
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        ext = os.path.splitext(file.filename)[1].lower()
+        new_filename = f"{user_id}{ext}"
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], new_filename)
         file.save(filepath)
         identification_path = filepath
     #sql query
@@ -1730,14 +1737,18 @@ def create_user(role):
         )
     """)
     # NOTE: doing appointment_id this way could bring about a race condition.... but lets be real this is never happening.
-    user_json = request.json.get('user')
-    doctor_json = request.json.get('doctor')
-    patient_json = request.json.get('patient')
-    pharmacist_json = request.json.get('pharmacist')
-    address_json = request.json.get("address")
-    creditcard_json = request.json.get("credit_card")
+    try:
+        user_json = json.loads(request.form.get('user'))
+        doctor_json = json.loads(request.form.get('doctor')) if request.form.get('doctor') else None
+        patient_json = json.loads(request.form.get('patient')) if request.form.get('patient') else None
+        pharmacist_json = json.loads(request.form.get('pharmacist')) if request.form.get('pharmacist') else None
+        address_json = json.loads(request.form.get("address")) if request.form.get('address') else None
+        creditcard_json = json.loads(request.form.get("credit_card")) if request.form.get('credit_card') else None
+    except Exception as e:
+        return ResponseMessage(f"Malformed JSON: {e}", 400)
+    
     user_params = {
-        'user_id': (db.session.execute(text("SELECT MAX(user_id) + 1 AS user_id FROM users")).first()).user_id,
+        'user_id': user_id,
         'email': user_json.get('email'),
         'password': user_json.get('password'),
         'first_name': user_json.get('first_name'),
@@ -1774,7 +1785,8 @@ def create_user(role):
     patient_params = {
         'patient_id': user_params['user_id'],
         'address_id': address_params['address_id'],
-        'medical_history': patient_json.get('medical_history'),
+        #'medical_history': patient_json.get('medical_history'),
+        'medical_history': "loreum ipsum bullshit type shi",
         'creditcard_id': creditcard_params['creditcard_id'],
         'ssn': patient_json.get('ssn')
     } if patient_json != None else None 
@@ -1797,7 +1809,7 @@ def create_user(role):
         return ResponseMessage("Password must be at least 4 characters.", 400)
     if(len(user_params['first_name']) < 1 or len(user_params['last_name']) < 1):
         return ResponseMessage("Name fields must be non-empty.", 400)
-    if(re.search(valid_phone, user_params['phone_number']) == None):
+    if(re.search(valid_phone, str(user_params['phone_number'])) == None):
         return ResponseMessage("Invalid phone number.", 400)
     if(user_params['role'] not in ('doctor', 'patient', 'pharmacist')):
         return ResponseMessage("Invalid user role. (must be 'doctor', 'patient', or 'pharmacist')", 400)
@@ -1811,6 +1823,7 @@ def create_user(role):
         #user fields
         if(None in patient_params.values()):
             return ResponseMessage("Required parameters missing from patient fields.", 400)
+        
         if(patient_params['medical_history'] == ""):
             return ResponseMessage("Unless newborn babies are beginning their weight loss journey young, medical history should be non-empty", 400)
         if(re.search(valid_license, str(patient_params['ssn'])) == None):

@@ -203,6 +203,7 @@ CREATE TABLE "users" (
 	"role"	TEXT NOT NULL,
 	"eula"	TEXT NOT NULL DEFAULT 'signed',
 	"created_at"	TIMESTAMP NOT NULL,
+	"identification"	TEXT NOT NULL,
 	CONSTRAINT "users_pk" PRIMARY KEY("user_id")
 );
 COMMIT;

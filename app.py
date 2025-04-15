@@ -182,7 +182,7 @@ def delete_transaction(transaction_id):
 @swag_from('docs/savedposts/get.yml')
 def get_saved_posts():
     #sql query
-    query = "SELECT * FROM saved_posts AS S JOIN users AS U ON S.user_id = U.user_id\n"
+    query = "SELECT * FROM saved_posts AS S JOIN users AS U ON S.user_id = U.user_id JOIN forum_posts AS F ON F.post_id = S.post_id\n"
     #get inputs
     params = {
         'uid': "" if request.args.get('user_id') == None else request.args.get('user_id'),
@@ -202,6 +202,7 @@ def get_saved_posts():
             'first_name': row.first_name,
             'last_name': row.last_name,
             'post_id': row.post_id,
+            'title': row.title,
             'saved_at': row.saved_at
         })
     return json, 200
@@ -522,6 +523,7 @@ def update_appointment(appointment_id):
             status = {':status' if request.json.get('status') != None else 'status'},
             location = {':location' if request.json.get('location') != None else 'location'},
             reason = {':reason' if request.json.get('reason') != None else 'reason'}
+            notes = {':reason' if request.json.get('notes') != None else 'notes'}
         WHERE appointment_id = :appointment_id
     """)
     params = {
@@ -532,7 +534,8 @@ def update_appointment(appointment_id):
         'end_time': request.json.get('end_time'),
         'status': request.json.get('status'),
         'location': request.json.get('location'),
-        'reason': request.json.get('reason')
+        'reason': request.json.get('reason'),
+        'notes': request.json.get('notes')
     }
     #input validation
     if(db.session.execute(text("SELECT * FROM appointments WHERE appointment_id = :appointment_id"), params).first() == None):

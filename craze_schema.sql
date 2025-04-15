@@ -22,6 +22,7 @@ CREATE TABLE "appointments" (
 	"reason"	TEXT NOT NULL,
 	"details"    TEXT NOT NULL,
 	"created_at"	TIMESTAMP NOT NULL,
+	"notes" TEXT
 	CONSTRAINT "appointments_pk" PRIMARY KEY("appointment_id"),
 	CONSTRAINT "doctor_id" FOREIGN KEY("doctor_id") REFERENCES "users"("user_id"),
 	CONSTRAINT "patient_id" FOREIGN KEY("patient_id") REFERENCES "users"("user_id")

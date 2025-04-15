@@ -3,6 +3,7 @@ Patient Progress records
 tags:
     - Patients
 description:
+    Login Required
     Deletes an instance of a patient progress record from the `patient_progress` table using the required `progress_id` in the URL path.
 
     example - `/patient_progress/1` deletes the patient progress with `id = 1`.

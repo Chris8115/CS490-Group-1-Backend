@@ -1,7 +1,7 @@
 Address records
 ---
 tags:
-    - Services
+    - Patients
 description: >
   Updates an existing address record in the `address` table using the JSON body.
   

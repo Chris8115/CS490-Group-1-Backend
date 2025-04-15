@@ -1290,7 +1290,7 @@ def delete_pharmacists(pharmacist_id):
 @swag_from('docs/forumcomments/get.yml')
 def get_forum_comments():
     #sql query
-    query = "SELECT * FROM forum_comments\n"
+    query = "SELECT * FROM forum_comments AS F JOIN users AS U ON F.user_id = U.user_id\n"
     #get inputs
     params = {
         'cid': "" if request.args.get('comment_id') == None else request.args.get('comment_id'),
@@ -1309,6 +1309,8 @@ def get_forum_comments():
             'comment_id': row.comment_id,
             'post_id': row.post_id,
             'user_id': row.user_id,
+            'first_name': row.first_name,
+            'last_name': row.last_name,
             'comment_text': row.comment_text,
             'created_at': row.created_at
         })
@@ -1414,7 +1416,7 @@ def patch_forum_comments(comment_id):
 @swag_from('docs/forumposts/get.yml')
 def get_forum_posts():
     #sql query
-    query = "SELECT * FROM forum_posts\n"
+    query = "SELECT * FROM forum_posts AS F JOIN users AS U ON F.user_id = U.user_id\n"
     #get inputs
     params = {
         'pid': "" if request.args.get('post_id') == None else request.args.get('post_id'),
@@ -1434,6 +1436,8 @@ def get_forum_posts():
         json['forum_posts'].append({
             'post_id': row.post_id,
             'user_id': row.user_id,
+            'first_name': row.first_name,
+            'last_name': row.last_name,
             'title': row.title,
             'content': row.content,
             'post_type': row.post_type,

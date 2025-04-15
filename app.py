@@ -182,7 +182,7 @@ def delete_transaction(transaction_id):
 @swag_from('docs/savedposts/get.yml')
 def get_saved_posts():
     #sql query
-    query = "SELECT * FROM saved_posts\n"
+    query = "SELECT * FROM saved_posts AS S JOIN users AS U ON S.user_id = U.user_id\n"
     #get inputs
     params = {
         'uid': "" if request.args.get('user_id') == None else request.args.get('user_id'),
@@ -199,6 +199,8 @@ def get_saved_posts():
     for row in result:
         json['saved_posts'].append({
             'user_id': row.user_id,
+            'first_name': row.first_name,
+            'last_name': row.last_name,
             'post_id': row.post_id,
             'saved_at': row.saved_at
         })

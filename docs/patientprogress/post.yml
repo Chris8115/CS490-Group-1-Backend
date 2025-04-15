@@ -25,6 +25,7 @@ parameters:
         required:
           - patient_id
           - weight
+          - weight_goal
           - calories
         properties: 
           patient_id: 
@@ -33,10 +34,12 @@ parameters:
           weight: 
             type: integer
             description: weight
+          weight_goal: 
+            type: integer
+            description: weight goal
           calories: 
             type: integer
             description: calories
-          Notes: 
+          notes: 
             type: string
             description: notes
-

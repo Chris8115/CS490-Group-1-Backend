@@ -1,0 +1,42 @@
+Forum Posts records
+---
+tags:
+  - Discussion Forum
+description: >
+  Creates a new forum posts in the `Forum Comments` table using the JSON body.
+  
+  Example: A PUT request to `/forum_posts`
+  
+  creates a new forum posts record.
+responses:
+  201:
+    description: forum posts created successfully.
+  400:
+    description: Missing required fields.
+  500:
+    description: Error creating review.
+parameters:
+  - in: body
+    name: body
+    required: true
+    description: JSON object containing the forum posts fields.
+    schema:
+      type: object
+      properties:
+        user_id:
+          type: integer
+          description: The ID of the user.
+        title:
+          type: string
+          description: The title.
+        content:
+          type: string
+          description: The content.
+        post_type:
+          type: string
+          description: The post type.
+      required:
+        - user_id
+        - title
+        - content
+        - post_type

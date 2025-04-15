@@ -116,6 +116,7 @@ CREATE TABLE "patient_progress" (
 	"patient_id"	INTEGER,
 	"date_logged"	TIMESTAMP NOT NULL,
 	"weight"	REAL NOT NULL,
+	"weight_goal"	INTEGER NOT NULL DEFAULT 200,
 	"calories"	REAL NOT NULL,
 	"notes"	TEXT,
 	CONSTRAINT "patient_progress_pk" PRIMARY KEY("progress_id"),
@@ -202,6 +203,7 @@ CREATE TABLE "users" (
 	"role"	TEXT NOT NULL,
 	"eula"	TEXT NOT NULL DEFAULT 'signed',
 	"created_at"	TIMESTAMP NOT NULL,
+	"identification"	TEXT NOT NULL,
 	CONSTRAINT "users_pk" PRIMARY KEY("user_id")
 );
 COMMIT;

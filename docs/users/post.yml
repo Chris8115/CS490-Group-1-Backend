@@ -21,7 +21,7 @@ parameters:
       schema:
         type: integer
     - in: body
-      name: appointment
+      name: user
       required: true
       description: | 
         User information. 'optional' fields are actually required based on the role. Patients need patient, creditcard, and address for example. Only include the ones required for the users particular role.

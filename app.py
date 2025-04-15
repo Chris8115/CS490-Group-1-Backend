@@ -1290,7 +1290,7 @@ def delete_pharmacists(pharmacist_id):
 @swag_from('docs/forumcomments/get.yml')
 def get_forum_comments():
     #sql query
-    query = "SELECT * FROM forum_comments\n"
+    query = "SELECT * FROM forum_comments AS F JOIN users AS U ON F.user_id = U.user_id\n"
     #get inputs
     params = {
         'cid': "" if request.args.get('comment_id') == None else request.args.get('comment_id'),
@@ -1309,6 +1309,8 @@ def get_forum_comments():
             'comment_id': row.comment_id,
             'post_id': row.post_id,
             'user_id': row.user_id,
+            'first_name': row.first_name,
+            'last_name': row.last_name,
             'comment_text': row.comment_text,
             'created_at': row.created_at
         })
@@ -1329,7 +1331,49 @@ def delete_forum_comments(comment_id):
     else:
         db.session.commit()
         return Response(status=200)
-    
+
+@app.route("/forum_comments", methods=['POST'])
+@swag_from('docs/forumcomments/post.yml')
+def add_forum_comments():
+    #sql query
+    query = text("""
+        INSERT INTO forum_comments (comment_id, post_id, user_id, comment_text, created_at)
+        VALUES (
+            :comment_id,
+            :post_id,
+            :user_id,
+            :comment_text,
+            CURRENT_TIMESTAMP
+            )
+    """)
+    # NOTE: doing comment_id this way could bring about a race condition.... but lets be real this is never happening.
+    params = {
+        'comment_id': (db.session.execute(text("SELECT MAX(comment_id) + 1 AS comment_id FROM forum_comments")).first()).comment_id,
+        'post_id': request.json.get('post_id'),
+        'user_id': request.json.get('user_id'),
+        'comment_text': request.json.get('comment_text')
+    }
+    #input validation
+    if None in list(params.values())[:-1]:
+        return ResponseMessage("Required parameters not supplied.", 400)
+    try:
+        result = db.session.execute(text("SELECT * FROM forum_posts WHERE post_id = :post_id"), params)
+        if(result.first() == None):
+            return ResponseMessage("Invalid post id.", 400)
+        result = db.session.execute(text("SELECT * FROM users WHERE user_id = :user_id"), params)
+        if(result.first() == None):
+            return ResponseMessage("Invalid user id.", 400)
+        if(len(str(request.json.get('comment_text'))) <= 0):
+            return ResponseMessage("Invalid comment text.", 400)
+        #execute query
+        db.session.execute(query, params)
+    except Exception as e:
+        print(e)
+        return ResponseMessage(f"Error Executing Query:\n{e}", 500)
+    else:
+        db.session.commit()
+        return ResponseMessage(f"comment entry successfully created (id: {params['comment_id']})", 201)
+
 @app.route("/forum_comments/<int:comment_id>", methods=['PATCH'])
 @swag_from('docs/forumcomments/patch.yml')
 def patch_forum_comments(comment_id):
@@ -1372,7 +1416,7 @@ def patch_forum_comments(comment_id):
 @swag_from('docs/forumposts/get.yml')
 def get_forum_posts():
     #sql query
-    query = "SELECT * FROM forum_posts\n"
+    query = "SELECT * FROM forum_posts AS F JOIN users AS U ON F.user_id = U.user_id\n"
     #get inputs
     params = {
         'pid': "" if request.args.get('post_id') == None else request.args.get('post_id'),
@@ -1392,12 +1436,57 @@ def get_forum_posts():
         json['forum_posts'].append({
             'post_id': row.post_id,
             'user_id': row.user_id,
+            'first_name': row.first_name,
+            'last_name': row.last_name,
             'title': row.title,
             'content': row.content,
             'post_type': row.post_type,
             'created_at': row.created_at
         })
     return json, 200
+
+@app.route("/forum_posts", methods=['POST'])
+@swag_from('docs/forumposts/post.yml')
+def add_forum_posts():
+    #sql query
+    query = text("""
+        INSERT INTO forum_posts (post_id, user_id, title, content, post_type, created_at)
+        VALUES (
+            :post_id,
+            :user_id,
+            :title,
+            :content,
+            :post_type,
+            CURRENT_TIMESTAMP
+            )
+    """)
+    # NOTE: doing comment_id this way could bring about a race condition.... but lets be real this is never happening.
+    params = {
+        'post_id': (db.session.execute(text("SELECT MAX(post_id) + 1 AS post_id FROM forum_posts")).first()).post_id,
+        'user_id': request.json.get('user_id'),
+        'title': request.json.get('title'),
+        'content': request.json.get('content'),
+        'post_type': request.json.get('post_type')
+    }
+    #input validation
+    if None in list(params.values())[:-1]:
+        return ResponseMessage("Required parameters not supplied.", 400)
+    try:
+        result = db.session.execute(text("SELECT * FROM users WHERE user_id = :user_id"), params)
+        if(result.first() == None):
+            return ResponseMessage("Invalid user_id.", 400)
+        if (request.json.get('post_type').lower() != "discussion" and request.json.get('post_type').lower() != "Exercise Plan"):
+            return ResponseMessage("Invalid post_type.", 400)
+        if(len(str(request.json.get('comment_text'))) <= 0):
+            return ResponseMessage("Invalid comment text.", 400)
+        #execute query
+        db.session.execute(query, params)
+    except Exception as e:
+        print(e)
+        return ResponseMessage(f"Error Executing Query:\n{e}", 500)
+    else:
+        db.session.commit()
+        return ResponseMessage(f"post entry successfully created (id: {params['post_id']})", 201)
 
 @app.route("/forum_posts/<int:post_id>", methods=['DELETE'])
 @swag_from('docs/forumposts/delete.yml')
@@ -1414,6 +1503,39 @@ def delete_forum_posts(post_id):
     else:
         db.session.commit()
         return Response(status=200)
+
+@app.route("/forum_posts/<int:post_id>", methods=['PATCH'])
+@swag_from('docs/forumposts/patch.yml')
+def update_forum_posts(post_id):
+        #sql query
+    query = text(f"""
+        UPDATE forum_posts SET
+            title = {':title' if request.json.get('title') != None else 'title'},
+            content = {':content' if request.json.get('content') != None else 'content'},
+            post_type = {':post_type' if request.json.get('post_type') != None else 'post_type'}
+        WHERE post_id = :post_id
+    """)
+    params = {
+        'post_id': post_id,
+        'title': request.json.get('title'),
+        'content': request.json.get('content'),
+        'post_type': request.json.get('post_type')
+    }
+    #input validation
+    if(db.session.execute(text("SELECT * FROM forum_posts WHERE post_id = :post_id"), params).first() == None):
+        return ResponseMessage("post not found.", 404)
+    if (request.json.get('post_type').lower() != "discussion" and request.json.get('post_type').lower() != "exercise plan"):
+        return ResponseMessage("Invalid post_type.", 400)
+    if(len(str(request.json.get('comment_text'))) <= 0):
+        return ResponseMessage("Invalid comment text.", 400)
+    try:
+        db.session.execute(query, params)
+    except Exception as e:
+        print(e)
+        return ResponseMessage(f"Server/SQL Error. Exeption: \n{e}", 500)
+    else:
+        db.session.commit()
+        return ResponseMessage("Post Successfully Updated.", 200) 
 
 @app.route("/reviews", methods=['GET'])
 @swag_from('docs/reviews/get.yml')

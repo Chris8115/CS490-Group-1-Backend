@@ -1,0 +1,42 @@
+Forum Posts records
+---
+tags:
+    - Discussion Forum
+description: >
+  Updates an existing forum post in the `forum_posts` table using the JSON body.
+responses:
+  200:
+    description: post updated successfully.
+  400:
+    description: No update fields provided.
+  404:
+    description: post not found.
+  500:
+    description: Error updating post.
+parameters:
+  - in: path
+    name: post_id
+    required: true
+    description: The ID of the comment to update.
+    schema:
+      type: integer
+  - in: body
+    name: body
+    required: true
+    description: JSON object containing the field to update for the comment.
+    schema:
+      type: object
+      properties:
+        title:
+          type: string
+          description: The title.
+        content:
+          type: string
+          description: The content.
+        post_type:
+          type: string
+          description: The post type.
+      required:
+        - title
+        - content
+        - post_type

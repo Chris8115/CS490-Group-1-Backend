@@ -1330,8 +1330,8 @@ def delete_forum_comments(comment_id):
         db.session.commit()
         return Response(status=200)
 
-@app.route("/forum_comments", methods=['PUT'])
-@swag_from('docs/forumcomments/put.yml')
+@app.route("/forum_comments", methods=['POST'])
+@swag_from('docs/forumcomments/post.yml')
 def add_forum_comments():
     #sql query
     query = text("""
@@ -1441,8 +1441,8 @@ def get_forum_posts():
         })
     return json, 200
 
-@app.route("/forum_posts", methods=['PUT'])
-@swag_from('docs/forumposts/put.yml')
+@app.route("/forum_posts", methods=['POST'])
+@swag_from('docs/forumposts/post.yml')
 def add_forum_posts():
     #sql query
     query = text("""

@@ -49,4 +49,7 @@ parameters:
           reason: 
             type: string
             description: Appointment Reason
+          notes: 
+            type: string
+            description: extra notes
 

@@ -11,6 +11,7 @@ import os
 import pika
 import re
 from flask_login import LoginManager, UserMixin, login_user, LoginManager, login_required, logout_user, current_user
+from datetime import datetime, timedelta
 import json
 
 app = Flask(__name__)
@@ -470,28 +471,35 @@ def add_appointment():
             CURRENT_TIMESTAMP)
     """)
     # NOTE: doing appointment_id this way could bring about a race condition.... but lets be real this is never happening.
+    location = request.json.get('location')
+    if location is None:
+        location = ""
+
+    valid_datetime = r"^\d{4}-\d{2}-\d{2} [0-5][0-9]:[0-5][0-9]:[0-5][0-9]$"
+    if(request.json.get('start_time') != None and re.search(valid_datetime, request.json.get('start_time')) == None):
+        return ResponseMessage("Invalid Start Time. Format: (yyyy-mm-dd hh:mm:ss)", 400)
+    end_time = datetime.strptime(request.json.get('start_time'), "%Y-%m-%d %H:%M:%S")
+    end_time = end_time + timedelta(hours=1)
+    end_time = end_time.strftime("%Y-%m-%d %H:%M:%S")
+
     params = {
         'appointment_id': (db.session.execute(text("SELECT MAX(appointment_id) + 1 AS appointment_id FROM appointments")).first()).appointment_id,
         'doctor_id': request.json.get('doctor_id'),
         'patient_id': request.json.get('patient_id'),
         'start_time': request.json.get('start_time'),
-        'end_time': request.json.get('end_time'),
+        'end_time': end_time,
         'status': request.json.get('status'),
-        'location': request.json.get('location'),
+        'location': location,
         'reason': request.json.get('reason')
     }
     #input validation
-    if None in params.values():
+    if None in [request.json.get('doctor_id'), request.json.get('patient_id'), request.json.get('start_time'), request.json.get('status'), request.json.get('reason')]:
         return ResponseMessage("Required parameters not supplied.", 400)
     if(params['status'].lower() not in ('canceled', 'pending', 'rejected', 'accepted')):
         return ResponseMessage("Invalid status field. Must be ('canceled', 'pending', 'rejected', 'accepted')", 400)
-    valid_datetime = r"^\d{4}-\d{2}-\d{2} [0-5][0-9]:[0-5][0-9]:[0-5][0-9]$"
     if(len(params['reason']) == 0):
         return ResponseMessage("Reason must be non-empty.", 400)
-    if(len(params['location']) == 0):
-        return ResponseMessage("Invalid Address. (Developer note, if you think this is a mistake please say something)", 400)
-    if(None in (re.search(valid_datetime, params['start_time']), re.search(valid_datetime, params['end_time']))):
-        return ResponseMessage("Invalid Datetime. Format: (yyyy-mm-dd hh:mm:ss)", 400)
+
     try:
         result = db.session.execute(text("SELECT * FROM patients WHERE patient_id = :patient_id"), params)
         if(result.first() == None):
@@ -499,6 +507,12 @@ def add_appointment():
         result = db.session.execute(text("SELECT * FROM doctors WHERE doctor_id = :doctor_id"), params)
         if(result.first() == None):
             return ResponseMessage("Invalid doctor id.", 400)
+        result = db.session.execute(text("SELECT start_time, end_time FROM appointments WHERE doctor_id = :doctor_id"), params)
+        startA = request.json.get('start_time')
+        endA = end_time
+        for times in result:
+            if (startA < times.end_time) and (times.start_time < endA):
+                return ResponseMessage("Invalid timeslot.", 400)
         #execute query
         db.session.execute(query, params)
     except Exception as e:
@@ -518,18 +532,29 @@ def update_appointment(appointment_id):
             doctor_id = {':doctor_id' if request.json.get('doctor_id') != None else 'doctor_id'},
             patient_id = {':patient_id' if request.json.get('patient_id') != None else 'patient_id'},
             start_time = {':start_time' if request.json.get('start_time') != None else 'start_time'},
-            end_time = {':end_time' if request.json.get('end_time') != None else 'end_time'},
             status = {':status' if request.json.get('status') != None else 'status'},
             location = {':location' if request.json.get('location') != None else 'location'},
             reason = {':reason' if request.json.get('reason') != None else 'reason'}
         WHERE appointment_id = :appointment_id
     """)
+
+    valid_datetime = r"^\d{4}-\d{2}-\d{2} [0-5][0-9]:[0-5][0-9]:[0-5][0-9]$"
+    if(request.json.get('start_time') != None and re.search(valid_datetime, request.json.get('start_time')) == None):
+        return ResponseMessage("Invalid Start Time. Format: (yyyy-mm-dd hh:mm:ss)", 400)
+    if (request.json.get('start_time') != None):
+        end_time = datetime.strptime(request.json.get('start_time'), "%Y-%m-%d %H:%M:%S")
+        end_time = end_time + timedelta(hours=1)
+        end_time = end_time.strftime("%Y-%m-%d %H:%M:%S")
+    else:
+        end_time_result = db.session.execute(text("SELECT end_time FROM appointments WHERE appointment_id = :appointment_id"),{"appointment_id": appointment_id}).first()
+        end_time = end_time_result.end_time if end_time_result else None
+        
     params = {
         'appointment_id': appointment_id,
         'doctor_id': request.json.get('doctor_id'),
         'patient_id': request.json.get('patient_id'),
         'start_time': request.json.get('start_time'),
-        'end_time': request.json.get('end_time'),
+        'end_time': end_time,
         'status': request.json.get('status'),
         'location': request.json.get('location'),
         'reason': request.json.get('reason')
@@ -541,16 +566,20 @@ def update_appointment(appointment_id):
         return ResponseMessage("No parameters were passed to update...", 200)
     if(params['status'] != None and params['status'].lower() not in ('canceled', 'pending', 'rejected', 'accepted')):
         return ResponseMessage("Invalid status field. Must be ('canceled', 'pending', 'rejected', 'accepted')", 400)
-    valid_datetime = r"^\d{4}-\d{2}-\d{2} [0-5][0-9]:[0-5][0-9]:[0-5][0-9]$"
-    valid_address = r"\d{1,5}(\s\w.)?\s(\b\w*\b\s){1,2}\w*\.?" #dangerous regex
     if(params['reason'] != None and len(params['reason']) == 0):
         return ResponseMessage("Reason must be non-empty.", 400)
-    if(params['location'] != None and re.search(valid_address, params['location']) == None):
-        return ResponseMessage("Invalid Address. (Developer note, if you think this is a mistake please say something)", 400)
-    if(params['start_time'] != None and re.search(valid_datetime, params['start_time']) == None):
-        return ResponseMessage("Invalid Start Time. Format: (yyyy-mm-dd hh:mm:ss)", 400)
-    if(params['end_time'] != None and re.search(valid_datetime, params['end_time']) == None):
-        return ResponseMessage("Invalid End Time. Format: (yyyy-mm-dd hh:mm:ss)", 400)
+    if(params['location'] != None and len(params['location']) == 0):
+        return ResponseMessage("location must be non-empty.", 400)
+    
+    
+    if (request.json.get('start_time') != None):
+        result = db.session.execute(text("SELECT start_time, end_time FROM appointments WHERE doctor_id = :doctor_id"), params)
+        startA = request.json.get('start_time')
+        endA = end_time
+        for times in result:
+            if (startA < times.end_time) and (times.start_time < endA):
+                return ResponseMessage("Invalid timeslot.", 400)
+        
     if(params['doctor_id'] != None and db.session.execute(text("SELECT * FROM doctors WHERE doctor_id = :doctor_id"), params).first() == None):
         return ResponseMessage("Invalid doctor ID.", 400)
     if(params['patient_id'] != None and db.session.execute(text("SELECT * FROM patients WHERE patient_id = :patient_id"), params).first() == None):

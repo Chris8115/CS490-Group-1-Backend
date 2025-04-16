@@ -3,6 +3,7 @@ from flask_restful import Api, Resource, abort, reqparse
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.sql.functions import func
 from sqlalchemy import desc, text
+import requests
 from sqlalchemy.dialects import mysql
 from flasgger import Swagger, swag_from
 from flask_cors import CORS
@@ -2159,6 +2160,26 @@ def create_user(role):
     else:
         db.session.commit()
         return ResponseMessage(f"User succesfully created. (id: {user_params['user_id']})", 201)
+
+@app.route("/pharmacy", methods=['GET'])
+@login_required
+@swag_from('docs/pharmacy/get.yml')    
+def get_pharma_details ():
+    #get inputs
+    params = {
+        'order_id': "" if request.args.get('order_id') is None else request.args.get('order_id'),
+        'medication_id': "" if request.args.get('medication_id') is None else request.args.get('medication_id'),
+        'status': "" if request.args.get('status') is None else '%' + request.args.get('status') + '%',
+        'patient_id': "" if request.args.get('patient_id') is None else request.args.get('patient_id')
+    }
+    other_backend_url = 'http://localhost:5001/users/patient'
+    try:
+        response = requests.get(other_backend_url, params=params)
+        response.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        return jsonify({'error': 'Failed to fetch data from patient service', 'details': str(e)}), 500
+
+    return jsonify(response.json()), response.status_code
         
 def ResponseMessage(message, code):
     return {'message': message}, code

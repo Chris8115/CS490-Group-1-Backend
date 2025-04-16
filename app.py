@@ -2026,14 +2026,13 @@ def create_user(role):
     """)
     # NOTE: doing appointment_id this way could bring about a race condition.... but lets be real this is never happening.
     try:
-        user_json = request.json.get('user')
-        doctor_json = request.json.get('doctor') if request.json.get('doctor') else None
-        patient_json = request.json.get('patient') if request.json.get('patient') else None
-        pharmacist_json = request.json.get('pharmacist') if request.json.get('pharmacist') else None
-        address_json = request.json.get("address") if request.json.get('address') else None
-        creditcard_json = request.json.get("credit_card") if request.json.get('credit_card') else None
+        user_json = json.loads(request.form.get('user'))
+        doctor_json = json.loads(request.form.get('doctor')) if request.form.get('doctor') else None
+        patient_json = json.loads(request.form.get('patient')) if request.form.get('patient') else None
+        pharmacist_json = json.loads(request.form.get('pharmacist')) if request.form.get('pharmacist') else None
+        address_json = json.loads(request.form.get("address")) if request.form.get('address') else None
+        creditcard_json = json.loads(request.form.get("credit_card")) if request.form.get('credit_card') else None
     except Exception as e:
-        print(e)
         return ResponseMessage(f"Malformed JSON: {e}", 400)
     
     user_params = {
@@ -2074,8 +2073,7 @@ def create_user(role):
     patient_params = {
         'patient_id': user_params['user_id'],
         'address_id': address_params['address_id'],
-        #'medical_history': patient_json.get('medical_history'),
-        'medical_history': "loreum ipsum bullshit type shi",
+        'medical_history': patient_json.get('medical_history'),
         'creditcard_id': creditcard_params['creditcard_id'],
         'ssn': patient_json.get('ssn')
     } if patient_json != None else None 

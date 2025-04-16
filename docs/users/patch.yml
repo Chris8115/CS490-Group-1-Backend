@@ -1,0 +1,49 @@
+User records
+---
+tags:
+    - Users
+description:
+      Updates a user
+responses:
+    200:
+        description: user successfully updated.
+    400:
+        description: Client input validation error.
+    404:
+        description: user ID not found.
+    500:
+        description: Server/SQLite error.
+consumes:
+  - application/json
+parameters:
+    - in: path
+      name: user_id
+      required: true
+      description: user ID to update
+      schema:
+        type: integer
+    - in: body
+      name: User
+      required: true
+      description: | 
+        User information
+      schema:
+        type: object
+        properties: 
+          password: 
+            type: string
+            description: Password
+          email: 
+            type: string
+            description: email
+          first_name: 
+            type: string
+            description: first_name
+          last_name: 
+            type: string
+            description: last_name
+          phone_number: 
+            type: string
+            description: phone_number
+
+

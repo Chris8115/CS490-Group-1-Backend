@@ -36,6 +36,8 @@ app.config['MAIL_USE_TLS']=False
 app.config['MAIL_USE_SSL']=True
 
 app.config['SECRET_KEY'] = CRAZE_SECRET_KEY #super duper secret 🤫
+app.config['SESSION_COOKIE_SECURE']=False
+
 db = SQLAlchemy(app)
 UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads')
 if not os.path.exists(UPLOAD_FOLDER):

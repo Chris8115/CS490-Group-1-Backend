@@ -1918,12 +1918,14 @@ def get_users():
         'role': "" if request.args.get('role') == None else request.args.get('role'),
         'fname': "" if request.args.get('first_name') == None else '%' + request.args.get('first_name') + '%',
         'lname': "" if request.args.get('last_name') == None else '%' + request.args.get('last_name') + '%',
+        'email': "" if request.args.get('email') == None else '%' + request.args.get('email') + '%',
     }
     if(params['id'] != "" or params['role'] != "" or params['fname'] != "" or params['lname'] != ""):
         query += ("WHERE " + ("user_id = :id\n" if params['id'] != "" else "TRUE\n"))
         query += ("AND " + ("role = :role\n" if params['role'] != "" else "TRUE\n"))
         query += ("AND " + ("first_name LIKE :fname\n" if params['fname'] != "" else "TRUE\n"))
         query += ("AND " + ("last_name LIKE :lname\n" if params['lname'] != "" else "TRUE\n"))
+        query += ("AND " + ("email LIKE :email\n" if params['email'] != "" else "TRUE\n"))
     #execute query
     result = db.session.execute(text(query), params)
     json = {'users': []}

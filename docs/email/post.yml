@@ -1,0 +1,36 @@
+Email service
+---
+tags:
+  - Services
+description: >
+  Sends a new email
+responses:
+  200:
+    description: Email sent.
+  400:
+    description: Missing required fields.
+  500:
+    description: Error sending email.
+parameters:
+  - in: path
+    name: user_id
+    required: true
+    description: Recipient user ID.
+    schema:
+      type: integer
+  - in: body
+    name: body
+    required: true
+    description: JSON object containing the review fields.
+    required:
+      - email_subject
+      - email_body
+    schema:
+      type: object
+      properties:
+        email_subject:
+          type: string
+          description: Email subject.
+        email_body:
+          type: string
+          description: Email body.

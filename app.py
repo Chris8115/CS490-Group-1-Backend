@@ -13,6 +13,8 @@ import re
 from flask_login import LoginManager, UserMixin, login_user, LoginManager, login_required, logout_user, current_user
 from datetime import datetime, timedelta
 import json
+from flask_mail import Mail, Message
+from secret_keys import *
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True, origins=["http://localhost:3000"]) 
@@ -25,7 +27,15 @@ app.config['SWAGGER'] = {
     'doc_dir': './docs/',
     'uiversion': 3,
 }
-app.config['SECRET_KEY'] = 'CRAZE' #super duper secret 🤫
+
+app.config['MAIL_SERVER']="smtp.gmail.com"
+app.config['MAIL_PORT']="465"
+app.config['MAIL_USERNAME']="betteru490@gmail.com"
+app.config['MAIL_PASSWORD']=GMAIL_APP_PASSWORD
+app.config['MAIL_USE_TLS']=False
+app.config['MAIL_USE_SSL']=True
+
+app.config['SECRET_KEY'] = CRAZE_SECRET_KEY #super duper secret 🤫
 db = SQLAlchemy(app)
 UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads')
 if not os.path.exists(UPLOAD_FOLDER):
@@ -40,6 +50,9 @@ def allowed_file(filename):
 #API docs stuff
 api = Api(app)
 swag = Swagger(app)
+mail = Mail(app)
+
+mail.init_app(app)
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -73,6 +86,26 @@ def order_prescription(medication_id):
 @app.route("/")
 def home():
     return "<h1>It works!</h1>"
+
+@app.route("/mail/<int:user_id>", methods=['POST'])
+@swag_from("docs/email/post.yml")
+def email(user_id):
+    email_address = db.session.execute(text("SELECT email FROM users WHERE user_id = :uid"), {'uid': user_id}).first()
+    if(email_address == None):
+        return ResponseMessage("Could not send email. Invalid user.", 400)
+    if(request.json.get('email_body') == None or request.json.get('email_body') == ""):
+        return ResponseMessage("No email body.", 400)
+    if(request.json.get('email_subject') == None or request.json.get('email_subject') == ""):
+        return ResponseMessage("No email subject.", 400)
+    msg = Message(
+        subject=request.json.get('email_subject'),
+        body=request.json.get('email_body'),
+        sender="betteru490@gmail.com",
+        recipients=[email_address.email],
+    )
+    result = mail.send(msg)
+    print(msg, result)
+    return ResponseMessage(f"Email sent to {email_address.email}", 200)
 
 @app.route("/docs")
 def docs():
@@ -1993,13 +2026,14 @@ def create_user(role):
     """)
     # NOTE: doing appointment_id this way could bring about a race condition.... but lets be real this is never happening.
     try:
-        user_json = json.loads(request.form.get('user'))
-        doctor_json = json.loads(request.form.get('doctor')) if request.form.get('doctor') else None
-        patient_json = json.loads(request.form.get('patient')) if request.form.get('patient') else None
-        pharmacist_json = json.loads(request.form.get('pharmacist')) if request.form.get('pharmacist') else None
-        address_json = json.loads(request.form.get("address")) if request.form.get('address') else None
-        creditcard_json = json.loads(request.form.get("credit_card")) if request.form.get('credit_card') else None
+        user_json = request.json.get('user')
+        doctor_json = request.json.get('doctor') if request.json.get('doctor') else None
+        patient_json = request.json.get('patient') if request.json.get('patient') else None
+        pharmacist_json = request.json.get('pharmacist') if request.json.get('pharmacist') else None
+        address_json = request.json.get("address") if request.json.get('address') else None
+        creditcard_json = request.json.get("credit_card") if request.json.get('credit_card') else None
     except Exception as e:
+        print(e)
         return ResponseMessage(f"Malformed JSON: {e}", 400)
     
     user_params = {

@@ -2,3 +2,5 @@ venv/
 .vs/
 _pycache_/
 instance/craze.db
+secrets.py
+secret_keys.py

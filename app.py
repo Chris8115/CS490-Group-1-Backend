@@ -243,14 +243,14 @@ def get_saved_posts():
         })
     return json, 200
 
-@app.route("/saved_posts/<int:post_id>", methods=['DELETE'])
+@app.route("/saved_posts/<int:post_id>/<int:user_id>", methods=['DELETE'])
 @login_required
 @swag_from('docs/savedposts/delete.yml')
-def delete_saved_posts(post_id):
+def delete_saved_posts(post_id, user_id):
     try:
-        result = db.session.execute(text("SELECT * FROM saved_posts WHERE post_id = :post_id\n"), {'post_id': post_id})
+        result = db.session.execute(text("SELECT * FROM saved_posts WHERE post_id = :post_id AND user_id = :user_id\n"), {'post_id': post_id, 'user_id': user_id})
         if result.first() != None:
-            db.session.execute(text("DELETE FROM saved_posts WHERE post_id = :post_id\n"), {'post_id': post_id})
+            db.session.execute(text("DELETE FROM saved_posts WHERE post_id = :post_id AND user_id = :user_id\n"), {'post_id': post_id, 'user_id': user_id})
         else:
             return Response(status=400)
     except Exception as e:

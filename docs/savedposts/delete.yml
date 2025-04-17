@@ -21,3 +21,9 @@ parameters:
       description: The ID of the saved posts to delete
       schema:
         type: integer
+    - in: path
+      name: user_id
+      required: true
+      description: The ID of the user's saved posts to delete
+      schema:
+        type: integer

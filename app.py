@@ -260,6 +260,33 @@ def delete_saved_posts(post_id):
         db.session.commit()
         return Response(status=200)
 
+@app.route("/saved_posts", methods=['POST'])
+@login_required
+@swag_from('docs/savedposts/post.yml')
+def add_saved_posts():
+    query = text("""
+        INSERT INTO saved_posts (user_id, post_id, saved_at)
+        VALUES (
+            :user_id,
+            :post_id,
+            :CURRENT_TIMESTAMP)
+    """)
+    params = {
+        'post_id': request.json.get('post_id'),
+        'user_id': request.json.get('user_id')
+    }
+    #input validation
+    if None in params.values():
+        return ResponseMessage("Required parameters not supplied.", 400)
+        #execute query
+        db.session.execute(query, params)
+    except Exception as e:
+        print(e)
+        return ResponseMessage(f"Error Executing Query:\n{e}", 500)
+    else:
+        db.session.commit()
+        return ResponseMessage(f"Post saved successfully", 201)
+
 @app.route("/prescriptions", methods=['GET'])
 @swag_from('docs/prescriptions/get.yml')
 def get_prescriptions():

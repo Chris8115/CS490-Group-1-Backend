@@ -226,9 +226,9 @@ def get_saved_posts():
         'datetime': "" if request.args.get('saved_at') == None else '%' + request.args.get('saved_at') + '%'
     }
     if(params['uid'] != "" or params['pid'] != "" or params['datetime'] != ""):
-        query += ("WHERE " + ("user_id = :uid\n" if params['uid'] != "" else "TRUE\n"))
-        query += ("AND " + ("post_id = :pid\n" if params['pid'] != "" else "TRUE\n"))
-        query += ("AND " + ("saved_at LIKE :datetime\n" if params['datetime'] != "" else "TRUE\n"))
+        query += ("WHERE " + ("S.user_id = :uid\n" if params['uid'] != "" else "TRUE\n"))
+        query += ("AND " + ("S.post_id = :pid\n" if params['pid'] != "" else "TRUE\n"))
+        query += ("AND " + ("S.saved_at LIKE :datetime\n" if params['datetime'] != "" else "TRUE\n"))
     #execute query
     result = db.session.execute(text(query), params)
     json = {'saved_posts': []}

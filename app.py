@@ -789,7 +789,9 @@ def get_patient_exercise_assignments():
             'patient_id': row.patient_id,
             'doctor_id': row.doctor_id,
             'exercise_id': row.exercise_id,
-            'instructions': row.instructions,
+            'frequency_per_week': row.frequency_per_week,
+            'reps': row.reps,
+            'sets': row.sets,
             'assigned_at': row.assigned_at
         })
     return json, 200
@@ -819,9 +821,15 @@ def patch_patient_exercise_assignments(assignment_id):
     if 'exercise_id' in data:
         update_fields.append("exercise_id = :exercise_id")
         params['exercise_id'] = data['exercise_id']
-    if 'instructions' in data:
-        update_fields.append("instructions = :instructions")
-        params['instructions'] = data['instructions']
+    if 'frequency_per_week' in data:
+        update_fields.append("frequency_per_week = :frequency_per_week")
+        params['frequency_per_week'] = data['frequency_per_week']
+    if 'reps' in data:
+        update_fields.append("reps = :reps")
+        params['reps'] = data['reps']
+    if 'sets' in data:
+        update_fields.append("sets = :sets")
+        params['sets'] = data['sets']
     
     if not update_fields:
         return {"error": "No update fields provided."}, 400
@@ -849,14 +857,16 @@ def post_patient_exercise_assignments():
 
     from datetime import datetime
     query = """
-        INSERT INTO patient_exercise_assignments (patient_id, doctor_id, exercise_id, instructions, assigned_at)
-        VALUES (:patient_id, :doctor_id, :exercise_id, :instructions, :assigned_at)
+        INSERT INTO patient_exercise_assignments (patient_id, doctor_id, exercise_id, frequency_per_week, reps, sets, assigned_at)
+        VALUES (:patient_id, :doctor_id, :exercise_id, :frequency_per_week, :reps, :sets, :assigned_at)
     """
     params = {
         'patient_id': data['patient_id'],
         'doctor_id': data['doctor_id'],
         'exercise_id': data['exercise_id'],
-        'instructions': data.get('instructions', ""),
+        'frequency_per_week': data['frequency_per_week'],
+        'reps': data['reps'],
+        'sets': data['sets'],
         'assigned_at': datetime.utcnow()
     }
     

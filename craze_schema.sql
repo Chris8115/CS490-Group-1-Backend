@@ -22,7 +22,7 @@ CREATE TABLE "appointments" (
 	"reason"	TEXT NOT NULL,
 	"details"    TEXT NOT NULL,
 	"created_at"	TIMESTAMP NOT NULL,
-	"notes" TEXT
+	"notes" TEXT,
 	CONSTRAINT "appointments_pk" PRIMARY KEY("appointment_id"),
 	CONSTRAINT "doctor_id" FOREIGN KEY("doctor_id") REFERENCES "users"("user_id"),
 	CONSTRAINT "patient_id" FOREIGN KEY("patient_id") REFERENCES "users"("user_id")
@@ -105,8 +105,10 @@ CREATE TABLE "patient_exercise_assignments" (
 	"patient_id"	INTEGER,
 	"doctor_id"	INTEGER,
 	"assigned_at"	TIMESTAMP NOT NULL,
-	"instructions"	TEXT NOT NULL,
 	"exercise_id"	INTEGER NOT NULL,
+	"frequency_per_week"	INTEGER DEFAULT 0 NOT NULL,
+	"reps"	INTEGER DEFAULT 0 NOT NULL,
+	"sets"	INTEGER DEFAULT 0 NOT NULL,
 	CONSTRAINT "patient_exercise_assignments_pk" PRIMARY KEY("assignment_id"),
 	CONSTRAINT "doctor_id" FOREIGN KEY("doctor_id") REFERENCES "users"("user_id"),
 	FOREIGN KEY("exercise_id") REFERENCES "exercise_plans"("exercise_id"),

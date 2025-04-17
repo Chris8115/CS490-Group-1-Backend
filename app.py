@@ -1555,7 +1555,11 @@ def add_forum_posts():
         return ResponseMessage(f"Error Executing Query:\n{e}", 500)
     else:
         db.session.commit()
-        return ResponseMessage(f"post entry successfully created (id: {params['post_id']})", 201)
+        data = {
+            'message': 'post entry successfully created',
+            'id': params['post_id']
+        }
+        return jsonify(data), 201
 
 @app.route("/forum_posts/<int:post_id>", methods=['DELETE'])
 @swag_from('docs/forumposts/delete.yml')

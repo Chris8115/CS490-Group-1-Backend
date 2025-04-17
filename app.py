@@ -269,7 +269,7 @@ def add_saved_posts():
         VALUES (
             :user_id,
             :post_id,
-            :CURRENT_TIMESTAMP)
+            CURRENT_TIMESTAMP)
     """)
     params = {
         'post_id': request.json.get('post_id'),

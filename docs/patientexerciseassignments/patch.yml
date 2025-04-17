@@ -47,6 +47,12 @@ parameters:
         exercise_id:
           type: integer
           description: Updated exercise ID.
-        instructions:
-          type: string
-          description: Updated exercise instructions.
+        frequency_per_week:
+          type: integer
+          description: Updated frequency_per_week.
+        reps:
+          type: integer
+          description: Updated reps.
+        sets:
+          type: integer
+          description: Updated sets.

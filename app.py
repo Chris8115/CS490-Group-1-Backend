@@ -1544,7 +1544,7 @@ def add_forum_posts():
         result = db.session.execute(text("SELECT * FROM users WHERE user_id = :user_id"), params)
         if(result.first() == None):
             return ResponseMessage("Invalid user_id.", 400)
-        if (request.json.get('post_type').lower() != "discussion" and request.json.get('post_type').lower() != "Exercise Plan"):
+        if (request.json.get('post_type').lower() != "discussion" and request.json.get('post_type').lower() != "exercise plan"):
             return ResponseMessage("Invalid post_type.", 400)
         if(len(str(request.json.get('comment_text'))) <= 0):
             return ResponseMessage("Invalid comment text.", 400)

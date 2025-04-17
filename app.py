@@ -1019,7 +1019,7 @@ def get_doctor_patient_relationship():
     params = {
         'did': "" if request.args.get('doctor_id') == None else request.args.get('doctor_id'),
         'pid': "" if request.args.get('patient_id') == None else request.args.get('patient_id'),
-        'status': "" if request.args.get('status') == None else '%' + request.args.get('status') + '%',
+        'status': "" if request.args.get('status') == None else request.args.get('status'),
     }
     if(params['did'] != "" or params['pid'] != "" or params['status'] != ""):
         query += ("WHERE " + ("doctor_id = :did\n" if params['did'] != "" else "TRUE\n"))

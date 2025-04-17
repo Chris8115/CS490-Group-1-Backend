@@ -45,5 +45,3 @@ parameters:
           phone_number: 
             type: string
             description: phone_number
-
-

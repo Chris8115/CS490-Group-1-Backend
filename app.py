@@ -1950,12 +1950,14 @@ def get_users():
         'role': "" if request.args.get('role') == None else request.args.get('role'),
         'fname': "" if request.args.get('first_name') == None else '%' + request.args.get('first_name') + '%',
         'lname': "" if request.args.get('last_name') == None else '%' + request.args.get('last_name') + '%',
+        'email': "" if request.args.get('email') == None else '%' + request.args.get('email') + '%',
     }
-    if(params['id'] != "" or params['role'] != "" or params['fname'] != "" or params['lname'] != ""):
+    if(params['id'] != "" or params['role'] != "" or params['fname'] != "" or params['lname'] != "" or params['email'] != ""):
         query += ("WHERE " + ("user_id = :id\n" if params['id'] != "" else "TRUE\n"))
         query += ("AND " + ("role = :role\n" if params['role'] != "" else "TRUE\n"))
         query += ("AND " + ("first_name LIKE :fname\n" if params['fname'] != "" else "TRUE\n"))
         query += ("AND " + ("last_name LIKE :lname\n" if params['lname'] != "" else "TRUE\n"))
+        query += ("AND " + ("email LIKE :email\n" if params['email'] != "" else "TRUE\n"))
     #execute query
     result = db.session.execute(text(query), params)
     json = {'users': []}
@@ -1987,7 +1989,62 @@ def delete_users(user_id):
     else:
         db.session.commit()
         return Response(status=200)
+
+@app.route("/users/<int:user_id>", methods=['PATCH'])
+@swag_from('docs/users/patch.yml')
+def patch_user(user_id):
+    data = request.get_json(force=True)
     
+    # Check if the user exists
+    existing = db.session.execute(
+        text("SELECT * FROM users WHERE user_id = :user_id"),
+        {'user_id': user_id}
+    ).first()
+    
+    if not existing:
+        return {"error": "user not found"}, 404
+
+    update_fields = []
+    params = {}
+    
+    if 'password' in data:
+        update_fields.append("password = :password")
+        params['password'] = data['password']
+    if 'email' in data:
+        valid_email = r"^.+\d*@.+[.][a-zA-Z]{2,4}$"
+        if(re.search(valid_email, data['email']) == None):
+            return ResponseMessage("Invalid email.", 400)
+        update_fields.append("email = :email")
+        params['email'] = data['email']
+    if 'first_name' in data:
+        update_fields.append("first_name = :first_name")
+        params['first_name'] = data['first_name']
+    if 'last_name' in data:
+        update_fields.append("last_name = :last_name")
+        params['last_name'] = data['last_name']
+    if 'phone_number' in data:
+        data['phone_number'] = re.sub(r"(-|\s|\)|\()", "", str(data['phone_number']))
+        valid_phone = r"^\d{10}$"
+        if(re.search(valid_phone, str(data['phone_number'])) == None):
+            return ResponseMessage("Invalid phone number.", 400)
+        update_fields.append("phone_number = :phone_number")
+        params['phone_number'] = data['phone_number']
+
+    if not update_fields:
+        return {"error": "No update fields provided."}, 400
+    
+    params['user_id'] = user_id
+    query = "UPDATE users SET " + ", ".join(update_fields) + " WHERE user_id = :user_id"
+    
+    try:
+        db.session.execute(text(query), params)
+        db.session.commit()
+    except Exception as e:
+        print(e)
+        return {"error": "Error updating user"}, 500
+
+    return {"message": "user updated successfully"}, 200
+
 @app.route("/users/<string:role>", methods=['POST'])
 @swag_from('docs/users/post.yml')
 def create_user(role):

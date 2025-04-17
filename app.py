@@ -279,6 +279,7 @@ def add_saved_posts():
     if None in params.values():
         return ResponseMessage("Required parameters not supplied.", 400)
         #execute query
+    try:
         db.session.execute(query, params)
     except Exception as e:
         print(e)

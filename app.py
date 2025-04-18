@@ -614,8 +614,8 @@ def update_appointment(appointment_id):
             start_time = {':start_time' if request.json.get('start_time') != None else 'start_time'},
             status = {':status' if request.json.get('status') != None else 'status'},
             location = {':location' if request.json.get('location') != None else 'location'},
-            reason = {':reason' if request.json.get('reason') != None else 'reason'}
-            notes = {':reason' if request.json.get('notes') != None else 'notes'}
+            reason = {':reason' if request.json.get('reason') != None else 'reason'},
+            notes = {':notes' if request.json.get('notes') != None else 'notes'},
             details = {':details' if request.json.get('details') != None else 'details'}
         WHERE appointment_id = :appointment_id
     """)
@@ -649,7 +649,7 @@ def update_appointment(appointment_id):
         'status': request.json.get('status'),
         'location': location,
         'reason': request.json.get('reason'),
-        'details': details
+        'details': details,
         'reason': request.json.get('reason'),
         'notes': notes
     }

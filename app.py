@@ -1554,19 +1554,22 @@ def patch_forum_comments(comment_id):
 @swag_from('docs/forumposts/get.yml')
 def get_forum_posts():
     #sql query
-    query = "SELECT * FROM forum_posts AS F JOIN users AS U ON F.user_id = U.user_id\n"
+    query = "SELECT F.post_id, U.user_id, U.first_name, U.last_name, F.title, F.content, F.post_type, F.created_at AS post_created_at FROM forum_posts AS F JOIN users AS U ON F.user_id = U.user_id\n"
     #get inputs
     params = {
         'pid': "" if request.args.get('post_id') == None else request.args.get('post_id'),
         'uid': "" if request.args.get('user_id') == None else request.args.get('user_id'),
         'title': "" if request.args.get('title') == None else '%' + request.args.get('title') + '%',
         'type': "" if request.args.get('post_type') == None else '%' + request.args.get('post_type') + '%',
+        'order_by': "DESC" if request.args.get('order_by') == None else request.args.get('order_by')
     }
-    if(params['pid'] != "" or params['uid'] != "" or params['title'] != "" or params['type'] != ""):
+    if(params['pid'] != "" or params['uid'] != "" or params['title'] != "" or params['type'] != "" or params['order_by'] != ""):
         query += ("WHERE " + ("post_id = :pid\n" if params['pid'] != "" else "TRUE\n"))
         query += ("AND " + ("user_id = :uid\n" if params['uid'] != "" else "TRUE\n"))
         query += ("AND " + ("title LIKE :title\n" if params['title'] != "" else "TRUE\n"))
         query += ("AND " + ("post_type LIKE :type\n" if params['type'] != "" else "TRUE\n"))
+        query += (f"ORDER BY F.created_at {"ASC" if params['order_by'].upper() == "ASC" else "DESC"}")
+        print(query)
     #execute query
     result = db.session.execute(text(query), params)
     json = {'forum_posts': []}
@@ -1579,7 +1582,7 @@ def get_forum_posts():
             'title': row.title,
             'content': row.content,
             'post_type': row.post_type,
-            'created_at': row.created_at
+            'created_at': row.post_created_at
         })
     return json, 200
 

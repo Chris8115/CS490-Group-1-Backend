@@ -23,7 +23,7 @@ parameters:
       schema:
         type: integer
     - in: query
-      name: title
+      name: title 
       required: false
       description: includes results like `title` column
       schema:
@@ -32,5 +32,11 @@ parameters:
       name: post_type
       required: false
       description: includes results like `post_type` column (exercise plan, discussion)
+      schema:
+        type: string
+    - in: query
+      name: order_by
+      required: false
+      description: sorts results by SQL order options. (ASC or DESC)
       schema:
         type: string

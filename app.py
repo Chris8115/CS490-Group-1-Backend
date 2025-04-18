@@ -480,16 +480,19 @@ def appointments():
         'aid': "" if request.args.get('appointment_id') == None else request.args.get('appointment_id'),
         'did': "" if request.args.get('doctor_id') == None else request.args.get('doctor_id'),
         'pid': "" if request.args.get('patient_id') == None else request.args.get('patient_id'),
-        'status': "" if request.args.get('status') == None else '%' + request.args.get('status') + '%',
-        'reason': "" if request.args.get('reason') == None else '%' + request.args.get('reason') + '%'
+        'status': "" if request.args.get('status') == None else request.args.get('status'),
+        'reason': "" if request.args.get('reason') == None else '%' + request.args.get('reason') + '%',
+        'start_time': "" if request.args.get('start_time') == None else '%' + request.args.get('start_time') + '%',
+        'order_by': "DESC" if request.args.get('order_by') == None else request.args.get('order_by')
     }
-    if(params['aid'] != "" or params['did'] != "" or params['pid'] != "" or params['status'] != "" or params['reason'] != ""):
+    if(params['aid'] != "" or params['did'] != "" or params['pid'] != "" or params['status'] != "" or params['reason'] != "" or params['start_time'] != "" or params['order_by'] != ""):
         query += ("WHERE " + ("appointment_id = :aid\n" if params['aid'] != "" else "TRUE\n"))
         query += ("AND " + ("doctor_id = :did\n" if params['did'] != "" else "TRUE\n"))
         query += ("AND " + ("patient_id = :pid\n" if params['pid'] != "" else "TRUE\n"))
-        query += ("AND " + ("status LIKE :status\n" if params['status'] != "" else "TRUE\n"))
+        query += ("AND " + ("status = :status\n" if params['status'] != "" else "TRUE\n"))
         query += ("AND " + ("reason LIKE :reason\n" if params['reason'] != "" else "TRUE\n"))
-        query += ("ORDER BY start_time DESC")
+        query += ("AND " + ("start_time LIKE :start_time\n" if params['start_time'] != "" else "TRUE\n"))
+        query += (f"ORDER BY start_time {"ASC" if params['order_by'].upper() == "ASC" else "DESC"}") #the unsafe way but has limited values so its fine
     #execute query
     result = db.session.execute(text(query), params)
     json = {'appointments': []}
@@ -503,7 +506,9 @@ def appointments():
             'status': row.status,
             'location': row.location,
             'reason': row.reason,
-            'created_at': row.created_at
+            'created_at': row.created_at,
+            'details': row.details,
+            'notes' : row.notes
         })
     return json, 200
 
@@ -530,7 +535,7 @@ def delete_appointments(appointment_id):
 def add_appointment():
     #sql query
     query = text("""
-        INSERT INTO appointments (appointment_id, doctor_id, patient_id, start_time, end_time, status, location, reason, created_at)
+        INSERT INTO appointments (appointment_id, doctor_id, patient_id, start_time, end_time, status, location, reason, details, created_at, notes)
         VALUES (
             :appointment_id,
             :doctor_id,
@@ -540,12 +545,20 @@ def add_appointment():
             :status,
             :location,
             :reason,
-            CURRENT_TIMESTAMP)
+            :details,
+            CURRENT_TIMESTAMP,
+            :notes)
     """)
     # NOTE: doing appointment_id this way could bring about a race condition.... but lets be real this is never happening.
     location = request.json.get('location')
     if location is None:
         location = ""
+    details = request.json.get('details')
+    if details is None:
+        details = ""
+    notes = request.json.get('notes')
+    if notes is None:
+        notes = ""
 
     valid_datetime = r"^\d{4}-\d{2}-\d{2} [0-5][0-9]:[0-5][0-9]:[0-5][0-9]$"
     if(request.json.get('start_time') != None and re.search(valid_datetime, request.json.get('start_time')) == None):
@@ -553,7 +566,7 @@ def add_appointment():
     end_time = datetime.strptime(request.json.get('start_time'), "%Y-%m-%d %H:%M:%S")
     end_time = end_time + timedelta(hours=1)
     end_time = end_time.strftime("%Y-%m-%d %H:%M:%S")
-
+    
     params = {
         'appointment_id': (db.session.execute(text("SELECT MAX(appointment_id) + 1 AS appointment_id FROM appointments")).first()).appointment_id,
         'doctor_id': request.json.get('doctor_id'),
@@ -562,7 +575,9 @@ def add_appointment():
         'end_time': end_time,
         'status': request.json.get('status'),
         'location': location,
-        'reason': request.json.get('reason')
+        'reason': request.json.get('reason'),
+        'details': details,
+        'notes': notes
     }
     #input validation
     if None in [request.json.get('doctor_id'), request.json.get('patient_id'), request.json.get('start_time'), request.json.get('status'), request.json.get('reason')]:
@@ -606,10 +621,20 @@ def update_appointment(appointment_id):
             start_time = {':start_time' if request.json.get('start_time') != None else 'start_time'},
             status = {':status' if request.json.get('status') != None else 'status'},
             location = {':location' if request.json.get('location') != None else 'location'},
-            reason = {':reason' if request.json.get('reason') != None else 'reason'}
-            notes = {':reason' if request.json.get('notes') != None else 'notes'}
+            reason = {':reason' if request.json.get('reason') != None else 'reason'},
+            notes = {':notes' if request.json.get('notes') != None else 'notes'},
+            details = {':details' if request.json.get('details') != None else 'details'}
         WHERE appointment_id = :appointment_id
     """)
+    location = request.json.get('location')
+    if location is None:
+        location = ""
+    details = request.json.get('details')
+    if details is None:
+        details = ""
+    notes = request.json.get('notes')
+    if notes is None:
+        notes = ""
 
     valid_datetime = r"^\d{4}-\d{2}-\d{2} [0-5][0-9]:[0-5][0-9]:[0-5][0-9]$"
     if(request.json.get('start_time') != None and re.search(valid_datetime, request.json.get('start_time')) == None):
@@ -629,9 +654,11 @@ def update_appointment(appointment_id):
         'start_time': request.json.get('start_time'),
         'end_time': end_time,
         'status': request.json.get('status'),
-        'location': request.json.get('location'),
+        'location': location,
         'reason': request.json.get('reason'),
-        'notes': request.json.get('notes')
+        'details': details,
+        'reason': request.json.get('reason'),
+        'notes': notes
     }
     #input validation
     if(db.session.execute(text("SELECT * FROM appointments WHERE appointment_id = :appointment_id"), params).first() == None):
@@ -642,10 +669,10 @@ def update_appointment(appointment_id):
         return ResponseMessage("Invalid status field. Must be ('canceled', 'pending', 'rejected', 'accepted')", 400)
     if(params['reason'] != None and len(params['reason']) == 0):
         return ResponseMessage("Reason must be non-empty.", 400)
-    if(params['location'] != None and len(params['location']) == 0):
-        return ResponseMessage("location must be non-empty.", 400)
-    
-    
+    #add appointment time validation
+    if(params['start_time'] != None and re.search(valid_datetime, params['start_time']) == None):
+        return ResponseMessage("Invalid Start Time. Format: (yyyy-mm-dd hh:mm:ss)", 400)
+      
     if (request.json.get('start_time') != None):
         result = db.session.execute(text("SELECT start_time, end_time FROM appointments WHERE doctor_id = :doctor_id"), params)
         startA = request.json.get('start_time')
@@ -1531,19 +1558,22 @@ def patch_forum_comments(comment_id):
 @swag_from('docs/forumposts/get.yml')
 def get_forum_posts():
     #sql query
-    query = "SELECT * FROM forum_posts AS F JOIN users AS U ON F.user_id = U.user_id\n"
+    query = "SELECT F.post_id, U.user_id, U.first_name, U.last_name, F.title, F.content, F.post_type, F.created_at AS post_created_at FROM forum_posts AS F JOIN users AS U ON F.user_id = U.user_id\n"
     #get inputs
     params = {
         'pid': "" if request.args.get('post_id') == None else request.args.get('post_id'),
         'uid': "" if request.args.get('user_id') == None else request.args.get('user_id'),
         'title': "" if request.args.get('title') == None else '%' + request.args.get('title') + '%',
         'type': "" if request.args.get('post_type') == None else '%' + request.args.get('post_type') + '%',
+        'order_by': "DESC" if request.args.get('order_by') == None else request.args.get('order_by')
     }
-    if(params['pid'] != "" or params['uid'] != "" or params['title'] != "" or params['type'] != ""):
+    if(params['pid'] != "" or params['uid'] != "" or params['title'] != "" or params['type'] != "" or params['order_by'] != ""):
         query += ("WHERE " + ("post_id = :pid\n" if params['pid'] != "" else "TRUE\n"))
         query += ("AND " + ("user_id = :uid\n" if params['uid'] != "" else "TRUE\n"))
         query += ("AND " + ("title LIKE :title\n" if params['title'] != "" else "TRUE\n"))
         query += ("AND " + ("post_type LIKE :type\n" if params['type'] != "" else "TRUE\n"))
+        query += (f"ORDER BY F.created_at {"ASC" if params['order_by'].upper() == "ASC" else "DESC"}")
+        print(query)
     #execute query
     result = db.session.execute(text(query), params)
     json = {'forum_posts': []}
@@ -1556,7 +1586,7 @@ def get_forum_posts():
             'title': row.title,
             'content': row.content,
             'post_type': row.post_type,
-            'created_at': row.created_at
+            'created_at': row.post_created_at
         })
     return json, 200
 

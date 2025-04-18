@@ -41,3 +41,15 @@ parameters:
       description: includes results like `reason` column
       schema:
         type: string
+    - in: query
+      name: start_time
+      required: false
+      description: includes results like `start_time` column
+      schema:
+        type: string
+    - in: query
+      name: order_by
+      required: false
+      description: sorts results by SQL order options. (ASC or DESC)
+      schema:
+        type: string

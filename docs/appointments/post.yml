@@ -28,6 +28,7 @@ parameters:
           - start_time
           - status
           - reason
+          - details
         properties: 
           patient_id: 
             type: integer
@@ -47,4 +48,9 @@ parameters:
           reason: 
             type: string
             description: Appointment Reason
-
+          details: 
+            type: string
+            description: Appointment details
+          notes: 
+            type: string
+            description: extra notes

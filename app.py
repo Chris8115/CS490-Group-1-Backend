@@ -476,16 +476,19 @@ def appointments():
         'aid': "" if request.args.get('appointment_id') == None else request.args.get('appointment_id'),
         'did': "" if request.args.get('doctor_id') == None else request.args.get('doctor_id'),
         'pid': "" if request.args.get('patient_id') == None else request.args.get('patient_id'),
-        'status': "" if request.args.get('status') == None else '%' + request.args.get('status') + '%',
-        'reason': "" if request.args.get('reason') == None else '%' + request.args.get('reason') + '%'
+        'status': "" if request.args.get('status') == None else request.args.get('status'),
+        'reason': "" if request.args.get('reason') == None else '%' + request.args.get('reason') + '%',
+        'start_time': "" if request.args.get('start_time') == None else '%' + request.args.get('start_time') + '%',
+        'order_by': "DESC" if request.args.get('order_by') == None else request.args.get('order_by')
     }
-    if(params['aid'] != "" or params['did'] != "" or params['pid'] != "" or params['status'] != "" or params['reason'] != ""):
+    if(params['aid'] != "" or params['did'] != "" or params['pid'] != "" or params['status'] != "" or params['reason'] != "" or params['start_time'] != "" or params['order_by'] != ""):
         query += ("WHERE " + ("appointment_id = :aid\n" if params['aid'] != "" else "TRUE\n"))
         query += ("AND " + ("doctor_id = :did\n" if params['did'] != "" else "TRUE\n"))
         query += ("AND " + ("patient_id = :pid\n" if params['pid'] != "" else "TRUE\n"))
-        query += ("AND " + ("status LIKE :status\n" if params['status'] != "" else "TRUE\n"))
+        query += ("AND " + ("status = :status\n" if params['status'] != "" else "TRUE\n"))
         query += ("AND " + ("reason LIKE :reason\n" if params['reason'] != "" else "TRUE\n"))
-        query += ("ORDER BY start_time DESC")
+        query += ("AND " + ("start_time LIKE :start_time\n" if params['start_time'] != "" else "TRUE\n"))
+        query += (f"ORDER BY start_time {"ASC" if params['order_by'].upper() == "ASC" else "DESC"}") #the unsafe way but has limited values so its fine
     #execute query
     result = db.session.execute(text(query), params)
     json = {'appointments': []}

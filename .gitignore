@@ -4,3 +4,4 @@ _pycache_/
 instance/craze.db
 secrets.py
 secret_keys.py
+*.py[cod]

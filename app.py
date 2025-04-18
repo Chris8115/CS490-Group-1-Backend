@@ -481,7 +481,7 @@ def appointments():
         'start_time': "" if request.args.get('start_time') == None else '%' + request.args.get('start_time') + '%',
         'order_by': "DESC" if request.args.get('order_by') == None else request.args.get('order_by')
     }
-    if(params['aid'] != "" or params['did'] != "" or params['pid'] != "" or params['status'] != "" or params['reason'] != "" or params['start_time'] != ""):
+    if(params['aid'] != "" or params['did'] != "" or params['pid'] != "" or params['status'] != "" or params['reason'] != "" or params['start_time'] != "" or params['order_by'] != ""):
         query += ("WHERE " + ("appointment_id = :aid\n" if params['aid'] != "" else "TRUE\n"))
         query += ("AND " + ("doctor_id = :did\n" if params['did'] != "" else "TRUE\n"))
         query += ("AND " + ("patient_id = :pid\n" if params['pid'] != "" else "TRUE\n"))

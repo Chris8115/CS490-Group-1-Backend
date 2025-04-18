@@ -500,7 +500,8 @@ def appointments():
             'location': row.location,
             'reason': row.reason,
             'created_at': row.created_at,
-            'details': row.details
+            'details': row.details,
+            'notes' : row.notes
         })
     return json, 200
 
@@ -527,7 +528,7 @@ def delete_appointments(appointment_id):
 def add_appointment():
     #sql query
     query = text("""
-        INSERT INTO appointments (appointment_id, doctor_id, patient_id, start_time, end_time, status, location, reason, details, created_at)
+        INSERT INTO appointments (appointment_id, doctor_id, patient_id, start_time, end_time, status, location, reason, details, created_at, notes)
         VALUES (
             :appointment_id,
             :doctor_id,
@@ -538,12 +539,19 @@ def add_appointment():
             :location,
             :reason,
             :details,
-            CURRENT_TIMESTAMP)
+            CURRENT_TIMESTAMP,
+            :notes)
     """)
     # NOTE: doing appointment_id this way could bring about a race condition.... but lets be real this is never happening.
     location = request.json.get('location')
     if location is None:
         location = ""
+    details = request.json.get('details')
+    if details is None:
+        details = ""
+    notes = request.json.get('notes')
+    if notes is None:
+        notes = ""
 
     valid_datetime = r"^\d{4}-\d{2}-\d{2} [0-5][0-9]:[0-5][0-9]:[0-5][0-9]$"
     if(request.json.get('start_time') != None and re.search(valid_datetime, request.json.get('start_time')) == None):
@@ -551,7 +559,7 @@ def add_appointment():
     end_time = datetime.strptime(request.json.get('start_time'), "%Y-%m-%d %H:%M:%S")
     end_time = end_time + timedelta(hours=1)
     end_time = end_time.strftime("%Y-%m-%d %H:%M:%S")
-
+    
     params = {
         'appointment_id': (db.session.execute(text("SELECT MAX(appointment_id) + 1 AS appointment_id FROM appointments")).first()).appointment_id,
         'doctor_id': request.json.get('doctor_id'),
@@ -561,7 +569,8 @@ def add_appointment():
         'status': request.json.get('status'),
         'location': location,
         'reason': request.json.get('reason'),
-        'details': request.json.get('details')
+        'details': details,
+        'notes': notes
     }
     #input validation
     if None in [request.json.get('doctor_id'), request.json.get('patient_id'), request.json.get('start_time'), request.json.get('status'), request.json.get('reason')]:
@@ -605,11 +614,20 @@ def update_appointment(appointment_id):
             start_time = {':start_time' if request.json.get('start_time') != None else 'start_time'},
             status = {':status' if request.json.get('status') != None else 'status'},
             location = {':location' if request.json.get('location') != None else 'location'},
-            reason = {':reason' if request.json.get('reason') != None else 'reason'}
-            notes = {':reason' if request.json.get('notes') != None else 'notes'}
+            reason = {':reason' if request.json.get('reason') != None else 'reason'},
+            notes = {':notes' if request.json.get('notes') != None else 'notes'},
             details = {':details' if request.json.get('details') != None else 'details'}
         WHERE appointment_id = :appointment_id
     """)
+    location = request.json.get('location')
+    if location is None:
+        location = ""
+    details = request.json.get('details')
+    if details is None:
+        details = ""
+    notes = request.json.get('notes')
+    if notes is None:
+        notes = ""
 
     valid_datetime = r"^\d{4}-\d{2}-\d{2} [0-5][0-9]:[0-5][0-9]:[0-5][0-9]$"
     if(request.json.get('start_time') != None and re.search(valid_datetime, request.json.get('start_time')) == None):
@@ -629,10 +647,11 @@ def update_appointment(appointment_id):
         'start_time': request.json.get('start_time'),
         'end_time': end_time,
         'status': request.json.get('status'),
-        'location': request.json.get('location'),
+        'location': location,
         'reason': request.json.get('reason'),
-        'notes': request.json.get('notes'),
-        'details': request.json.get('details'),
+        'details': details,
+        'reason': request.json.get('reason'),
+        'notes': notes
     }
     #input validation
     if(db.session.execute(text("SELECT * FROM appointments WHERE appointment_id = :appointment_id"), params).first() == None):
@@ -643,10 +662,10 @@ def update_appointment(appointment_id):
         return ResponseMessage("Invalid status field. Must be ('canceled', 'pending', 'rejected', 'accepted')", 400)
     if(params['reason'] != None and len(params['reason']) == 0):
         return ResponseMessage("Reason must be non-empty.", 400)
-    if(params['location'] != None and len(params['location']) == 0):
-        return ResponseMessage("location must be non-empty.", 400)
-    
-    
+    #add appointment time validation
+    if(params['start_time'] != None and re.search(valid_datetime, params['start_time']) == None):
+        return ResponseMessage("Invalid Start Time. Format: (yyyy-mm-dd hh:mm:ss)", 400)
+      
     if (request.json.get('start_time') != None):
         result = db.session.execute(text("SELECT start_time, end_time FROM appointments WHERE doctor_id = :doctor_id"), params)
         startA = request.json.get('start_time')

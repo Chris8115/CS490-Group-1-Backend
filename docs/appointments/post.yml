@@ -50,4 +50,7 @@ parameters:
             description: Appointment Reason
           details: 
             type: string
-            description: details
+            description: Appointment details
+          notes: 
+            type: string
+            description: extra notes

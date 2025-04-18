@@ -16,6 +16,8 @@ import json
 from flask_mail import Mail, Message
 from secret_keys import *
 
+HOST = 'localhost'
+
 app = Flask(__name__)
 CORS(app, supports_credentials=True, origins=["http://localhost:3000"]) 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///craze.db'
@@ -84,7 +86,35 @@ def order_prescription(medication_id):
     channel.basic_publish(exchange='', routing_key='orders', body=str(medication_id))
     print(f"Ordered medication ID: {medication_id}")
     connection.close()
-      
+
+def listen_for_meds():
+    with app.app_context():
+        def order_callback(ch, method, properties, body):
+            params = json.loads(body.decode())
+            print(f"MESSAGE:: JSON data: {body.decode()}")
+            #input validation already done on pharmacy end.... hopefully....
+            try:
+                db.session.execute(text(f"""
+                    INSERT INTO medications (medication_id, name, description)
+                    VALUES (
+                        (SELECT MAX(medication_id) FROM medications) + 1,
+                        :name,
+                        :description
+                    )
+                """), params)
+            except Exception as e:
+                ch.basic_nack(delivery_tag=method.delivery_tag, requeue=True)
+                print(f"SQLITE ERROR:: {e}")
+            else:
+                db.session.commit()
+                ch.basic_ack(delivery_tag=method.delivery_tag)
+                print("SQLITE:: Updated order.")
+        connection = pika.BlockingConnection(pika.ConnectionParameters(HOST))
+        channel = connection.channel()
+        channel.queue_declare(queue='new_medication')
+        channel.basic_consume(queue='new_medication', on_message_callback=order_callback)
+        channel.start_consuming()
+
 @app.route("/")
 def home():
     return "<h1>It works!</h1>"
@@ -2299,4 +2329,6 @@ def ResponseMessage(message, code):
     return {'message': message}, code
 
 if __name__ == "__main__":
+    import threading
+    threading.Thread(target=listen_for_meds, daemon=True).start()
     app.run(debug=True)

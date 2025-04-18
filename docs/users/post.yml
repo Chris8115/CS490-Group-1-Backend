@@ -76,6 +76,9 @@ parameters:
               profile:
                 type: string
                 description: Profile bio/description.
+              profile_picture:
+                type: string
+                description: profile_picture.
           patient: 
             type: object
             description: patient information

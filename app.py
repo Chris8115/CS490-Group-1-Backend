@@ -7,6 +7,8 @@ from sqlalchemy.dialects import mysql
 from flasgger import Swagger, swag_from
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
+from dotenv import load_dotenv
+load_dotenv()
 import os
 import pika
 import re

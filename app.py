@@ -15,8 +15,9 @@ from datetime import datetime, timedelta
 import json
 from flask_mail import Mail, Message
 from secret_keys import *
+from flask import send_from_directory
 
-app = Flask(__name__)
+app = Flask(__name__, static_url_path='/static', static_folder='static')
 CORS(app, supports_credentials=True, origins=["http://localhost:3000"]) 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///craze.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -39,12 +40,19 @@ app.config['SECRET_KEY'] = CRAZE_SECRET_KEY #super duper secret 🤫
 app.config['SESSION_COOKIE_SECURE']=False
 
 db = SQLAlchemy(app)
-UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads')
+UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'static/uploads')
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg'}
+
+PIC_FOLDER = os.path.join(os.path.dirname(__file__), 'static/profile_pictures')
+if not os.path.exists(PIC_FOLDER):
+    os.makedirs(PIC_FOLDER)
+
+app.config['PIC_FOLDER'] = PIC_FOLDER
+
+ALLOWED_EXTENSIONS = {'png'}
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -1842,6 +1850,7 @@ def delete_patients(patient_id):
         result = db.session.execute(text("SELECT * FROM patients WHERE patient_id = :patient_id\n"), {'patient_id': patient_id})
         if result.first() != None:
             db.session.execute(text("DELETE FROM patients WHERE patient_id = :patient_id\n"), {'patient_id': patient_id})
+            db.session.execute(text("DELETE FROM users WHERE user_id = :user_id\n"), {'user_id': patient_id})
         else:
             return Response(status=400)
     except Exception as e:
@@ -1920,7 +1929,8 @@ def get_doctors():
             'doctor_id': row.doctor_id,
             'license_number': row.license_number,
             'specialization': row.specialization,
-            'profile': row.profile
+            'profile': row.profile,
+            'picture': f"http://localhost:5000/static/profile_pics/{row.doctor_id}.png"
         })
     return json, 200
 
@@ -1931,6 +1941,7 @@ def delete_doctors(doctor_id):
         result = db.session.execute(text("SELECT * FROM doctors WHERE doctor_id = :doctor_id\n"), {'doctor_id': doctor_id})
         if result.first() != None:
             db.session.execute(text("DELETE FROM doctors WHERE doctor_id = :doctor_id\n"), {'doctor_id': doctor_id})
+            db.session.execute(text("DELETE FROM users WHERE user_id = :user_id\n"), {'user_id': doctor_id})
         else:
             return Response(status=400)
     except Exception as e:
@@ -2025,6 +2036,12 @@ def delete_users(user_id):
         result = db.session.execute(text("SELECT * FROM users WHERE user_id = :user_id\n"), {'user_id': user_id})
         if result.first() != None:
             db.session.execute(text("DELETE FROM users WHERE user_id = :user_id\n"), {'user_id': user_id})
+            result = db.session.execute(text("SELECT * FROM patients WHERE patient_id = :patient_id\n"), {'patient_id': user_id})
+            if result.first() != None:
+                db.session.execute(text("DELETE FROM patients WHERE patient_id = :patient_id\n"), {'patient_id': user_id})
+            result = db.session.execute(text("SELECT * FROM doctors WHERE doctor_id = :doctor_id\n"), {'doctor_id': user_id})
+            if result.first() != None:
+                db.session.execute(text("DELETE FROM doctors WHERE doctor_id = :doctor_id\n"), {'doctor_id': user_id})
         else:
             return Response(status=400)
     except Exception as e:
@@ -2092,18 +2109,26 @@ def patch_user(user_id):
 @app.route("/users/<string:role>", methods=['POST'])
 @swag_from('docs/users/post.yml')
 def create_user(role):
+    #runs no matter if patient or doctor
     file = request.files.get('identification')
-    identification_path = ""
     user_id = (db.session.execute(text("SELECT MAX(user_id) + 1 AS user_id FROM users")).first()).user_id
     if file and allowed_file(file.filename):
         ext = os.path.splitext(file.filename)[1].lower()
         new_filename = f"{user_id}{ext}"
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], new_filename)
         file.save(filepath)
-        identification_path = filepath
+    
+    if role == "doctor":
+        file = request.files.get('profile_pic')
+        if file and allowed_file(file.filename):
+            ext = os.path.splitext(file.filename)[1].lower()
+            new_filename = f"{user_id}{ext}"
+            filepath = os.path.join(app.config['PIC_FOLDER'], new_filename)
+            file.save(filepath)
+    
     #sql query
     user_query = text("""
-        INSERT INTO users (user_id, email, password, first_name, last_name, phone_number, role, created_at, identification)
+        INSERT INTO users (user_id, email, password, first_name, last_name, phone_number, role, created_at)
         VALUES (
             :user_id,
             :email,
@@ -2112,8 +2137,8 @@ def create_user(role):
             :last_name,
             :phone_number,
             :role,
-            CURRENT_TIMESTAMP,
-            :identification)
+            CURRENT_TIMESTAMP
+        )
     """)
     patient_query = text("""
         INSERT INTO patients (patient_id, address_id, medical_history, creditcard_id, ssn)
@@ -2130,12 +2155,13 @@ def create_user(role):
         VALUES (:pharmacist_id, :pharmacy_location)
     """)
     doctor_query = text("""
-        INSERT INTO doctors (doctor_id, license_number, specialization, profile)
+        INSERT INTO doctors (doctor_id, license_number, specialization, profile, office)
         VALUES (
             :doctor_id,
             :license_number,
             :specialization,
-            :profile
+            :profile,
+            :office
         )
     """)
     creditcard_query = text("""
@@ -2165,7 +2191,7 @@ def create_user(role):
         doctor_json = json.loads(request.form.get('doctor')) if request.form.get('doctor') else None
         patient_json = json.loads(request.form.get('patient')) if request.form.get('patient') else None
         pharmacist_json = json.loads(request.form.get('pharmacist')) if request.form.get('pharmacist') else None
-        address_json = json.loads(request.form.get("address")) if request.form.get('address') else None
+        address_json = json.loads(request.form.get("address"))
         creditcard_json = json.loads(request.form.get("credit_card")) if request.form.get('credit_card') else None
     except Exception as e:
         return ResponseMessage(f"Malformed JSON: {e}", 400)
@@ -2177,28 +2203,29 @@ def create_user(role):
         'first_name': user_json.get('first_name'),
         'last_name': user_json.get('last_name'),
         'phone_number': user_json.get('phone_number'),
-        'role': role,
-        'identification': identification_path
+        'role': role
     }
-    doctor_params = {
-        'doctor_id': user_params['user_id'],
-        'license_number': doctor_json.get('license_number'),
-        'specialization': doctor_json.get('specialization'),
-        'profile': doctor_json.get('profile') if doctor_json.get('profile') != "" else "N/A",
-    } if doctor_json != None else None 
-    pharmacist_params = {
-        'pharmacist_id': user_params['user_id'],
-        'pharmacy_location': pharmacist_json.get('pharmacy_location'),
-    } if pharmacist_json != None else None 
+    address_id = (db.session.execute(text("SELECT MAX(address_id) + 1 AS address_id FROM address")).first()).address_id
     address_params = {
-        'address_id': (db.session.execute(text("SELECT MAX(address_id) + 1 AS address_id FROM address")).first()).address_id,
+        'address_id': address_id,
         'address2': address_json.get('address2'),
         'state': address_json.get('state'),
         'city': address_json.get('city'),
         'country': address_json.get('country'),
         'address': address_json.get('address'),
         'zip': address_json.get('zip'),
-    } if address_json != None else None 
+    }
+    doctor_params = {
+        'doctor_id': user_params['user_id'],
+        'license_number': doctor_json.get('license_number'),
+        'specialization': doctor_json.get('specialization'),
+        'profile': doctor_json.get('profile') if doctor_json.get('profile') != "" else "N/A",
+        'office': address_id
+    } if doctor_json != None else None 
+    pharmacist_params = {
+        'pharmacist_id': user_params['user_id'],
+        'pharmacy_location': pharmacist_json.get('pharmacy_location'),
+    } if pharmacist_json != None else None 
     creditcard_params = {
         'creditcard_id': (db.session.execute(text("SELECT MAX(creditcard_id) + 1 AS creditcard_id FROM credit_card")).first()).creditcard_id,
         'cardnumber': creditcard_json.get('cardnumber'),
@@ -2280,12 +2307,12 @@ def create_user(role):
     #execute query
     try:
         db.session.execute(user_query, user_params)
+        db.session.execute(address_query, address_params)
         if(user_params['role'] == 'pharmacist'):
             db.session.execute(pharmacist_query, pharmacist_params)
         elif(user_params['role'] == 'doctor'):
             db.session.execute(doctor_query, doctor_params)
         elif(user_params['role'] == 'patient'):
-            db.session.execute(address_query, address_params)
             db.session.execute(creditcard_query, creditcard_params)
             db.session.execute(patient_query, patient_params)
     except Exception as e:

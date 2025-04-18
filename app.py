@@ -1,4 +1,4 @@
-from flask import Flask, request, Response, jsonify, render_template, redirect, url_for
+from flask import Flask, request, Response, jsonify, render_template
 from flask_restful import Api, Resource, abort, reqparse
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.sql.functions import func
@@ -6,9 +6,15 @@ from sqlalchemy import desc, text
 from sqlalchemy.dialects import mysql
 from flasgger import Swagger, swag_from
 from flask_cors import CORS
+from werkzeug.utils import secure_filename
+import os
 import pika
 import re
 from flask_login import LoginManager, UserMixin, login_user, LoginManager, login_required, logout_user, current_user
+from datetime import datetime, timedelta
+import json
+from flask_mail import Mail, Message
+from secret_keys import *
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True, origins=["http://localhost:3000"]) 
@@ -21,11 +27,34 @@ app.config['SWAGGER'] = {
     'doc_dir': './docs/',
     'uiversion': 3,
 }
-app.config['SECRET_KEY'] = 'CRAZE' #super duper secret 🤫
+
+app.config['MAIL_SERVER']="smtp.gmail.com"
+app.config['MAIL_PORT']="465"
+app.config['MAIL_USERNAME']="betteru490@gmail.com"
+app.config['MAIL_PASSWORD']=GMAIL_APP_PASSWORD
+app.config['MAIL_USE_TLS']=False
+app.config['MAIL_USE_SSL']=True
+
+app.config['SECRET_KEY'] = CRAZE_SECRET_KEY #super duper secret 🤫
+app.config['SESSION_COOKIE_SECURE']=False
+
 db = SQLAlchemy(app)
+UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads')
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 #API docs stuff
 api = Api(app)
 swag = Swagger(app)
+mail = Mail(app)
+
+mail.init_app(app)
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -59,6 +88,26 @@ def order_prescription(medication_id):
 @app.route("/")
 def home():
     return "<h1>It works!</h1>"
+
+@app.route("/mail/<int:user_id>", methods=['POST'])
+@swag_from("docs/email/post.yml")
+def email(user_id):
+    email_address = db.session.execute(text("SELECT email FROM users WHERE user_id = :uid"), {'uid': user_id}).first()
+    if(email_address == None):
+        return ResponseMessage("Could not send email. Invalid user.", 400)
+    if(request.json.get('email_body') == None or request.json.get('email_body') == ""):
+        return ResponseMessage("No email body.", 400)
+    if(request.json.get('email_subject') == None or request.json.get('email_subject') == ""):
+        return ResponseMessage("No email subject.", 400)
+    msg = Message(
+        subject=request.json.get('email_subject'),
+        body=request.json.get('email_body'),
+        sender="betteru490@gmail.com",
+        recipients=[email_address.email],
+    )
+    result = mail.send(msg)
+    print(msg, result)
+    return ResponseMessage(f"Email sent to {email_address.email}", 200)
 
 @app.route("/docs")
 def docs():
@@ -169,7 +218,7 @@ def delete_transaction(transaction_id):
 @swag_from('docs/savedposts/get.yml')
 def get_saved_posts():
     #sql query
-    query = "SELECT * FROM saved_posts\n"
+    query = "SELECT * FROM saved_posts AS S JOIN users AS U ON S.user_id = U.user_id JOIN forum_posts AS F ON F.post_id = S.post_id\n"
     #get inputs
     params = {
         'uid': "" if request.args.get('user_id') == None else request.args.get('user_id'),
@@ -177,28 +226,35 @@ def get_saved_posts():
         'datetime': "" if request.args.get('saved_at') == None else '%' + request.args.get('saved_at') + '%'
     }
     if(params['uid'] != "" or params['pid'] != "" or params['datetime'] != ""):
-        query += ("WHERE " + ("user_id = :uid\n" if params['uid'] != "" else "TRUE\n"))
-        query += ("AND " + ("post_id = :pid\n" if params['pid'] != "" else "TRUE\n"))
-        query += ("AND " + ("saved_at LIKE :datetime\n" if params['datetime'] != "" else "TRUE\n"))
+        query += ("WHERE " + ("S.user_id = :uid\n" if params['uid'] != "" else "TRUE\n"))
+        query += ("AND " + ("S.post_id = :pid\n" if params['pid'] != "" else "TRUE\n"))
+        query += ("AND " + ("S.saved_at LIKE :datetime\n" if params['datetime'] != "" else "TRUE\n"))
     #execute query
     result = db.session.execute(text(query), params)
     json = {'saved_posts': []}
     for row in result:
         json['saved_posts'].append({
             'user_id': row.user_id,
+            'first_name': row.first_name,
+            'last_name': row.last_name,
             'post_id': row.post_id,
+            'title': row.title,
             'saved_at': row.saved_at
         })
     return json, 200
 
-@app.route("/saved_posts/<int:post_id>", methods=['DELETE'])
+@app.route("/saved_posts", methods=['DELETE'])
 @login_required
 @swag_from('docs/savedposts/delete.yml')
-def delete_saved_posts(post_id):
+def delete_saved_posts():
+    params = {
+        'post_id': request.json.get('post_id'),
+        'user_id': request.json.get('user_id')
+    }
     try:
-        result = db.session.execute(text("SELECT * FROM saved_posts WHERE post_id = :post_id\n"), {'post_id': post_id})
+        result = db.session.execute(text("SELECT * FROM saved_posts WHERE post_id = :post_id AND user_id = :user_id\n"), {'post_id': params['post_id'], 'user_id': params['user_id']})
         if result.first() != None:
-            db.session.execute(text("DELETE FROM saved_posts WHERE post_id = :post_id\n"), {'post_id': post_id})
+            db.session.execute(text("DELETE FROM saved_posts WHERE post_id = :post_id AND user_id = :user_id\n"), {'post_id': params['post_id'], 'user_id': params['user_id']})
         else:
             return Response(status=400)
     except Exception as e:
@@ -207,6 +263,34 @@ def delete_saved_posts(post_id):
     else:
         db.session.commit()
         return Response(status=200)
+
+@app.route("/saved_posts", methods=['POST'])
+@login_required
+@swag_from('docs/savedposts/post.yml')
+def add_saved_posts():
+    query = text("""
+        INSERT INTO saved_posts (user_id, post_id, saved_at)
+        VALUES (
+            :user_id,
+            :post_id,
+            CURRENT_TIMESTAMP)
+    """)
+    params = {
+        'post_id': request.json.get('post_id'),
+        'user_id': request.json.get('user_id')
+    }
+    #input validation
+    if None in params.values():
+        return ResponseMessage("Required parameters not supplied.", 400)
+        #execute query
+    try:
+        db.session.execute(query, params)
+    except Exception as e:
+        print(e)
+        return ResponseMessage(f"Error Executing Query:\n{e}", 500)
+    else:
+        db.session.commit()
+        return ResponseMessage(f"Post saved successfully", 201)
 
 @app.route("/prescriptions", methods=['GET'])
 @swag_from('docs/prescriptions/get.yml')
@@ -415,7 +499,9 @@ def appointments():
             'status': row.status,
             'location': row.location,
             'reason': row.reason,
-            'created_at': row.created_at
+            'created_at': row.created_at,
+            'details': row.details,
+            'notes' : row.notes
         })
     return json, 200
 
@@ -442,7 +528,7 @@ def delete_appointments(appointment_id):
 def add_appointment():
     #sql query
     query = text("""
-        INSERT INTO appointments (appointment_id, doctor_id, patient_id, start_time, end_time, status, location, reason, created_at)
+        INSERT INTO appointments (appointment_id, doctor_id, patient_id, start_time, end_time, status, location, reason, details, created_at, notes)
         VALUES (
             :appointment_id,
             :doctor_id,
@@ -452,7 +538,9 @@ def add_appointment():
             :status,
             :location,
             :reason,
-            CURRENT_TIMESTAMP)
+            :details,
+            CURRENT_TIMESTAMP,
+            :notes)
     """)
     # NOTE: doing appointment_id this way could bring about a race condition.... but lets be real this is never happening.
     location = request.json.get('location')
@@ -461,27 +549,37 @@ def add_appointment():
     details = request.json.get('details')
     if details is None:
         details = ""
+    notes = request.json.get('notes')
+    if notes is None:
+        notes = ""
+
+    valid_datetime = r"^\d{4}-\d{2}-\d{2} [0-5][0-9]:[0-5][0-9]:[0-5][0-9]$"
+    if(request.json.get('start_time') != None and re.search(valid_datetime, request.json.get('start_time')) == None):
+        return ResponseMessage("Invalid Start Time. Format: (yyyy-mm-dd hh:mm:ss)", 400)
+    end_time = datetime.strptime(request.json.get('start_time'), "%Y-%m-%d %H:%M:%S")
+    end_time = end_time + timedelta(hours=1)
+    end_time = end_time.strftime("%Y-%m-%d %H:%M:%S")
+    
     params = {
         'appointment_id': (db.session.execute(text("SELECT MAX(appointment_id) + 1 AS appointment_id FROM appointments")).first()).appointment_id,
         'doctor_id': request.json.get('doctor_id'),
         'patient_id': request.json.get('patient_id'),
         'start_time': request.json.get('start_time'),
-        'end_time': request.json.get('end_time'),
+        'end_time': end_time,
         'status': request.json.get('status'),
         'location': location,
         'reason': request.json.get('reason'),
-        'details': details
+        'details': details,
+        'notes': notes
     }
     #input validation
-    if None in [request.json.get('doctor_id'), request.json.get('patient_id'), request.json.get('start_time'), request.json.get('end_time'), request.json.get('status'), request.json.get('reason')]:
+    if None in [request.json.get('doctor_id'), request.json.get('patient_id'), request.json.get('start_time'), request.json.get('status'), request.json.get('reason')]:
         return ResponseMessage("Required parameters not supplied.", 400)
     if(params['status'].lower() not in ('canceled', 'pending', 'rejected', 'accepted')):
         return ResponseMessage("Invalid status field. Must be ('canceled', 'pending', 'rejected', 'accepted')", 400)
-    valid_datetime = r"^\d{4}-\d{2}-\d{2} [0-5][0-9]:[0-5][0-9]:[0-5][0-9]$"
     if(len(params['reason']) == 0):
         return ResponseMessage("Reason must be non-empty.", 400)
-    if(None in (re.search(valid_datetime, params['start_time']), re.search(valid_datetime, params['end_time']))):
-        return ResponseMessage("Invalid Datetime. Format: (yyyy-mm-dd hh:mm:ss)", 400)
+
     try:
         result = db.session.execute(text("SELECT * FROM patients WHERE patient_id = :patient_id"), params)
         if(result.first() == None):
@@ -489,7 +587,12 @@ def add_appointment():
         result = db.session.execute(text("SELECT * FROM doctors WHERE doctor_id = :doctor_id"), params)
         if(result.first() == None):
             return ResponseMessage("Invalid doctor id.", 400)
-        #add appointment time validation
+        result = db.session.execute(text("SELECT start_time, end_time FROM appointments WHERE doctor_id = :doctor_id"), params)
+        startA = request.json.get('start_time')
+        endA = end_time
+        for times in result:
+            if (startA < times.end_time) and (times.start_time < endA):
+                return ResponseMessage("Invalid timeslot.", 400)
         #execute query
         db.session.execute(query, params)
     except Exception as e:
@@ -509,10 +612,11 @@ def update_appointment(appointment_id):
             doctor_id = {':doctor_id' if request.json.get('doctor_id') != None else 'doctor_id'},
             patient_id = {':patient_id' if request.json.get('patient_id') != None else 'patient_id'},
             start_time = {':start_time' if request.json.get('start_time') != None else 'start_time'},
-            end_time = {':end_time' if request.json.get('end_time') != None else 'end_time'},
             status = {':status' if request.json.get('status') != None else 'status'},
             location = {':location' if request.json.get('location') != None else 'location'},
             reason = {':reason' if request.json.get('reason') != None else 'reason'}
+            notes = {':reason' if request.json.get('notes') != None else 'notes'}
+            details = {':details' if request.json.get('details') != None else 'details'}
         WHERE appointment_id = :appointment_id
     """)
     location = request.json.get('location')
@@ -521,16 +625,33 @@ def update_appointment(appointment_id):
     details = request.json.get('details')
     if details is None:
         details = ""
+    notes = request.json.get('notes')
+    if notes is None:
+        notes = ""
+
+    valid_datetime = r"^\d{4}-\d{2}-\d{2} [0-5][0-9]:[0-5][0-9]:[0-5][0-9]$"
+    if(request.json.get('start_time') != None and re.search(valid_datetime, request.json.get('start_time')) == None):
+        return ResponseMessage("Invalid Start Time. Format: (yyyy-mm-dd hh:mm:ss)", 400)
+    if (request.json.get('start_time') != None):
+        end_time = datetime.strptime(request.json.get('start_time'), "%Y-%m-%d %H:%M:%S")
+        end_time = end_time + timedelta(hours=1)
+        end_time = end_time.strftime("%Y-%m-%d %H:%M:%S")
+    else:
+        end_time_result = db.session.execute(text("SELECT end_time FROM appointments WHERE appointment_id = :appointment_id"),{"appointment_id": appointment_id}).first()
+        end_time = end_time_result.end_time if end_time_result else None
+        
     params = {
         'appointment_id': appointment_id,
         'doctor_id': request.json.get('doctor_id'),
         'patient_id': request.json.get('patient_id'),
         'start_time': request.json.get('start_time'),
-        'end_time': request.json.get('end_time'),
+        'end_time': end_time,
         'status': request.json.get('status'),
         'location': location,
         'reason': request.json.get('reason'),
         'details': details
+        'reason': request.json.get('reason'),
+        'notes': notes
     }
     #input validation
     if(db.session.execute(text("SELECT * FROM appointments WHERE appointment_id = :appointment_id"), params).first() == None):
@@ -539,14 +660,20 @@ def update_appointment(appointment_id):
         return ResponseMessage("No parameters were passed to update...", 200)
     if(params['status'] != None and params['status'].lower() not in ('canceled', 'pending', 'rejected', 'accepted')):
         return ResponseMessage("Invalid status field. Must be ('canceled', 'pending', 'rejected', 'accepted')", 400)
-    valid_datetime = r"^\d{4}-\d{2}-\d{2} [0-5][0-9]:[0-5][0-9]:[0-5][0-9]$"
     if(params['reason'] != None and len(params['reason']) == 0):
         return ResponseMessage("Reason must be non-empty.", 400)
     #add appointment time validation
     if(params['start_time'] != None and re.search(valid_datetime, params['start_time']) == None):
         return ResponseMessage("Invalid Start Time. Format: (yyyy-mm-dd hh:mm:ss)", 400)
-    if(params['end_time'] != None and re.search(valid_datetime, params['end_time']) == None):
-        return ResponseMessage("Invalid End Time. Format: (yyyy-mm-dd hh:mm:ss)", 400)
+      
+    if (request.json.get('start_time') != None):
+        result = db.session.execute(text("SELECT start_time, end_time FROM appointments WHERE doctor_id = :doctor_id"), params)
+        startA = request.json.get('start_time')
+        endA = end_time
+        for times in result:
+            if (startA < times.end_time) and (times.start_time < endA):
+                return ResponseMessage("Invalid timeslot.", 400)
+        
     if(params['doctor_id'] != None and db.session.execute(text("SELECT * FROM doctors WHERE doctor_id = :doctor_id"), params).first() == None):
         return ResponseMessage("Invalid doctor ID.", 400)
     if(params['patient_id'] != None and db.session.execute(text("SELECT * FROM patients WHERE patient_id = :patient_id"), params).first() == None):
@@ -585,6 +712,7 @@ def get_patient_progress():
             'progress_id': row.progress_id,
             'patient_id': row.patient_id,
             'weight': row.weight,
+            'weight_goal': row.weight_goal,
             'calories': row.calories,
             'notes': row.notes,
             'date_logged': row.date_logged
@@ -614,11 +742,12 @@ def delete_patient_progress(progress_id):
 def add_patient_progress():
     #sql query
     query = text("""
-        INSERT INTO patient_progress (progress_id, patient_id, weight, calories, notes, date_logged)
+        INSERT INTO patient_progress (progress_id, patient_id, weight, weight_goal, calories, notes, date_logged)
         VALUES (
             :progress_id,
             :patient_id,
             :weight,
+            :weight_goal,
             :calories,
             :notes,
             CURRENT_TIMESTAMP
@@ -630,6 +759,7 @@ def add_patient_progress():
         'patient_id': request.json.get('patient_id'),
         'weight': request.json.get('weight'),
         'calories': request.json.get('calories'),
+        'weight_goal': request.json.get('weight_goal'),
         'notes': request.json.get('notes')
     }
     #input validation
@@ -641,6 +771,8 @@ def add_patient_progress():
             return ResponseMessage("Invalid patient id.", 400)
         if(request.json.get('weight') <= 0 or request.json.get('weight') >= 1500):
             return ResponseMessage("Invalid weight.", 400)
+        if(request.json.get('weight_goal') <= 0 or request.json.get('weight_goal') >= 1500):
+            return ResponseMessage("Invalid weight goal.", 400)
         if(request.json.get('calories') <= 0 or request.json.get('calories') >= 30000):
             return ResponseMessage("Invalid calories.", 400)
         #execute query
@@ -650,7 +782,7 @@ def add_patient_progress():
         return ResponseMessage(f"Error Executing Query:\n{e}", 500)
     else:
         db.session.commit()
-        return ResponseMessage(f"patient progress entry successfully created (id: {params['patient_id']})", 201)
+        return ResponseMessage(f"patient progress entry successfully created (id: {params['progress_id']})", 201)
 
 @app.route("/patient_exercise_assignments", methods=['GET'])
 @login_required
@@ -681,7 +813,9 @@ def get_patient_exercise_assignments():
             'patient_id': row.patient_id,
             'doctor_id': row.doctor_id,
             'exercise_id': row.exercise_id,
-            'instructions': row.instructions,
+            'frequency_per_week': row.frequency_per_week,
+            'reps': row.reps,
+            'sets': row.sets,
             'assigned_at': row.assigned_at
         })
     return json, 200
@@ -711,9 +845,15 @@ def patch_patient_exercise_assignments(assignment_id):
     if 'exercise_id' in data:
         update_fields.append("exercise_id = :exercise_id")
         params['exercise_id'] = data['exercise_id']
-    if 'instructions' in data:
-        update_fields.append("instructions = :instructions")
-        params['instructions'] = data['instructions']
+    if 'frequency_per_week' in data:
+        update_fields.append("frequency_per_week = :frequency_per_week")
+        params['frequency_per_week'] = data['frequency_per_week']
+    if 'reps' in data:
+        update_fields.append("reps = :reps")
+        params['reps'] = data['reps']
+    if 'sets' in data:
+        update_fields.append("sets = :sets")
+        params['sets'] = data['sets']
     
     if not update_fields:
         return {"error": "No update fields provided."}, 400
@@ -741,14 +881,16 @@ def post_patient_exercise_assignments():
 
     from datetime import datetime
     query = """
-        INSERT INTO patient_exercise_assignments (patient_id, doctor_id, exercise_id, instructions, assigned_at)
-        VALUES (:patient_id, :doctor_id, :exercise_id, :instructions, :assigned_at)
+        INSERT INTO patient_exercise_assignments (patient_id, doctor_id, exercise_id, frequency_per_week, reps, sets, assigned_at)
+        VALUES (:patient_id, :doctor_id, :exercise_id, :frequency_per_week, :reps, :sets, :assigned_at)
     """
     params = {
         'patient_id': data['patient_id'],
         'doctor_id': data['doctor_id'],
         'exercise_id': data['exercise_id'],
-        'instructions': data.get('instructions', ""),
+        'frequency_per_week': data['frequency_per_week'],
+        'reps': data['reps'],
+        'sets': data['sets'],
         'assigned_at': datetime.utcnow()
     }
     
@@ -911,7 +1053,7 @@ def get_doctor_patient_relationship():
     params = {
         'did': "" if request.args.get('doctor_id') == None else request.args.get('doctor_id'),
         'pid': "" if request.args.get('patient_id') == None else request.args.get('patient_id'),
-        'status': "" if request.args.get('status') == None else '%' + request.args.get('status') + '%',
+        'status': "" if request.args.get('status') == None else request.args.get('status'),
     }
     if(params['did'] != "" or params['pid'] != "" or params['status'] != ""):
         query += ("WHERE " + ("doctor_id = :did\n" if params['did'] != "" else "TRUE\n"))
@@ -1283,7 +1425,7 @@ def delete_pharmacists(pharmacist_id):
 @swag_from('docs/forumcomments/get.yml')
 def get_forum_comments():
     #sql query
-    query = "SELECT * FROM forum_comments\n"
+    query = "SELECT * FROM forum_comments AS F JOIN users AS U ON F.user_id = U.user_id\n"
     #get inputs
     params = {
         'cid': "" if request.args.get('comment_id') == None else request.args.get('comment_id'),
@@ -1302,6 +1444,8 @@ def get_forum_comments():
             'comment_id': row.comment_id,
             'post_id': row.post_id,
             'user_id': row.user_id,
+            'first_name': row.first_name,
+            'last_name': row.last_name,
             'comment_text': row.comment_text,
             'created_at': row.created_at
         })
@@ -1322,7 +1466,49 @@ def delete_forum_comments(comment_id):
     else:
         db.session.commit()
         return Response(status=200)
-    
+
+@app.route("/forum_comments", methods=['POST'])
+@swag_from('docs/forumcomments/post.yml')
+def add_forum_comments():
+    #sql query
+    query = text("""
+        INSERT INTO forum_comments (comment_id, post_id, user_id, comment_text, created_at)
+        VALUES (
+            :comment_id,
+            :post_id,
+            :user_id,
+            :comment_text,
+            CURRENT_TIMESTAMP
+            )
+    """)
+    # NOTE: doing comment_id this way could bring about a race condition.... but lets be real this is never happening.
+    params = {
+        'comment_id': (db.session.execute(text("SELECT MAX(comment_id) + 1 AS comment_id FROM forum_comments")).first()).comment_id,
+        'post_id': request.json.get('post_id'),
+        'user_id': request.json.get('user_id'),
+        'comment_text': request.json.get('comment_text')
+    }
+    #input validation
+    if None in list(params.values())[:-1]:
+        return ResponseMessage("Required parameters not supplied.", 400)
+    try:
+        result = db.session.execute(text("SELECT * FROM forum_posts WHERE post_id = :post_id"), params)
+        if(result.first() == None):
+            return ResponseMessage("Invalid post id.", 400)
+        result = db.session.execute(text("SELECT * FROM users WHERE user_id = :user_id"), params)
+        if(result.first() == None):
+            return ResponseMessage("Invalid user id.", 400)
+        if(len(str(request.json.get('comment_text'))) <= 0):
+            return ResponseMessage("Invalid comment text.", 400)
+        #execute query
+        db.session.execute(query, params)
+    except Exception as e:
+        print(e)
+        return ResponseMessage(f"Error Executing Query:\n{e}", 500)
+    else:
+        db.session.commit()
+        return ResponseMessage(f"comment entry successfully created (id: {params['comment_id']})", 201)
+
 @app.route("/forum_comments/<int:comment_id>", methods=['PATCH'])
 @swag_from('docs/forumcomments/patch.yml')
 def patch_forum_comments(comment_id):
@@ -1365,7 +1551,7 @@ def patch_forum_comments(comment_id):
 @swag_from('docs/forumposts/get.yml')
 def get_forum_posts():
     #sql query
-    query = "SELECT * FROM forum_posts\n"
+    query = "SELECT * FROM forum_posts AS F JOIN users AS U ON F.user_id = U.user_id\n"
     #get inputs
     params = {
         'pid': "" if request.args.get('post_id') == None else request.args.get('post_id'),
@@ -1385,12 +1571,61 @@ def get_forum_posts():
         json['forum_posts'].append({
             'post_id': row.post_id,
             'user_id': row.user_id,
+            'first_name': row.first_name,
+            'last_name': row.last_name,
             'title': row.title,
             'content': row.content,
             'post_type': row.post_type,
             'created_at': row.created_at
         })
     return json, 200
+
+@app.route("/forum_posts", methods=['POST'])
+@swag_from('docs/forumposts/post.yml')
+def add_forum_posts():
+    #sql query
+    query = text("""
+        INSERT INTO forum_posts (post_id, user_id, title, content, post_type, created_at)
+        VALUES (
+            :post_id,
+            :user_id,
+            :title,
+            :content,
+            :post_type,
+            CURRENT_TIMESTAMP
+            )
+    """)
+    # NOTE: doing comment_id this way could bring about a race condition.... but lets be real this is never happening.
+    params = {
+        'post_id': (db.session.execute(text("SELECT MAX(post_id) + 1 AS post_id FROM forum_posts")).first()).post_id,
+        'user_id': request.json.get('user_id'),
+        'title': request.json.get('title'),
+        'content': request.json.get('content'),
+        'post_type': request.json.get('post_type')
+    }
+    #input validation
+    if None in list(params.values())[:-1]:
+        return ResponseMessage("Required parameters not supplied.", 400)
+    try:
+        result = db.session.execute(text("SELECT * FROM users WHERE user_id = :user_id"), params)
+        if(result.first() == None):
+            return ResponseMessage("Invalid user_id.", 400)
+        if (request.json.get('post_type').lower() != "discussion" and request.json.get('post_type').lower() != "exercise plan"):
+            return ResponseMessage("Invalid post_type.", 400)
+        if(len(str(request.json.get('comment_text'))) <= 0):
+            return ResponseMessage("Invalid comment text.", 400)
+        #execute query
+        db.session.execute(query, params)
+    except Exception as e:
+        print(e)
+        return ResponseMessage(f"Error Executing Query:\n{e}", 500)
+    else:
+        db.session.commit()
+        data = {
+            'message': 'post entry successfully created',
+            'id': params['post_id']
+        }
+        return jsonify(data), 201
 
 @app.route("/forum_posts/<int:post_id>", methods=['DELETE'])
 @swag_from('docs/forumposts/delete.yml')
@@ -1407,6 +1642,39 @@ def delete_forum_posts(post_id):
     else:
         db.session.commit()
         return Response(status=200)
+
+@app.route("/forum_posts/<int:post_id>", methods=['PATCH'])
+@swag_from('docs/forumposts/patch.yml')
+def update_forum_posts(post_id):
+        #sql query
+    query = text(f"""
+        UPDATE forum_posts SET
+            title = {':title' if request.json.get('title') != None else 'title'},
+            content = {':content' if request.json.get('content') != None else 'content'},
+            post_type = {':post_type' if request.json.get('post_type') != None else 'post_type'}
+        WHERE post_id = :post_id
+    """)
+    params = {
+        'post_id': post_id,
+        'title': request.json.get('title'),
+        'content': request.json.get('content'),
+        'post_type': request.json.get('post_type')
+    }
+    #input validation
+    if(db.session.execute(text("SELECT * FROM forum_posts WHERE post_id = :post_id"), params).first() == None):
+        return ResponseMessage("post not found.", 404)
+    if (request.json.get('post_type').lower() != "discussion" and request.json.get('post_type').lower() != "exercise plan"):
+        return ResponseMessage("Invalid post_type.", 400)
+    if(len(str(request.json.get('comment_text'))) <= 0):
+        return ResponseMessage("Invalid comment text.", 400)
+    try:
+        db.session.execute(query, params)
+    except Exception as e:
+        print(e)
+        return ResponseMessage(f"Server/SQL Error. Exeption: \n{e}", 500)
+    else:
+        db.session.commit()
+        return ResponseMessage("Post Successfully Updated.", 200) 
 
 @app.route("/reviews", methods=['GET'])
 @swag_from('docs/reviews/get.yml')
@@ -1720,12 +1988,14 @@ def get_users():
         'role': "" if request.args.get('role') == None else request.args.get('role'),
         'fname': "" if request.args.get('first_name') == None else '%' + request.args.get('first_name') + '%',
         'lname': "" if request.args.get('last_name') == None else '%' + request.args.get('last_name') + '%',
+        'email': "" if request.args.get('email') == None else '%' + request.args.get('email') + '%',
     }
-    if(params['id'] != "" or params['role'] != "" or params['fname'] != "" or params['lname'] != ""):
+    if(params['id'] != "" or params['role'] != "" or params['fname'] != "" or params['lname'] != "" or params['email'] != ""):
         query += ("WHERE " + ("user_id = :id\n" if params['id'] != "" else "TRUE\n"))
         query += ("AND " + ("role = :role\n" if params['role'] != "" else "TRUE\n"))
         query += ("AND " + ("first_name LIKE :fname\n" if params['fname'] != "" else "TRUE\n"))
         query += ("AND " + ("last_name LIKE :lname\n" if params['lname'] != "" else "TRUE\n"))
+        query += ("AND " + ("email LIKE :email\n" if params['email'] != "" else "TRUE\n"))
     #execute query
     result = db.session.execute(text(query), params)
     json = {'users': []}
@@ -1757,13 +2027,77 @@ def delete_users(user_id):
     else:
         db.session.commit()
         return Response(status=200)
+
+@app.route("/users/<int:user_id>", methods=['PATCH'])
+@swag_from('docs/users/patch.yml')
+def patch_user(user_id):
+    data = request.get_json(force=True)
     
+    # Check if the user exists
+    existing = db.session.execute(
+        text("SELECT * FROM users WHERE user_id = :user_id"),
+        {'user_id': user_id}
+    ).first()
+    
+    if not existing:
+        return {"error": "user not found"}, 404
+
+    update_fields = []
+    params = {}
+    
+    if 'password' in data:
+        update_fields.append("password = :password")
+        params['password'] = data['password']
+    if 'email' in data:
+        valid_email = r"^.+\d*@.+[.][a-zA-Z]{2,4}$"
+        if(re.search(valid_email, data['email']) == None):
+            return ResponseMessage("Invalid email.", 400)
+        update_fields.append("email = :email")
+        params['email'] = data['email']
+    if 'first_name' in data:
+        update_fields.append("first_name = :first_name")
+        params['first_name'] = data['first_name']
+    if 'last_name' in data:
+        update_fields.append("last_name = :last_name")
+        params['last_name'] = data['last_name']
+    if 'phone_number' in data:
+        data['phone_number'] = re.sub(r"(-|\s|\)|\()", "", str(data['phone_number']))
+        valid_phone = r"^\d{10}$"
+        if(re.search(valid_phone, str(data['phone_number'])) == None):
+            return ResponseMessage("Invalid phone number.", 400)
+        update_fields.append("phone_number = :phone_number")
+        params['phone_number'] = data['phone_number']
+
+    if not update_fields:
+        return {"error": "No update fields provided."}, 400
+    
+    params['user_id'] = user_id
+    query = "UPDATE users SET " + ", ".join(update_fields) + " WHERE user_id = :user_id"
+    
+    try:
+        db.session.execute(text(query), params)
+        db.session.commit()
+    except Exception as e:
+        print(e)
+        return {"error": "Error updating user"}, 500
+
+    return {"message": "user updated successfully"}, 200
+
 @app.route("/users/<string:role>", methods=['POST'])
 @swag_from('docs/users/post.yml')
 def create_user(role):
+    file = request.files.get('identification')
+    identification_path = ""
+    user_id = (db.session.execute(text("SELECT MAX(user_id) + 1 AS user_id FROM users")).first()).user_id
+    if file and allowed_file(file.filename):
+        ext = os.path.splitext(file.filename)[1].lower()
+        new_filename = f"{user_id}{ext}"
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], new_filename)
+        file.save(filepath)
+        identification_path = filepath
     #sql query
     user_query = text("""
-        INSERT INTO users (user_id, email, password, first_name, last_name, phone_number, role, created_at)
+        INSERT INTO users (user_id, email, password, first_name, last_name, phone_number, role, created_at, identification)
         VALUES (
             :user_id,
             :email,
@@ -1772,7 +2106,8 @@ def create_user(role):
             :last_name,
             :phone_number,
             :role,
-            CURRENT_TIMESTAMP)
+            CURRENT_TIMESTAMP,
+            :identification)
     """)
     patient_query = text("""
         INSERT INTO patients (patient_id, address_id, medical_history, creditcard_id, ssn)
@@ -1819,21 +2154,25 @@ def create_user(role):
         )
     """)
     # NOTE: doing appointment_id this way could bring about a race condition.... but lets be real this is never happening.
-    user_json = request.json.get('user')
-    doctor_json = request.json.get('doctor')
-    patient_json = request.json.get('patient')
-    pharmacist_json = request.json.get('pharmacist')
-    address_json = request.json.get("address")
-    creditcard_json = request.json.get("credit_card")
+    try:
+        user_json = json.loads(request.form.get('user'))
+        doctor_json = json.loads(request.form.get('doctor')) if request.form.get('doctor') else None
+        patient_json = json.loads(request.form.get('patient')) if request.form.get('patient') else None
+        pharmacist_json = json.loads(request.form.get('pharmacist')) if request.form.get('pharmacist') else None
+        address_json = json.loads(request.form.get("address")) if request.form.get('address') else None
+        creditcard_json = json.loads(request.form.get("credit_card")) if request.form.get('credit_card') else None
+    except Exception as e:
+        return ResponseMessage(f"Malformed JSON: {e}", 400)
     
     user_params = {
-        'user_id': (db.session.execute(text("SELECT MAX(user_id) + 1 AS user_id FROM users")).first()).user_id,
+        'user_id': user_id,
         'email': user_json.get('email'),
         'password': user_json.get('password'),
         'first_name': user_json.get('first_name'),
         'last_name': user_json.get('last_name'),
         'phone_number': user_json.get('phone_number'),
         'role': role,
+        'identification': identification_path
     }
     doctor_params = {
         'doctor_id': user_params['user_id'],
@@ -1886,7 +2225,7 @@ def create_user(role):
         return ResponseMessage("Password must be at least 4 characters.", 400)
     if(len(user_params['first_name']) < 1 or len(user_params['last_name']) < 1):
         return ResponseMessage("Name fields must be non-empty.", 400)
-    if(re.search(valid_phone, user_params['phone_number']) == None):
+    if(re.search(valid_phone, str(user_params['phone_number'])) == None):
         return ResponseMessage("Invalid phone number.", 400)
     if(user_params['role'] not in ('doctor', 'patient', 'pharmacist')):
         return ResponseMessage("Invalid user role. (must be 'doctor', 'patient', or 'pharmacist')", 400)
@@ -1900,6 +2239,7 @@ def create_user(role):
         #user fields
         if(None in patient_params.values()):
             return ResponseMessage("Required parameters missing from patient fields.", 400)
+        
         if(patient_params['medical_history'] == ""):
             return ResponseMessage("Unless newborn babies are beginning their weight loss journey young, medical history should be non-empty", 400)
         if(re.search(valid_license, str(patient_params['ssn'])) == None):

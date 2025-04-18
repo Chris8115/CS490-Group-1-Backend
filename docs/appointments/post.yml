@@ -26,9 +26,9 @@ parameters:
           - patient_id
           - doctor_id
           - start_time
-          - end_time
           - status
           - reason
+          - details
         properties: 
           patient_id: 
             type: integer
@@ -39,9 +39,6 @@ parameters:
           start_time: 
             type: string
             description: Appointment start time (`yyyy-mm-dd hh:mm:ss`)
-          end_time: 
-            type: string
-            description: Appointment end time (`yyyy-mm-dd hh:mm:ss`)
           status: 
             type: string
             description: Status of types (`accepted`, `rejected`, `pending`, `canceled`)
@@ -54,4 +51,6 @@ parameters:
           details: 
             type: string
             description: Appointment details
-
+          notes: 
+            type: string
+            description: extra notes

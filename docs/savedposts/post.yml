@@ -1,0 +1,34 @@
+Saved Posts records
+---
+tags:
+    - Discussion Forum
+description:
+    Login Required
+    Creates an Saved Post record
+responses:
+    201:
+        description: Post saved successfully.
+    400:
+        description: Client input validation error.
+    500:
+        description: Server/SQLite error.
+consumes:
+  - application/json
+parameters:
+    - in: body
+      name: saved_post
+      required: true
+      description: | 
+        saved_post information
+      schema:
+        type: object
+        required: 
+          - post_id
+          - user_id
+        properties: 
+          post_id: 
+            type: integer
+            description: post ID
+          user_id: 
+            type: integer
+            description: user ID

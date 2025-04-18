@@ -1,0 +1,39 @@
+Forum Comments records
+---
+tags:
+  - Discussion Forum
+description: >
+  Creates a new Forum Comments in the `Forum Comments` table using the JSON body.
+  
+  Example: A PUT request to `/forum_comments`
+  
+  creates a new review record.
+responses:
+  201:
+    description: Forum Comments created successfully.
+  400:
+    description: Missing required fields.
+  500:
+    description: Error creating review.
+parameters:
+  - in: body
+    name: body
+    required: true
+    description: JSON object containing the Forum Comments fields.
+    schema:
+      type: object
+      properties:
+        post_id:
+          type: integer
+          description: The ID of the post.
+        user_id:
+          type: integer
+          description: The ID of the user.
+        comment_text:
+          type: string
+          description: The comment text.
+        
+      required:
+        - post_id
+        - user_id
+        - comment_text

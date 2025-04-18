@@ -39,10 +39,19 @@ parameters:
         exercise_id:
           type: integer
           description: ID of the exercise.
-        instructions:
-          type: string
-          description: Additional instructions for the exercise assignment.
+        frequency_per_week:
+          type: integer
+          description: frequency_per_week.
+        reps:
+          type: integer
+          description: reps.
+        sets:
+          type: integer
+          description: sets.
       required:
         - patient_id
         - doctor_id
         - exercise_id
+        - frequency_per_week
+        - reps
+        - sets

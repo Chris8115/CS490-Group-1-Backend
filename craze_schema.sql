@@ -20,7 +20,9 @@ CREATE TABLE "appointments" (
 	"status"	TEXT NOT NULL,
 	"location"	TEXT NOT NULL,
 	"reason"	TEXT NOT NULL,
+	"details"    TEXT NOT NULL,
 	"created_at"	TIMESTAMP NOT NULL,
+	"notes" TEXT,
 	CONSTRAINT "appointments_pk" PRIMARY KEY("appointment_id"),
 	CONSTRAINT "doctor_id" FOREIGN KEY("doctor_id") REFERENCES "users"("user_id"),
 	CONSTRAINT "patient_id" FOREIGN KEY("patient_id") REFERENCES "users"("user_id")
@@ -48,6 +50,7 @@ CREATE TABLE "doctors" (
 	"license_number"	INTEGER NOT NULL,
 	"specialization"	TEXT NOT NULL,
 	"profile"	TEXT NOT NULL,
+	"office"	INTEGER DEFAULT -1 NOT NULL,
 	PRIMARY KEY("doctor_id"),
 	CONSTRAINT "doctor_id" FOREIGN KEY("doctor_id") REFERENCES "users"("user_id")
 );
@@ -102,8 +105,10 @@ CREATE TABLE "patient_exercise_assignments" (
 	"patient_id"	INTEGER,
 	"doctor_id"	INTEGER,
 	"assigned_at"	TIMESTAMP NOT NULL,
-	"instructions"	TEXT NOT NULL,
 	"exercise_id"	INTEGER NOT NULL,
+	"frequency_per_week"	INTEGER DEFAULT 0 NOT NULL,
+	"reps"	INTEGER DEFAULT 0 NOT NULL,
+	"sets"	INTEGER DEFAULT 0 NOT NULL,
 	CONSTRAINT "patient_exercise_assignments_pk" PRIMARY KEY("assignment_id"),
 	CONSTRAINT "doctor_id" FOREIGN KEY("doctor_id") REFERENCES "users"("user_id"),
 	FOREIGN KEY("exercise_id") REFERENCES "exercise_plans"("exercise_id"),
@@ -115,6 +120,7 @@ CREATE TABLE "patient_progress" (
 	"patient_id"	INTEGER,
 	"date_logged"	TIMESTAMP NOT NULL,
 	"weight"	REAL NOT NULL,
+	"weight_goal"	INTEGER NOT NULL DEFAULT 200,
 	"calories"	REAL NOT NULL,
 	"notes"	TEXT,
 	CONSTRAINT "patient_progress_pk" PRIMARY KEY("progress_id"),
@@ -201,6 +207,7 @@ CREATE TABLE "users" (
 	"role"	TEXT NOT NULL,
 	"eula"	TEXT NOT NULL DEFAULT 'signed',
 	"created_at"	TIMESTAMP NOT NULL,
+	"identification"	TEXT NOT NULL,
 	CONSTRAINT "users_pk" PRIMARY KEY("user_id")
 );
 COMMIT;

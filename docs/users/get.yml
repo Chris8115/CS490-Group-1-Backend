@@ -34,3 +34,9 @@ parameters:
       description: includes results matching `role` column (pharmacist, doctor, or patient)
       schema:
         type: string
+    - in: query
+      name: email
+      required: false
+      description: includes results like `email` column
+      schema:
+        type: string

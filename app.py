@@ -1,3 +1,8 @@
+from dotenv import load_dotenv
+import os
+load_dotenv()  
+from secret_keys import GMAIL_APP_PASSWORD, CRAZE_SECRET_KEY
+
 from flask import Flask, request, Response, jsonify, render_template
 from flask_restful import Api, Resource, abort, reqparse
 from flask_sqlalchemy import SQLAlchemy
@@ -7,8 +12,6 @@ from sqlalchemy.dialects import mysql
 from flasgger import Swagger, swag_from
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
-from dotenv import load_dotenv
-load_dotenv()
 import os
 import pika
 import re
@@ -16,7 +19,6 @@ from flask_login import LoginManager, UserMixin, login_user, LoginManager, login
 from datetime import datetime, timedelta
 import json
 from flask_mail import Mail, Message
-from secret_keys import *
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True, origins=["http://localhost:3000"]) 

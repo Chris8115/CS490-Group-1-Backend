@@ -52,4 +52,8 @@ parameters:
           reason: 
             type: string
             description: Appointment Reason
+          details: 
+            type: string
+            description: Appointment details
+            
 

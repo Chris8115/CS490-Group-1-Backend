@@ -499,7 +499,8 @@ def appointments():
             'status': row.status,
             'location': row.location,
             'reason': row.reason,
-            'created_at': row.created_at
+            'created_at': row.created_at,
+            'details': row.details
         })
     return json, 200
 
@@ -526,7 +527,7 @@ def delete_appointments(appointment_id):
 def add_appointment():
     #sql query
     query = text("""
-        INSERT INTO appointments (appointment_id, doctor_id, patient_id, start_time, end_time, status, location, reason, created_at)
+        INSERT INTO appointments (appointment_id, doctor_id, patient_id, start_time, end_time, status, location, reason, details, created_at)
         VALUES (
             :appointment_id,
             :doctor_id,
@@ -536,6 +537,7 @@ def add_appointment():
             :status,
             :location,
             :reason,
+            :details,
             CURRENT_TIMESTAMP)
     """)
     # NOTE: doing appointment_id this way could bring about a race condition.... but lets be real this is never happening.
@@ -558,7 +560,8 @@ def add_appointment():
         'end_time': end_time,
         'status': request.json.get('status'),
         'location': location,
-        'reason': request.json.get('reason')
+        'reason': request.json.get('reason'),
+        'details': request.json.get('details')
     }
     #input validation
     if None in [request.json.get('doctor_id'), request.json.get('patient_id'), request.json.get('start_time'), request.json.get('status'), request.json.get('reason')]:
@@ -604,6 +607,7 @@ def update_appointment(appointment_id):
             location = {':location' if request.json.get('location') != None else 'location'},
             reason = {':reason' if request.json.get('reason') != None else 'reason'}
             notes = {':reason' if request.json.get('notes') != None else 'notes'}
+            details = {':details' if request.json.get('details') != None else 'details'}
         WHERE appointment_id = :appointment_id
     """)
 
@@ -627,7 +631,8 @@ def update_appointment(appointment_id):
         'status': request.json.get('status'),
         'location': request.json.get('location'),
         'reason': request.json.get('reason'),
-        'notes': request.json.get('notes')
+        'notes': request.json.get('notes'),
+        'details': request.json.get('details'),
     }
     #input validation
     if(db.session.execute(text("SELECT * FROM appointments WHERE appointment_id = :appointment_id"), params).first() == None):

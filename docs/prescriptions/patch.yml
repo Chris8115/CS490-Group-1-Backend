@@ -44,7 +44,7 @@ parameters:
             description: Prescription prescribed time (`yyyy-mm-dd hh:mm:ss`)
           status: 
             type: string
-            description: Status of types (`accepted`, `rejected`, `pending`, `canceled`)
+            description: Status of types (`accepted`, `rejected`, `pending`, `canceled`, `ready`)
           instructions: 
             type: string
             description: Instructions

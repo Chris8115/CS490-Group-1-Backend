@@ -7,6 +7,8 @@ description:
 responses:
     200:
         description: JSON consisting of user ID, role, and message saying login successful
+    400:
+        description: User input invalid.
     401:
         description: Login failed.
 parameters:

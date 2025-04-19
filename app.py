@@ -178,23 +178,16 @@ def docs():
 @swag_from("docs/auth/login_get.yml", methods=['GET'])
 @swag_from("docs/auth/login_post.yml", methods=['POST'])
 def login():
-    next = request.args.get('next')
+    if(request.args.get('next') != None):
+        return ResponseMessage(f"Login Error: Login required to access route {request.args.get('next')}", 401)
+    method_source = request.args if request.method == 'GET' else request.json
     valid_email = r"^.+\d*@.+[.][a-zA-Z]{2,4}$"
     params = {
-        'email': None,
-        'password': None,
-        'remember': False
+        'email': method_source.get('email'),
+        'password': method_source.get('password'),
+        'remember': method_source.get('remember') if method_source.get('remember') != None else False
     }
-    if(request.method == 'GET'):
-        params['email'] = request.args.get('email')
-        params['password'] = request.args.get('password')
-        params['remember'] = request.args.get('remember') if request.args.get('remember') != None else False
-    elif(request.method == 'POST'):
-        json = request.json
-        params['email'] = json.get('email')
-        params['password'] = json.get('password')
-        params['remember'] = json.get('remember') if json.get('remember') != None else False
-    if(None in ( params['email'], params['password'])):
+    if(None in (params['email'], params['password'])):
         return ResponseMessage("Required credentials not sent.", 400)
     if(re.search(valid_email, params['email']) == None):
         return ResponseMessage("Invalid email address.", 400)
@@ -202,10 +195,10 @@ def login():
     if user == None:
         return ResponseMessage("Invalid user credentials.", 401)
     elif(user.password != params['password']):
-        return ResponseMessage("Invalid password.", 400)
+        return ResponseMessage("Invalid password.", 401)
     else:
         login_user(user, params['remember'] or False)
-        return {'user_id': current_user.user_id, 'role': current_user.role, 'message':'Login successful.'}
+        return {'user_id': current_user.user_id, 'role': current_user.role, 'message':'Login successful.'}, 200
 
 @app.route('/logout', methods=['GET', 'POST'])
 @login_required

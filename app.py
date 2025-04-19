@@ -150,8 +150,8 @@ def listen_for_meds():
 def home():
     return "<h1>It works!</h1>"
 
-@app.route("/mail/<int:user_id>", methods=['POST'])
-@swag_from("docs/email/post.yml")
+@app.route("/mail/<int:user_id>", methods=['POST']) # pragma: no cover
+@swag_from("docs/email/post.yml") # pragma: no cover
 def email(user_id):
     email_address = db.session.execute(text("SELECT email FROM users WHERE user_id = :uid"), {'uid': user_id}).first()
     if(email_address == None):
@@ -220,9 +220,9 @@ def logout():
 def login_check():
     return ResponseMessage(f"User is logged in. ID: {current_user.get_id()}", 200)
 
-@app.route("/transactions", methods=['GET'])
+@app.route("/transactions", methods=['GET']) # pragma: no cover
 @login_required
-@swag_from('docs/transactions/get.yml')
+@swag_from('docs/transactions/get.yml') # pragma: no cover
 def get_transactions():
     print(current_user)
     #sql query

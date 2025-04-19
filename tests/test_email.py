@@ -1,13 +1,11 @@
-# tests/test_email.py
-
 import os
 import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 import pytest
 from flask_mail import Message
 from sqlalchemy import text
 from app import app, db, mail
-
 
 @pytest.fixture
 def client():
@@ -31,6 +29,7 @@ def client():
 
     with app.test_client() as c:
         yield c
+
 # Check if there's no user
 def test_invalid_user_id(client):
     resp = client.post('/mail/999', json={
@@ -80,7 +79,6 @@ def test_successful_email_send(client, monkeypatch):
     def fake_send(msg):
         sent['msg'] = msg
         return True
-    # Don't want to send real mail so use monkey patch to send a fake message during runtime 
     monkeypatch.setattr(mail, 'send', fake_send)
 
     resp = client.post('/mail/1', json={
@@ -96,3 +94,25 @@ def test_successful_email_send(client, monkeypatch):
     assert msg.body      == 'This is a test'
     assert msg.sender    == 'betteru490@gmail.com'
     assert msg.recipients == ['test@example.com']
+
+def test_route_is_registered():
+    import app as _app
+    rules = {rule.rule for rule in _app.app.url_map.iter_rules()}
+    # Flask includes the converter type in the rule
+    assert '/mail/<int:user_id>' in rules
+
+def test_print_and_mail_send_side_effect(client, capsys, monkeypatch):
+    def fake_send(msg):
+        print(">> fake_send called with subject=", msg.subject)
+        return None
+    monkeypatch.setattr(mail, 'send', fake_send)
+
+    resp = client.post('/mail/1', json={
+        'email_subject': 'Hello!',
+        'email_body': 'Capture this print'
+    })
+    assert resp.status_code == 200
+
+    captured = capsys.readouterr()
+    assert "fake_send called with subject=" in captured.out
+    assert "Hello!" in captured.out

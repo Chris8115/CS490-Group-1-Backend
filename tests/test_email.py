@@ -1,5 +1,6 @@
 # tests/test_email.py
 
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 import os
 import sys
 import pytest
@@ -7,7 +8,6 @@ from flask_mail import Message
 from sqlalchemy import text
 from app import app, db, mail
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 @pytest.fixture
 def client():

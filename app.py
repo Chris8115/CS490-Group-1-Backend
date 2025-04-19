@@ -22,8 +22,6 @@ except ImportError:
 
 HOST = 'localhost'
 
-HOST = 'localhost'
-
 app = Flask(__name__)
 CORS(app, supports_credentials=True, origins=[f"http://{HOST}:3000"]) 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///craze.db'

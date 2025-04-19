@@ -22,6 +22,8 @@ except ImportError:
 
 HOST = 'localhost'
 
+HOST = 'localhost'
+
 app = Flask(__name__)
 CORS(app, supports_credentials=True, origins=[f"http://{HOST}:3000"]) 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///craze.db'
@@ -92,14 +94,14 @@ def order_prescription(medication_id):
     connection.close()
 
 def listen_for_orders():
-    with app.app_context():
+  with app.app_context():
         def order_callback(ch, method, properties, body):
             params = json.loads(body.decode())
             print(f"MESSAGE:: JSON data: {body.decode()}")
             #input validation already done on pharmacy end.... hopefully....
             try:
                 db.session.execute(text(f"""
-                    UPDATE prescriptions SET
+                UPDATE prescriptions SET
                         medication_id = {':medication_id' if params['medication_id'] != None else 'medication_id'},
                         status = {':status' if params['status'] != None else 'status'},
                         patient_id = {':patient_id' if params['patient_id'] != None else 'patient_id'}
@@ -117,6 +119,35 @@ def listen_for_orders():
         channel.queue_declare(queue='order_updates')
         channel.basic_consume(queue='order_updates', on_message_callback=order_callback)
         channel.start_consuming()
+        
+def listen_for_meds():
+    with app.app_context():
+        def medication_callback(ch, method, properties, body):
+            params = json.loads(body.decode())
+            print(f"MESSAGE:: JSON data: {body.decode()}")
+            #input validation already done on pharmacy end.... hopefully....
+            try:
+                db.session.execute(text(f"""
+                INSERT INTO medications (medication_id, name, description)
+                    VALUES (
+                        (SELECT MAX(medication_id) FROM medications) + 1,
+                        :name,
+                        :description
+                    )
+                """), params)
+            except Exception as e:
+                ch.basic_nack(delivery_tag=method.delivery_tag, requeue=True)
+                print(f"SQLITE ERROR:: {e}")
+            else:
+                db.session.commit()
+                ch.basic_ack(delivery_tag=method.delivery_tag)
+                print("SQLITE:: Added medication.")
+        connection = pika.BlockingConnection(pika.ConnectionParameters(HOST))
+        channel = connection.channel()
+        channel.queue_declare(queue='new_medication')
+        channel.basic_consume(queue='new_medication', on_message_callback=medication_callback)
+        channel.start_consuming()
+        
 
 @app.route("/")
 def home():
@@ -1587,19 +1618,22 @@ def patch_forum_comments(comment_id):
 @swag_from('docs/forumposts/get.yml')
 def get_forum_posts():
     #sql query
-    query = "SELECT * FROM forum_posts AS F JOIN users AS U ON F.user_id = U.user_id\n"
+    query = "SELECT F.post_id, U.user_id, U.first_name, U.last_name, F.title, F.content, F.post_type, F.created_at AS post_created_at FROM forum_posts AS F JOIN users AS U ON F.user_id = U.user_id\n"
     #get inputs
     params = {
         'pid': "" if request.args.get('post_id') == None else request.args.get('post_id'),
         'uid': "" if request.args.get('user_id') == None else request.args.get('user_id'),
         'title': "" if request.args.get('title') == None else '%' + request.args.get('title') + '%',
         'type': "" if request.args.get('post_type') == None else '%' + request.args.get('post_type') + '%',
+        'order_by': "DESC" if request.args.get('order_by') == None else request.args.get('order_by')
     }
-    if(params['pid'] != "" or params['uid'] != "" or params['title'] != "" or params['type'] != ""):
+    if(params['pid'] != "" or params['uid'] != "" or params['title'] != "" or params['type'] != "" or params['order_by'] != ""):
         query += ("WHERE " + ("post_id = :pid\n" if params['pid'] != "" else "TRUE\n"))
         query += ("AND " + ("user_id = :uid\n" if params['uid'] != "" else "TRUE\n"))
         query += ("AND " + ("title LIKE :title\n" if params['title'] != "" else "TRUE\n"))
         query += ("AND " + ("post_type LIKE :type\n" if params['type'] != "" else "TRUE\n"))
+        query += (f"ORDER BY F.created_at {"ASC" if params['order_by'].upper() == "ASC" else "DESC"}")
+        print(query)
     #execute query
     result = db.session.execute(text(query), params)
     json = {'forum_posts': []}
@@ -1612,7 +1646,7 @@ def get_forum_posts():
             'title': row.title,
             'content': row.content,
             'post_type': row.post_type,
-            'created_at': row.created_at
+            'created_at': row.post_created_at
         })
     return json, 200
 
@@ -2331,4 +2365,5 @@ def ResponseMessage(message, code):
 if __name__ == "__main__":
     import threading
     threading.Thread(target=listen_for_orders, daemon=True).start()
+    threading.Thread(target=listen_for_meds, daemon=True).start()
     app.run(debug=True)

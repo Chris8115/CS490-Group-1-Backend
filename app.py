@@ -14,12 +14,16 @@ from flask_login import LoginManager, UserMixin, login_user, LoginManager, login
 from datetime import datetime, timedelta
 import json
 from flask_mail import Mail, Message
-from secret_keys import *
+
+try:
+    from secret_keys import *
+except ImportError:
+    raise ImportError('ERROR! secret_keys.py not found! Please ask the group chat for it.')
 
 HOST = 'localhost'
 
 app = Flask(__name__)
-CORS(app, supports_credentials=True, origins=["http://localhost:3000"]) 
+CORS(app, supports_credentials=True, origins=[f"http://{HOST}:3000"]) 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///craze.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SWAGGER'] = {
@@ -80,22 +84,49 @@ class Users(db.Model, UserMixin):
         return str(self.user_id)
 
 def order_prescription(medication_id):
-    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(HOST))
     channel = connection.channel()
     channel.queue_declare(queue='orders')
     channel.basic_publish(exchange='', routing_key='orders', body=str(medication_id))
     print(f"Ordered medication ID: {medication_id}")
     connection.close()
 
-def listen_for_meds():
-    with app.app_context():
+def listen_for_orders():
+  with app.app_context():
         def order_callback(ch, method, properties, body):
             params = json.loads(body.decode())
             print(f"MESSAGE:: JSON data: {body.decode()}")
             #input validation already done on pharmacy end.... hopefully....
             try:
                 db.session.execute(text(f"""
-                    INSERT INTO medications (medication_id, name, description)
+                UPDATE prescriptions SET
+                        medication_id = {':medication_id' if params['medication_id'] != None else 'medication_id'},
+                        status = {':status' if params['status'] != None else 'status'},
+                        patient_id = {':patient_id' if params['patient_id'] != None else 'patient_id'}
+                    WHERE prescription_id = :order_id
+                """), params)
+            except Exception as e:
+                ch.basic_nack(delivery_tag=method.delivery_tag, requeue=True)
+                print(f"SQLITE ERROR:: {e}")
+            else:
+                db.session.commit()
+                ch.basic_ack(delivery_tag=method.delivery_tag)
+                print("SQLITE:: Updated order.")
+        connection = pika.BlockingConnection(pika.ConnectionParameters(HOST))
+        channel = connection.channel()
+        channel.queue_declare(queue='order_updates')
+        channel.basic_consume(queue='order_updates', on_message_callback=order_callback)
+        channel.start_consuming()
+        
+def listen_for_meds():
+    with app.app_context():
+        def medication_callback(ch, method, properties, body):
+            params = json.loads(body.decode())
+            print(f"MESSAGE:: JSON data: {body.decode()}")
+            #input validation already done on pharmacy end.... hopefully....
+            try:
+                db.session.execute(text(f"""
+                INSERT INTO medications (medication_id, name, description)
                     VALUES (
                         (SELECT MAX(medication_id) FROM medications) + 1,
                         :name,
@@ -108,12 +139,13 @@ def listen_for_meds():
             else:
                 db.session.commit()
                 ch.basic_ack(delivery_tag=method.delivery_tag)
-                print("SQLITE:: Updated order.")
+                print("SQLITE:: Added medication.")
         connection = pika.BlockingConnection(pika.ConnectionParameters(HOST))
         channel = connection.channel()
         channel.queue_declare(queue='new_medication')
-        channel.basic_consume(queue='new_medication', on_message_callback=order_callback)
+        channel.basic_consume(queue='new_medication', on_message_callback=medication_callback)
         channel.start_consuming()
+        
 
 @app.route("/")
 def home():
@@ -2330,5 +2362,6 @@ def ResponseMessage(message, code):
 
 if __name__ == "__main__":
     import threading
+    threading.Thread(target=listen_for_orders, daemon=True).start()
     threading.Thread(target=listen_for_meds, daemon=True).start()
     app.run(debug=True)

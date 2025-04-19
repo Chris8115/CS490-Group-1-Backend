@@ -1,7 +1,6 @@
 from dotenv import load_dotenv
 import os
 load_dotenv()  
-from secret_keys import GMAIL_APP_PASSWORD, CRAZE_SECRET_KEY
 
 from flask import Flask, request, Response, jsonify, render_template
 from flask_restful import Api, Resource, abort, reqparse
@@ -37,11 +36,11 @@ app.config['SWAGGER'] = {
 app.config['MAIL_SERVER']="smtp.gmail.com"
 app.config['MAIL_PORT']="465"
 app.config['MAIL_USERNAME']="betteru490@gmail.com"
-app.config['MAIL_PASSWORD']=GMAIL_APP_PASSWORD
+app.config['MAIL_PASSWORD']= os.getenv("GMAIL_APP_PASSWORD")
 app.config['MAIL_USE_TLS']=False
 app.config['MAIL_USE_SSL']=True
 
-app.config['SECRET_KEY'] = CRAZE_SECRET_KEY #super duper secret 🤫
+app.config['SECRET_KEY'] = os.getenv("CRAZE_SECRET_KEY") #super duper secret 🤫
 app.config['SESSION_COOKIE_SECURE']=False
 
 db = SQLAlchemy(app)

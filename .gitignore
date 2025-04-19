@@ -1,6 +1,8 @@
 venv/
 .vs/
+_pycache_/
+__pycache__/
 instance/craze.db
 secrets.py
-secret_keys.py
-__pycache__/
+*.py[cod]
+.env

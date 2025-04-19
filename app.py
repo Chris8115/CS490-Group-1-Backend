@@ -1,3 +1,7 @@
+from dotenv import load_dotenv
+import os
+load_dotenv()  
+
 from flask import Flask, request, Response, jsonify, render_template
 from flask_restful import Api, Resource, abort, reqparse
 from flask_sqlalchemy import SQLAlchemy
@@ -14,11 +18,6 @@ from flask_login import LoginManager, UserMixin, login_user, LoginManager, login
 from datetime import datetime, timedelta
 import json
 from flask_mail import Mail, Message
-
-try:
-    from secret_keys import *
-except ImportError:
-    raise ImportError('ERROR! secret_keys.py not found! Please ask the group chat for it.')
 
 HOST = 'localhost'
 
@@ -37,11 +36,11 @@ app.config['SWAGGER'] = {
 app.config['MAIL_SERVER']="smtp.gmail.com"
 app.config['MAIL_PORT']="465"
 app.config['MAIL_USERNAME']="betteru490@gmail.com"
-app.config['MAIL_PASSWORD']=GMAIL_APP_PASSWORD
+app.config['MAIL_PASSWORD']= os.getenv("GMAIL_APP_PASSWORD")
 app.config['MAIL_USE_TLS']=False
 app.config['MAIL_USE_SSL']=True
 
-app.config['SECRET_KEY'] = CRAZE_SECRET_KEY #super duper secret 🤫
+app.config['SECRET_KEY'] = os.getenv("CRAZE_SECRET_KEY") #super duper secret 🤫
 app.config['SESSION_COOKIE_SECURE']=False
 
 db = SQLAlchemy(app)

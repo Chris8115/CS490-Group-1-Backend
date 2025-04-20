@@ -18,6 +18,7 @@ from flask_login import LoginManager, UserMixin, login_user, LoginManager, login
 from datetime import datetime, timedelta
 import json
 from flask_mail import Mail, Message
+from flask import send_from_directory
 
 HOST = 'localhost'
 

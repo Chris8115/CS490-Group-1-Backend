@@ -1984,7 +1984,7 @@ def get_doctors():
             'license_number': row.license_number,
             'specialization': row.specialization,
             'profile': row.profile,
-            'picture': f"http://localhost:5000/static/profile_pics/{row.doctor_id}.png"
+            'picture': f"http://{HOST}:5000/static/profile_pics/{row.doctor_id}.png"
         })
     return json, 200
 

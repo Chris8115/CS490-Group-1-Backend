@@ -50,9 +50,10 @@ CREATE TABLE "doctors" (
 	"license_number"	INTEGER NOT NULL,
 	"specialization"	TEXT NOT NULL,
 	"profile"	TEXT NOT NULL,
-	"office"	INTEGER NOT NULL DEFAULT -1,
+	"office"	INTEGER,
 	PRIMARY KEY("doctor_id"),
-	CONSTRAINT "doctor_id" FOREIGN KEY("doctor_id") REFERENCES "users"("user_id")
+	CONSTRAINT "doctor_id" FOREIGN KEY("doctor_id") REFERENCES "users"("user_id"),
+	CONSTRAINT "office" FOREIGN KEY("office") REFERENCES "address"("address_id")
 );
 DROP TABLE IF EXISTS "exercise_plans";
 CREATE TABLE "exercise_plans" (

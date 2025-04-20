@@ -1,3 +1,7 @@
+from dotenv import load_dotenv
+import os
+load_dotenv()  
+
 from flask import Flask, request, Response, jsonify, render_template
 from flask_restful import Api, Resource, abort, reqparse
 from flask_sqlalchemy import SQLAlchemy
@@ -14,11 +18,12 @@ from flask_login import LoginManager, UserMixin, login_user, LoginManager, login
 from datetime import datetime, timedelta
 import json
 from flask_mail import Mail, Message
-from secret_keys import *
 from flask import send_from_directory
 
 app = Flask(__name__, static_url_path='/static', static_folder='static')
-CORS(app, supports_credentials=True, origins=["http://localhost:3000"]) 
+HOST = 'localhost'
+CORS(app, supports_credentials=True, origins=[f"http://{HOST}:3000"]) 
+
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///craze.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SWAGGER'] = {
@@ -32,11 +37,11 @@ app.config['SWAGGER'] = {
 app.config['MAIL_SERVER']="smtp.gmail.com"
 app.config['MAIL_PORT']="465"
 app.config['MAIL_USERNAME']="betteru490@gmail.com"
-app.config['MAIL_PASSWORD']=GMAIL_APP_PASSWORD
+app.config['MAIL_PASSWORD']= os.getenv("GMAIL_APP_PASSWORD")
 app.config['MAIL_USE_TLS']=False
 app.config['MAIL_USE_SSL']=True
 
-app.config['SECRET_KEY'] = CRAZE_SECRET_KEY #super duper secret 🤫
+app.config['SECRET_KEY'] = os.getenv("CRAZE_SECRET_KEY") #super duper secret 🤫
 app.config['SESSION_COOKIE_SECURE']=False
 
 db = SQLAlchemy(app)
@@ -86,13 +91,69 @@ class Users(db.Model, UserMixin):
         return str(self.user_id)
 
 def order_prescription(medication_id):
-    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(HOST))
     channel = connection.channel()
     channel.queue_declare(queue='orders')
     channel.basic_publish(exchange='', routing_key='orders', body=str(medication_id))
     print(f"Ordered medication ID: {medication_id}")
     connection.close()
-      
+
+def listen_for_orders():
+  with app.app_context():
+        def order_callback(ch, method, properties, body):
+            params = json.loads(body.decode())
+            print(f"MESSAGE:: JSON data: {body.decode()}")
+            #input validation already done on pharmacy end.... hopefully....
+            try:
+                db.session.execute(text(f"""
+                UPDATE prescriptions SET
+                        medication_id = {':medication_id' if params['medication_id'] != None else 'medication_id'},
+                        status = {':status' if params['status'] != None else 'status'},
+                        patient_id = {':patient_id' if params['patient_id'] != None else 'patient_id'}
+                    WHERE prescription_id = :order_id
+                """), params)
+            except Exception as e:
+                ch.basic_nack(delivery_tag=method.delivery_tag, requeue=True)
+                print(f"SQLITE ERROR:: {e}")
+            else:
+                db.session.commit()
+                ch.basic_ack(delivery_tag=method.delivery_tag)
+                print("SQLITE:: Updated order.")
+        connection = pika.BlockingConnection(pika.ConnectionParameters(HOST))
+        channel = connection.channel()
+        channel.queue_declare(queue='order_updates')
+        channel.basic_consume(queue='order_updates', on_message_callback=order_callback)
+        channel.start_consuming()
+        
+def listen_for_meds():
+    with app.app_context():
+        def medication_callback(ch, method, properties, body):
+            params = json.loads(body.decode())
+            print(f"MESSAGE:: JSON data: {body.decode()}")
+            #input validation already done on pharmacy end.... hopefully....
+            try:
+                db.session.execute(text(f"""
+                INSERT INTO medications (medication_id, name, description)
+                    VALUES (
+                        (SELECT MAX(medication_id) FROM medications) + 1,
+                        :name,
+                        :description
+                    )
+                """), params)
+            except Exception as e:
+                ch.basic_nack(delivery_tag=method.delivery_tag, requeue=True)
+                print(f"SQLITE ERROR:: {e}")
+            else:
+                db.session.commit()
+                ch.basic_ack(delivery_tag=method.delivery_tag)
+                print("SQLITE:: Added medication.")
+        connection = pika.BlockingConnection(pika.ConnectionParameters(HOST))
+        channel = connection.channel()
+        channel.queue_declare(queue='new_medication')
+        channel.basic_consume(queue='new_medication', on_message_callback=medication_callback)
+        channel.start_consuming()
+        
+
 @app.route("/")
 def home():
     return "<h1>It works!</h1>"
@@ -125,23 +186,16 @@ def docs():
 @swag_from("docs/auth/login_get.yml", methods=['GET'])
 @swag_from("docs/auth/login_post.yml", methods=['POST'])
 def login():
-    next = request.args.get('next')
+    if(request.args.get('next') != None):
+        return ResponseMessage(f"Login Error: Login required to access route {request.args.get('next')}", 401)
+    method_source = request.args if request.method == 'GET' else request.json
     valid_email = r"^.+\d*@.+[.][a-zA-Z]{2,4}$"
     params = {
-        'email': None,
-        'password': None,
-        'remember': False
+        'email': method_source.get('email'),
+        'password': method_source.get('password'),
+        'remember': method_source.get('remember') if method_source.get('remember') != None else False
     }
-    if(request.method == 'GET'):
-        params['email'] = request.args.get('email')
-        params['password'] = request.args.get('password')
-        params['remember'] = request.args.get('remember') if request.args.get('remember') != None else False
-    elif(request.method == 'POST'):
-        json = request.json
-        params['email'] = json.get('email')
-        params['password'] = json.get('password')
-        params['remember'] = json.get('remember') if json.get('remember') != None else False
-    if(None in ( params['email'], params['password'])):
+    if(None in (params['email'], params['password'])):
         return ResponseMessage("Required credentials not sent.", 400)
     if(re.search(valid_email, params['email']) == None):
         return ResponseMessage("Invalid email address.", 400)
@@ -149,10 +203,10 @@ def login():
     if user == None:
         return ResponseMessage("Invalid user credentials.", 401)
     elif(user.password != params['password']):
-        return ResponseMessage("Invalid password.", 400)
+        return ResponseMessage("Invalid password.", 401)
     else:
         login_user(user, params['remember'] or False)
-        return {'user_id': current_user.user_id, 'role': current_user.role, 'message':'Login successful.'}
+        return {'user_id': current_user.user_id, 'role': current_user.role, 'message':'Login successful.'}, 200
 
 @app.route('/logout', methods=['GET', 'POST'])
 @login_required
@@ -2326,4 +2380,7 @@ def ResponseMessage(message, code):
     return {'message': message}, code
 
 if __name__ == "__main__":
+    import threading
+    threading.Thread(target=listen_for_orders, daemon=True).start()
+    threading.Thread(target=listen_for_meds, daemon=True).start()
     app.run(debug=True)

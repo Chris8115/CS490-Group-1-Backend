@@ -43,7 +43,7 @@ parameters:
     - in: query
       name: status
       required: false
-      description: includes results like `status` column (canceled, rejected, accepted, ready)
+      description: includes results like `status` column (`accepted`, `rejected`, `pending`, `canceled`, `ready`)
       schema:
         type: string
     - in: query

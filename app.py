@@ -542,7 +542,7 @@ def appointments():
         query += ("AND " + ("status = :status\n" if params['status'] != "" else "TRUE\n"))
         query += ("AND " + ("reason LIKE :reason\n" if params['reason'] != "" else "TRUE\n"))
         query += ("AND " + ("start_time LIKE :start_time\n" if params['start_time'] != "" else "TRUE\n"))
-        query += (f"ORDER BY start_time {"ASC" if params['order_by'].upper() == "ASC" else "DESC"}") #the unsafe way but has limited values so its fine
+        query += (f"ORDER BY start_time {'ASC' if params['order_by'].upper() == 'ASC' else 'DESC'}") #the unsafe way but has limited values so its fine
     #execute query
     result = db.session.execute(text(query), params)
     json = {'appointments': []}
@@ -1622,7 +1622,7 @@ def get_forum_posts():
         query += ("AND " + ("user_id = :uid\n" if params['uid'] != "" else "TRUE\n"))
         query += ("AND " + ("title LIKE :title\n" if params['title'] != "" else "TRUE\n"))
         query += ("AND " + ("post_type LIKE :type\n" if params['type'] != "" else "TRUE\n"))
-        query += (f"ORDER BY F.created_at {"ASC" if params['order_by'].upper() == "ASC" else "DESC"}")
+        query += (f"ORDER BY F.created_at {'ASC' if params['order_by'].upper() == 'ASC' else 'DESC'}")
         print(query)
     #execute query
     result = db.session.execute(text(query), params)

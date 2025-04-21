@@ -24,7 +24,6 @@ HOST = 'localhost'
 
 app = Flask(__name__, static_url_path='/static', static_folder='static')
 CORS(app, supports_credentials=True, origins=[f"http://{HOST}:3000"]) 
-CORS(app, supports_credentials=True, origins=["http://localhost:3000"]) 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///craze.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SWAGGER'] = {

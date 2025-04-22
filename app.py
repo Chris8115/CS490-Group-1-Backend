@@ -2153,7 +2153,6 @@ def create_user(role):
         ext = os.path.splitext(file.filename)[1].lower()
         new_filename = f"{user_id}{ext}"
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], new_filename)
-        file.save(filepath)
         identification_path = filepath
     #sql query
     user_query = text("""
@@ -2347,9 +2346,11 @@ def create_user(role):
         return ResponseMessage(f"Server/SQL Error. Exception: \n{e}", 500)
     else:
         db.session.commit()
+        file.save(identification_path)
         return ResponseMessage(f"User succesfully created. (id: {user_params['user_id']})", 201)
         
 def ResponseMessage(message, code):
+    print(f"REST call returned with code {code},\nMessage: {message}")
     return {'message': message}, code
 
 if __name__ == "__main__":

@@ -29,7 +29,6 @@ INSERT INTO "address" VALUES (27,'Miami','United States',NULL,'47217 Reinke Road
 INSERT INTO "address" VALUES (28,'Houston','United States',NULL,'72391 Reinke Park',77260,'OK');
 INSERT INTO "address" VALUES (29,'Erie','United States',NULL,'21464 Washington Drive',16534,'OH');
 INSERT INTO "address" VALUES (30,'Vancouver','United States',NULL,'9756 Mallory Lane',98664,'RI');
-INSERT INTO "address" VALUES (31,'Avenel','USA','','33 test rd',7006,'NJ');
 INSERT INTO "appointments" VALUES (0,1,2,'2025-04-20 20:52:47','2025-04-20 21:52:47','canceled','ya know here and there','weight consultation','test','2025-04-18 02:18:49','test');
 INSERT INTO "appointments" VALUES (1,1,2,'2025-04-20 19:52:47','2025-04-20 20:52:47','canceled','32 Roth Road','weight consultation','Need progress update.','2025-02-15 16:18:37','');
 INSERT INTO "appointments" VALUES (2,4,5,'2025-08-01 01:43:04','2025-08-01 02:43:04','accepted','406 Dorton Park','surgery','Do not eat for 24 hours before surgery.','2025-02-25 12:38:21','');
@@ -71,7 +70,6 @@ INSERT INTO "doctors" VALUES (19,418495170,'Surgeon','Uses cutting-edge techniqu
 INSERT INTO "doctors" VALUES (22,330390941,'Weight Loss Coach','Emphasizes nutrition and exercise in his comprehensive weight loss programs.',18);
 INSERT INTO "doctors" VALUES (25,550787919,'Professional Trainer','Inspires patients with her personalized strategies for achieving healthier lives.',19);
 INSERT INTO "doctors" VALUES (28,944122028,'Weight Loss Coach','Committed to empowering individuals to take control of their weight and overall health.',20);
-INSERT INTO "doctors" VALUES (31,123456789,'necromancy','I can raise the dead',31);
 INSERT INTO "exercise_plans" VALUES (1,'Push-Ups for Upper Body Strength','Start in a high plank with hands shoulder-width apart. Keep your core tight as you lower your body until your chest is just above the floor, then push back up. Focus on steady movement and controlled breathing.');
 INSERT INTO "exercise_plans" VALUES (2,'Bodyweight Squats for Lower Body','Stand with feet shoulder-width apart, toes slightly outward. Bend at the knees and hips to lower into a squat, keeping your chest lifted. Drive through your heels to return to standing, maintaining proper form throughout.');
 INSERT INTO "exercise_plans" VALUES (3,'Forearm Plank for Core Stability','Begin in a push-up position but rest on your forearms with elbows under your shoulders. Keep your body in a straight line from head to heels. Engage your abs and glutes, holding this position without letting your hips drop.');

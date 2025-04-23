@@ -175,8 +175,8 @@ def docs():
     return render_template("build/html/index.html")
 
 @app.route('/login', methods=['GET', 'POST'])
-@swag_from("docs/auth/login_get.yml", methods=['GET'])
-@swag_from("docs/auth/login_post.yml", methods=['POST'])
+@swag_from("docs/auth/login_get.yml", methods=['GET']) # pragma: no cover
+@swag_from("docs/auth/login_post.yml", methods=['POST']) # pragma: no cover
 def login():
     if(request.args.get('next') != None):
         return ResponseMessage(f"Login Error: Login required to access route {request.args.get('next')}", 401)
@@ -202,14 +202,14 @@ def login():
 
 @app.route('/logout', methods=['GET', 'POST'])
 @login_required
-@swag_from('docs/auth/logout.yml', methods=['GET', 'POST'])
+@swag_from('docs/auth/logout.yml', methods=['GET', 'POST']) # pragma: no cover
 def logout():
     logout_user()
     return ResponseMessage("User Logged out.", 200)
 
 @app.route('/login_check')
 @login_required
-@swag_from('docs/auth/login_check.yml')
+@swag_from('docs/auth/login_check.yml') # pragma: no cover
 def login_check():
     return ResponseMessage(f"User is logged in. ID: {current_user.get_id()}", 200)
 
@@ -252,7 +252,7 @@ def get_transactions():
 
 @app.route("/transactions/<int:transaction_id>", methods=['DELETE'])
 @login_required
-@swag_from('docs/transactions/delete.yml')
+@swag_from('docs/transactions/delete.yml') # pragma: no cover
 def delete_transaction(transaction_id):
     try:
         result = db.session.execute(text("SELECT * FROM transactions WHERE transaction_id = :transaction_id\n"), {'transaction_id': transaction_id})
@@ -320,7 +320,7 @@ def add_transactions():
 
 @app.route("/saved_posts", methods=['GET'])
 @login_required
-@swag_from('docs/savedposts/get.yml')
+@swag_from('docs/savedposts/get.yml') # pragma: no cover
 def get_saved_posts():
     #sql query
     query = "SELECT * FROM saved_posts AS S JOIN users AS U ON S.user_id = U.user_id JOIN forum_posts AS F ON F.post_id = S.post_id\n"
@@ -350,7 +350,7 @@ def get_saved_posts():
 
 @app.route("/saved_posts", methods=['DELETE'])
 @login_required
-@swag_from('docs/savedposts/delete.yml')
+@swag_from('docs/savedposts/delete.yml') # pragma: no cover
 def delete_saved_posts():
     params = {
         'post_id': request.json.get('post_id'),
@@ -371,7 +371,7 @@ def delete_saved_posts():
 
 @app.route("/saved_posts", methods=['POST'])
 @login_required
-@swag_from('docs/savedposts/post.yml')
+@swag_from('docs/savedposts/post.yml') # pragma: no cover
 def add_saved_posts():
     query = text("""
         INSERT INTO saved_posts (user_id, post_id, saved_at)

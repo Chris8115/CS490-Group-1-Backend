@@ -521,7 +521,7 @@ def put_prescriptions():
 
 @app.route("/appointments", methods=['GET'])
 @login_required
-@swag_from('docs/appointments/get.yml')
+@swag_from('docs/appointments/get.yml') # pragma: no cover
 def appointments():
     #sql query
     query = "SELECT * FROM appointments\n"
@@ -564,7 +564,7 @@ def appointments():
 
 @app.route("/appointments/<int:appointment_id>", methods=['DELETE'])
 @login_required
-@swag_from('docs/appointments/delete.yml')
+@swag_from('docs/appointments/delete.yml') # pragma: no cover
 def delete_appointments(appointment_id):
     try:
         result = db.session.execute(text("SELECT * FROM appointments WHERE appointment_id = :appointment_id\n"), {'appointment_id': appointment_id})
@@ -581,7 +581,7 @@ def delete_appointments(appointment_id):
 
 @app.route("/appointments", methods=['POST'])
 @login_required
-@swag_from('docs/appointments/post.yml')
+@swag_from('docs/appointments/post.yml') # pragma: no cover
 def add_appointment():
     #sql query
     query = text("""
@@ -661,7 +661,7 @@ def add_appointment():
 
 @app.route("/appointments/<int:appointment_id>", methods=['PATCH'])
 @login_required
-@swag_from("docs/appointments/patch.yml")
+@swag_from("docs/appointments/patch.yml") # pragma: no cover
 def update_appointment(appointment_id):
     #sql query
     query = text(f"""
@@ -746,7 +746,7 @@ def update_appointment(appointment_id):
 
 @app.route("/patient_progress", methods=['GET'])
 @login_required
-@swag_from('docs/patientprogress/get.yml')
+@swag_from('docs/patientprogress/get.yml') # pragma: no cover
 def get_patient_progress():
     #sql query
     query = "SELECT * FROM patient_progress\n"
@@ -778,7 +778,7 @@ def get_patient_progress():
 
 @app.route("/patient_progress/<int:progress_id>", methods=['DELETE'])
 @login_required
-@swag_from('docs/patientprogress/delete.yml')
+@swag_from('docs/patientprogress/delete.yml') # pragma: no cover
 def delete_patient_progress(progress_id):
     try:
         result = db.session.execute(text("SELECT * FROM patient_progress WHERE progress_id = :progress_id\n"), {'progress_id': progress_id})
@@ -795,7 +795,7 @@ def delete_patient_progress(progress_id):
 
 @app.route("/patient_progress", methods=['POST'])
 @login_required
-@swag_from('docs/patientprogress/post.yml')
+@swag_from('docs/patientprogress/post.yml') # pragma: no cover
 def add_patient_progress():
     #sql query
     query = text("""

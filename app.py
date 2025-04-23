@@ -2153,7 +2153,6 @@ def create_user(role):
         ext = os.path.splitext(file.filename)[1].lower()
         new_filename = f"{user_id}{ext}"
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], new_filename)
-        file.save(filepath)
         identification_path = filepath
     #sql query
     user_query = text("""
@@ -2281,6 +2280,8 @@ def create_user(role):
     user_params['role'] = user_params['role'].lower()
     if(re.search(valid_email, user_params['email']) == None):
         return ResponseMessage("Invalid email.", 400)
+    if(db.session.execute(text("SELECT * FROM users WHERE email = :email"), user_params).first() != None):
+        return ResponseMessage("Email already registered with BetterU.", 400)
     if(len(user_params['password']) < 4):
         return ResponseMessage("Password must be at least 4 characters.", 400)
     if(len(user_params['first_name']) < 1 or len(user_params['last_name']) < 1):
@@ -2347,9 +2348,11 @@ def create_user(role):
         return ResponseMessage(f"Server/SQL Error. Exception: \n{e}", 500)
     else:
         db.session.commit()
-        return ResponseMessage(f"User succesfully created. (id: {user_params['user_id']})", 201)
+        file.save(identification_path)
+        return ResponseMessage(f"User successfully created. (id: {user_params['user_id']})", 201)
         
 def ResponseMessage(message, code):
+    print(f"REST call returned with code {code},\nMessage: {message}")
     return {'message': message}, code
 
 if __name__ == "__main__":

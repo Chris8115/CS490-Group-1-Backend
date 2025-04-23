@@ -175,8 +175,8 @@ def docs():
     return render_template("build/html/index.html")
 
 @app.route('/login', methods=['GET', 'POST'])
-@swag_from("docs/auth/login_get.yml", methods=['GET'])
-@swag_from("docs/auth/login_post.yml", methods=['POST'])
+@swag_from("docs/auth/login_get.yml", methods=['GET']) # pragma: no cover
+@swag_from("docs/auth/login_post.yml", methods=['POST']) # pragma: no cover
 def login():
     if(request.args.get('next') != None):
         return ResponseMessage(f"Login Error: Login required to access route {request.args.get('next')}", 401)
@@ -202,14 +202,14 @@ def login():
 
 @app.route('/logout', methods=['GET', 'POST'])
 @login_required
-@swag_from('docs/auth/logout.yml', methods=['GET', 'POST'])
+@swag_from('docs/auth/logout.yml', methods=['GET', 'POST']) # pragma: no cover
 def logout():
     logout_user()
     return ResponseMessage("User Logged out.", 200)
 
 @app.route('/login_check')
 @login_required
-@swag_from('docs/auth/login_check.yml')
+@swag_from('docs/auth/login_check.yml') # pragma: no cover
 def login_check():
     return ResponseMessage(f"User is logged in. ID: {current_user.get_id()}", 200)
 

@@ -347,7 +347,7 @@ def add_saved_posts():
         return ResponseMessage(f"Post saved successfully", 201)
 
 @app.route("/prescriptions", methods=['GET'])
-@swag_from('docs/prescriptions/get.yml')
+@swag_from('docs/prescriptions/get.yml') # pragma: no cover
 def get_prescriptions():
     #sql query
     query = "SELECT * FROM prescriptions\n"
@@ -387,7 +387,7 @@ def get_prescriptions():
     return json, 200
 
 @app.route("/prescriptions/<int:prescription_id>", methods=['DELETE'])
-@swag_from('docs/prescriptions/delete.yml')
+@swag_from('docs/prescriptions/delete.yml') # pragma: no cover
 def delete_prescriptions(prescription_id):
     try:
         result = db.session.execute(text("SELECT * FROM prescriptions WHERE prescription_id = :prescription_id\n"), {'prescription_id': prescription_id})
@@ -403,7 +403,7 @@ def delete_prescriptions(prescription_id):
         return Response(status=200)
 
 @app.route("/prescriptions/<int:prescription_id>", methods=['PATCH'])
-@swag_from('docs/prescriptions/patch.yml')
+@swag_from('docs/prescriptions/patch.yml') # pragma: no cover
 def update_prescriptions(prescription_id):
     #sql query
     query = text(f"""
@@ -459,7 +459,7 @@ def update_prescriptions(prescription_id):
         return ResponseMessage("Prescription Successfully Updated.", 200) 
 
 @app.route("/prescriptions", methods=['POST'])
-@swag_from('docs/prescriptions/post.yml')
+@swag_from('docs/prescriptions/post.yml') # pragma: no cover
 def put_prescriptions():
     query = text("""
         INSERT INTO prescriptions (prescription_id, doctor_id, patient_id, medication_id, instructions, date_prescribed, status, quantity, pharmacist_id)

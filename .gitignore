@@ -6,3 +6,4 @@ instance/craze.db
 secrets.py
 *.py[cod]
 .env
+uploads/

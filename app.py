@@ -158,8 +158,8 @@ def listen_for_meds():
 def home():
     return "<h1>It works!</h1>"
 
-@app.route("/mail/<int:user_id>", methods=['POST'])
-@swag_from("docs/email/post.yml")
+@app.route("/mail/<int:user_id>", methods=['POST']) # pragma: no cover
+@swag_from("docs/email/post.yml") # pragma: no cover
 def email(user_id):
     email_address = db.session.execute(text("SELECT email FROM users WHERE user_id = :uid"), {'uid': user_id}).first()
     if(email_address == None):
@@ -183,8 +183,8 @@ def docs():
     return render_template("build/html/index.html")
 
 @app.route('/login', methods=['GET', 'POST'])
-@swag_from("docs/auth/login_get.yml", methods=['GET'])
-@swag_from("docs/auth/login_post.yml", methods=['POST'])
+@swag_from("docs/auth/login_get.yml", methods=['GET']) # pragma: no cover
+@swag_from("docs/auth/login_post.yml", methods=['POST']) # pragma: no cover
 def login():
     if(request.args.get('next') != None):
         return ResponseMessage(f"Login Error: Login required to access route {request.args.get('next')}", 401)
@@ -210,20 +210,20 @@ def login():
 
 @app.route('/logout', methods=['GET', 'POST'])
 @login_required
-@swag_from('docs/auth/logout.yml', methods=['GET', 'POST'])
+@swag_from('docs/auth/logout.yml', methods=['GET', 'POST']) # pragma: no cover
 def logout():
     logout_user()
     return ResponseMessage("User Logged out.", 200)
 
 @app.route('/login_check')
 @login_required
-@swag_from('docs/auth/login_check.yml')
+@swag_from('docs/auth/login_check.yml') # pragma: no cover
 def login_check():
     return ResponseMessage(f"User is logged in. ID: {current_user.get_id()}", 200)
 
-@app.route("/transactions", methods=['GET'])
+@app.route("/transactions", methods=['GET']) # pragma: no cover
 @login_required
-@swag_from('docs/transactions/get.yml')
+@swag_from('docs/transactions/get.yml') # pragma: no cover
 def get_transactions():
     print(current_user)
     #sql query
@@ -260,7 +260,7 @@ def get_transactions():
 
 @app.route("/transactions/<int:transaction_id>", methods=['DELETE'])
 @login_required
-@swag_from('docs/transactions/delete.yml')
+@swag_from('docs/transactions/delete.yml') # pragma: no cover
 def delete_transaction(transaction_id):
     try:
         result = db.session.execute(text("SELECT * FROM transactions WHERE transaction_id = :transaction_id\n"), {'transaction_id': transaction_id})
@@ -275,9 +275,60 @@ def delete_transaction(transaction_id):
         db.session.commit()
         return Response(status=200)
 
+@app.route("/transactions", methods=['POST'])
+@login_required
+@swag_from('docs/transactions/post.yml')
+def add_transactions():
+    query = text("""
+        INSERT INTO transactions (transaction_id, patient_id, doctor_id, service_fee, doctor_fee, subtotal, created_at, creditcard_id)
+        VALUES (
+            :transaction_id,
+            :patient_id,
+            :doctor_id,
+            :service_fee,
+            :doctor_fee,
+            :subtotal,
+            CURRENT_TIMESTAMP,
+            :creditcard_id)
+    """)
+
+    result = db.session.execute(text("SELECT creditcard_id FROM credit_card WHERE cardnumber = :cardnumber"), {'cardnumber': request.json.get('creditcard_number')})
+    if(result.first() == None):
+        return ResponseMessage("Invalid credit card.", 400)
+
+    params = {
+        'transaction_id': (db.session.execute(text("SELECT MAX(transaction_id) + 1 AS transaction_id FROM transactions")).first()).transaction_id,
+        'patient_id': request.json.get('patient_id'),
+        'doctor_id': request.json.get('doctor_id'),
+        'service_fee': request.json.get('service_fee'),
+        'doctor_fee': request.json.get('doctor_fee'),
+        'subtotal': request.json.get('subtotal'),
+        'creditcard_id': (db.session.execute(text("SELECT creditcard_id FROM credit_card WHERE cardnumber = :cardnumber"), {'cardnumber': request.json.get('creditcard_number')}).first())[0]
+    }
+    #input validation
+    if None in params.values():
+        return ResponseMessage("Required parameters not supplied.", 400)
+    result = db.session.execute(text("SELECT * FROM patients WHERE patient_id = :patient_id"), params)
+    if(result.first() == None):
+        return ResponseMessage("Invalid patient id.", 400)
+    result = db.session.execute(text("SELECT * FROM doctors WHERE doctor_id = :doctor_id"), params)
+    if(result.first() == None):
+        return ResponseMessage("Invalid doctor id.", 400)
+    if (request.json.get('service_fee') < 0 or request.json.get('doctor_fee') < 0 or request.json.get('subtotal') < 0):
+        return ResponseMessage("Fee or subtotal must be non negative.", 400)
+    #execute query
+    try:
+        db.session.execute(query, params)
+    except Exception as e:
+        print(e)
+        return ResponseMessage(f"Error Executing Query:\n{e}", 500)
+    else:
+        db.session.commit()
+        return ResponseMessage(f"Transaction record saved successfully", 201)
+
 @app.route("/saved_posts", methods=['GET'])
 @login_required
-@swag_from('docs/savedposts/get.yml')
+@swag_from('docs/savedposts/get.yml') # pragma: no cover
 def get_saved_posts():
     #sql query
     query = "SELECT * FROM saved_posts AS S JOIN users AS U ON S.user_id = U.user_id JOIN forum_posts AS F ON F.post_id = S.post_id\n"
@@ -307,7 +358,7 @@ def get_saved_posts():
 
 @app.route("/saved_posts", methods=['DELETE'])
 @login_required
-@swag_from('docs/savedposts/delete.yml')
+@swag_from('docs/savedposts/delete.yml') # pragma: no cover
 def delete_saved_posts():
     params = {
         'post_id': request.json.get('post_id'),
@@ -328,7 +379,7 @@ def delete_saved_posts():
 
 @app.route("/saved_posts", methods=['POST'])
 @login_required
-@swag_from('docs/savedposts/post.yml')
+@swag_from('docs/savedposts/post.yml') # pragma: no cover
 def add_saved_posts():
     query = text("""
         INSERT INTO saved_posts (user_id, post_id, saved_at)
@@ -550,7 +601,7 @@ def appointments():
         query += ("AND " + ("status = :status\n" if params['status'] != "" else "TRUE\n"))
         query += ("AND " + ("reason LIKE :reason\n" if params['reason'] != "" else "TRUE\n"))
         query += ("AND " + ("start_time LIKE :start_time\n" if params['start_time'] != "" else "TRUE\n"))
-        query += (f"ORDER BY start_time {'ASC' if params['order_by'].upper() == 'ASC' else 'DESC'}") #the unsafe way but has limited values so its fine
+        query += (f"ORDER BY start_time {"ASC" if params['order_by'].upper() == "ASC" else "DESC"}") #the unsafe way but has limited values so its fine
     #execute query
     result = db.session.execute(text(query), params)
     json = {'appointments': []}
@@ -2171,15 +2222,7 @@ def create_user(role):
         new_filename = f"{user_id}{ext}"
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], new_filename)
         file.save(filepath)
-    
-    if role == "doctor":
-        file = request.files.get('profile_pic')
-        if file and allowed_file(file.filename):
-            ext = os.path.splitext(file.filename)[1].lower()
-            new_filename = f"{user_id}{ext}"
-            filepath = os.path.join(app.config['PIC_FOLDER'], new_filename)
-            file.save(filepath)
-    
+        identification_path = filepath
     #sql query
     user_query = text("""
         INSERT INTO users (user_id, email, password, first_name, last_name, phone_number, role, created_at)
@@ -2308,6 +2351,8 @@ def create_user(role):
     user_params['role'] = user_params['role'].lower()
     if(re.search(valid_email, user_params['email']) == None):
         return ResponseMessage("Invalid email.", 400)
+    if(db.session.execute(text("SELECT * FROM users WHERE email = :email"), user_params).first() != None):
+        return ResponseMessage("Email already registered with BetterU.", 400)
     if(len(user_params['password']) < 4):
         return ResponseMessage("Password must be at least 4 characters.", 400)
     if(len(user_params['first_name']) < 1 or len(user_params['last_name']) < 1):
@@ -2374,9 +2419,11 @@ def create_user(role):
         return ResponseMessage(f"Server/SQL Error. Exception: \n{e}", 500)
     else:
         db.session.commit()
-        return ResponseMessage(f"User succesfully created. (id: {user_params['user_id']})", 201)
+        file.save(identification_path)
+        return ResponseMessage(f"User successfully created. (id: {user_params['user_id']})", 201)
         
 def ResponseMessage(message, code):
+    print(f"REST call returned with code {code},\nMessage: {message}")
     return {'message': message}, code
 
 if __name__ == "__main__":

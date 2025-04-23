@@ -1,0 +1,50 @@
+Transactions records
+---
+tags:
+    - Services
+description:
+    Login Required
+    Creates an Transaction record
+responses:
+    201:
+        description: Transaction record saved successfully.
+    400:
+        description: Client input validation error.
+    500:
+        description: Server/SQLite error.
+consumes:
+  - application/json
+parameters:
+    - in: body
+      name: Transaction
+      required: true
+      description: | 
+        Transaction information
+      schema:
+        type: object
+        required: 
+          - patient_id
+          - doctor_id
+          - service_fee
+          - doctor_fee
+          - subtotal
+          - creditcard_number
+        properties: 
+          patient_id: 
+            type: integer
+            description: patient_id
+          doctor_id: 
+            type: integer
+            description: doctor_id
+          service_fee: 
+            type: number
+            description: service_fee
+          doctor_fee: 
+            type: number
+            description: doctor_fee
+          subtotal: 
+            type: number
+            description: subtotal
+          creditcard_number: 
+            type: integer
+            description: creditcard_number

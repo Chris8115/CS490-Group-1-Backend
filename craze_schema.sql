@@ -40,6 +40,7 @@ CREATE TABLE "doctor_patient_relationship" (
 	"doctor_id"	INTEGER,
 	"patient_id"	INTEGER,
 	"status"	TEXT NOT NULL,
+	"notes"     TEXT,
 	"date_assigned"	TIMESTAMP NOT NULL,
 	CONSTRAINT "doctor_id" FOREIGN KEY("doctor_id") REFERENCES "users"("user_id"),
 	CONSTRAINT "patient_id" FOREIGN KEY("patient_id") REFERENCES "users"("user_id")

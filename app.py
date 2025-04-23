@@ -663,7 +663,15 @@ def add_appointment():
 @login_required
 @swag_from("docs/appointments/patch.yml")
 def update_appointment(appointment_id):
-    #sql query
+    # Load existing row to get its doctor_id
+    existing = db.session.execute(
+        text("SELECT doctor_id FROM appointments WHERE appointment_id = :id"),
+        {"id": appointment_id}
+    ).first()
+    if not existing:
+        return ResponseMessage("Appointment not found.", 404)
+    existing_doctor = existing.doctor_id
+    
     query = text(f"""
         UPDATE appointments SET
             doctor_id = {':doctor_id' if request.json.get('doctor_id') != None else 'doctor_id'},
@@ -699,7 +707,7 @@ def update_appointment(appointment_id):
         
     params = {
         'appointment_id': appointment_id,
-        'doctor_id': request.json.get('doctor_id'),
+        'doctor_id': request.json.get('doctor_id', existing_doctor),
         'patient_id': request.json.get('patient_id'),
         'start_time': request.json.get('start_time'),
         'end_time': end_time,
@@ -724,7 +732,7 @@ def update_appointment(appointment_id):
         return ResponseMessage("Invalid Start Time. Format: (yyyy-mm-dd hh:mm:ss)", 400)
       
     if (request.json.get('start_time') != None):
-        result = db.session.execute(text("SELECT start_time, end_time FROM appointments WHERE doctor_id = :doctor_id"), params)
+        result = db.session.execute(text("SELECT start_time, end_time FROM appointments WHERE doctor_id = :doctor_id AND appointment_id != :appointment_id"), params)
         startA = request.json.get('start_time')
         endA = end_time
         for times in result:

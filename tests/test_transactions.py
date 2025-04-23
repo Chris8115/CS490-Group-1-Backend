@@ -83,3 +83,16 @@ def test_filter_by_creditcard_id(client):
     resp = client.get('/transactions?creditcard_id=999')
     assert resp.status_code == 200
     assert resp.get_json()['transactions'] == []
+
+# Deleting a non-existent transaction should return 400
+def test_delete_nonexistent_transaction(client):
+    resp = client.delete('/transactions/999')
+    assert resp.status_code == 400
+
+# Successfully delete an existing transaction
+def test_delete_transaction_success(client):
+    resp = client.delete('/transactions/9001')
+    assert resp.status_code == 200
+
+    resp2 = client.delete('/transactions/9001')
+    assert resp2.status_code == 400

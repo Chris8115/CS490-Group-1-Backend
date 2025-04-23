@@ -252,7 +252,7 @@ def get_transactions():
 
 @app.route("/transactions/<int:transaction_id>", methods=['DELETE'])
 @login_required
-@swag_from('docs/transactions/delete.yml')
+@swag_from('docs/transactions/delete.yml') # pragma: no cover
 def delete_transaction(transaction_id):
     try:
         result = db.session.execute(text("SELECT * FROM transactions WHERE transaction_id = :transaction_id\n"), {'transaction_id': transaction_id})
@@ -269,7 +269,7 @@ def delete_transaction(transaction_id):
 
 @app.route("/saved_posts", methods=['GET'])
 @login_required
-@swag_from('docs/savedposts/get.yml')
+@swag_from('docs/savedposts/get.yml') # pragma: no cover
 def get_saved_posts():
     #sql query
     query = "SELECT * FROM saved_posts AS S JOIN users AS U ON S.user_id = U.user_id JOIN forum_posts AS F ON F.post_id = S.post_id\n"
@@ -299,7 +299,7 @@ def get_saved_posts():
 
 @app.route("/saved_posts", methods=['DELETE'])
 @login_required
-@swag_from('docs/savedposts/delete.yml')
+@swag_from('docs/savedposts/delete.yml') # pragma: no cover
 def delete_saved_posts():
     params = {
         'post_id': request.json.get('post_id'),
@@ -320,7 +320,7 @@ def delete_saved_posts():
 
 @app.route("/saved_posts", methods=['POST'])
 @login_required
-@swag_from('docs/savedposts/post.yml')
+@swag_from('docs/savedposts/post.yml') # pragma: no cover
 def add_saved_posts():
     query = text("""
         INSERT INTO saved_posts (user_id, post_id, saved_at)

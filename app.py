@@ -267,6 +267,57 @@ def delete_transaction(transaction_id):
         db.session.commit()
         return Response(status=200)
 
+@app.route("/transactions", methods=['POST'])
+@login_required
+@swag_from('docs/transactions/post.yml')
+def add_transactions():
+    query = text("""
+        INSERT INTO transactions (transaction_id, patient_id, doctor_id, service_fee, doctor_fee, subtotal, created_at, creditcard_id)
+        VALUES (
+            :transaction_id,
+            :patient_id,
+            :doctor_id,
+            :service_fee,
+            :doctor_fee,
+            :subtotal,
+            CURRENT_TIMESTAMP,
+            :creditcard_id)
+    """)
+
+    result = db.session.execute(text("SELECT creditcard_id FROM credit_card WHERE cardnumber = :cardnumber"), {'cardnumber': request.json.get('creditcard_number')})
+    if(result.first() == None):
+        return ResponseMessage("Invalid credit card.", 400)
+
+    params = {
+        'transaction_id': (db.session.execute(text("SELECT MAX(transaction_id) + 1 AS transaction_id FROM transactions")).first()).transaction_id,
+        'patient_id': request.json.get('patient_id'),
+        'doctor_id': request.json.get('doctor_id'),
+        'service_fee': request.json.get('service_fee'),
+        'doctor_fee': request.json.get('doctor_fee'),
+        'subtotal': request.json.get('subtotal'),
+        'creditcard_id': (db.session.execute(text("SELECT creditcard_id FROM credit_card WHERE cardnumber = :cardnumber"), {'cardnumber': request.json.get('creditcard_number')}).first())[0]
+    }
+    #input validation
+    if None in params.values():
+        return ResponseMessage("Required parameters not supplied.", 400)
+    result = db.session.execute(text("SELECT * FROM patients WHERE patient_id = :patient_id"), params)
+    if(result.first() == None):
+        return ResponseMessage("Invalid patient id.", 400)
+    result = db.session.execute(text("SELECT * FROM doctors WHERE doctor_id = :doctor_id"), params)
+    if(result.first() == None):
+        return ResponseMessage("Invalid doctor id.", 400)
+    if (request.json.get('service_fee') < 0 or request.json.get('doctor_fee') < 0 or request.json.get('subtotal') < 0):
+        return ResponseMessage("Fee or subtotal must be non negative.", 400)
+    #execute query
+    try:
+        db.session.execute(query, params)
+    except Exception as e:
+        print(e)
+        return ResponseMessage(f"Error Executing Query:\n{e}", 500)
+    else:
+        db.session.commit()
+        return ResponseMessage(f"Transaction record saved successfully", 201)
+
 @app.route("/saved_posts", methods=['GET'])
 @login_required
 @swag_from('docs/savedposts/get.yml')

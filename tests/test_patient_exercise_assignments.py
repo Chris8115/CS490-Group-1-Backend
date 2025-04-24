@@ -4,7 +4,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 import pytest
 from flask import Response
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from sqlalchemy import text
 
 from app import app, db
@@ -31,8 +31,8 @@ def client():
                 assigned_at         TEXT  NOT NULL
             )
         """))
-        now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-        older = (datetime.utcnow() - timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")
+        now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+        older = (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")
         for idx, ts in enumerate((now, older), start=1):
             db.session.execute(text("""
                 INSERT INTO patient_exercise_assignments
@@ -79,7 +79,7 @@ def test_get_filter_by_exercise_id(client):
     assert len(data) == 1 and data[0]["exercise_id"] == 31
 
 def test_get_filter_by_assigned_at(client):
-    snippet = datetime.utcnow().strftime("%Y-%m-%d")
+    snippet = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     rv = client.get(f"/patient_exercise_assignments?assigned_at={snippet}")
     data = rv.get_json()["patient_exercise_assignments"]
     assert all(snippet in item["assigned_at"] for item in data)

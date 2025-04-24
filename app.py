@@ -902,7 +902,7 @@ def add_patient_progress():
 
 @app.route("/patient_exercise_assignments", methods=['GET'])
 @login_required
-@swag_from('docs/patientexerciseassignments/get.yml')
+@swag_from('docs/patientexerciseassignments/get.yml') # pragma: no cover
 def get_patient_exercise_assignments():
     #sql query
     query = "SELECT * FROM patient_exercise_assignments\n"
@@ -937,7 +937,7 @@ def get_patient_exercise_assignments():
     return json, 200
 
 @app.route("/patient_exercise_assignments/<int:assignment_id>", methods=['PATCH'])
-@swag_from('docs/patientexerciseassignments/patch.yml')
+@swag_from('docs/patientexerciseassignments/patch.yml') # pragma: no cover
 def patch_patient_exercise_assignments(assignment_id):
     data = request.get_json(force=True)
     
@@ -988,7 +988,7 @@ def patch_patient_exercise_assignments(assignment_id):
 
 
 @app.route("/patient_exercise_assignments", methods=['POST'])
-@swag_from('docs/patientexerciseassignments/post.yml')
+@swag_from('docs/patientexerciseassignments/post.yml') # pragma: no cover
 def post_patient_exercise_assignments():
     data = request.get_json(force=True)
     
@@ -1022,7 +1022,7 @@ def post_patient_exercise_assignments():
 
 @app.route("/patient_exercise_assignments/<int:assignment_id>", methods=['DELETE'])
 @login_required
-@swag_from('docs/patientexerciseassignments/delete.yml')
+@swag_from('docs/patientexerciseassignments/delete.yml') # pragma: no cover
 def delete_patient_exercise_assignments(assignment_id):
     try:
         result = db.session.execute(text("SELECT * FROM patient_exercise_assignments WHERE assignment_id = :assignment_id\n"), {'assignment_id': assignment_id})

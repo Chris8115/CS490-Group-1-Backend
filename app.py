@@ -2458,7 +2458,8 @@ def create_user(role):
         return ResponseMessage(f"Server/SQL Error. Exception: \n{e}", 500)
     else:
         db.session.commit()
-        file.save(identification_path)
+        if role == 'patient':
+            file.save(identification_path)
         if role == 'doctor':
             file.save(profile_path)
         return ResponseMessage(f"User successfully created. (id: {user_params['user_id']})", 201)

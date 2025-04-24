@@ -1205,7 +1205,8 @@ def get_doctor_patient_relationship():
             'doctor_id': row.doctor_id,
             'patient_id': row.patient_id,
             'status': row.status,
-            'date_assigned': row.date_assigned
+            'date_assigned': row.date_assigned,
+            'notes': row.notes
         })
     return json, 200
 
@@ -1278,37 +1279,37 @@ def patch_doctor_patient_relationship(doctor_id, patient_id):
     return {"message": "Doctor patient relationship updated successfully"}, 200
 
 @app.route("/doctor_patient_relationship", methods=['POST'])
-@swag_from('docs/doctorpatientrelationship/post.yml') # pragma: no cover
+@swag_from('docs/doctorpatientrelationship/post.yml')  # pragma: no cover
 def post_doctor_patient_relationship():
     data = request.get_json(force=True)
-    
+
     # Validate required fields
     if 'doctor_id' not in data or 'patient_id' not in data or 'status' not in data:
         return {"error": "Missing required fields: doctor_id, patient_id, and status"}, 400
     if not str(data['status']).strip():
         return {"error": "Status cannot be empty"}, 400
 
-    from datetime import datetime
     query = """
-        INSERT INTO doctor_patient_relationship (doctor_id, patient_id, status, date_assigned)
-        VALUES (:doctor_id, :patient_id, :status, :date_assigned)
+        INSERT INTO doctor_patient_relationship (doctor_id, patient_id, status, date_assigned, notes)
+        VALUES (:doctor_id, :patient_id, :status, :date_assigned, :notes)
     """
     params = {
         'doctor_id': data['doctor_id'],
         'patient_id': data['patient_id'],
         'status': data['status'],
-        # Automatically set date_assigned to the current date and time
-        'date_assigned': datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+        'date_assigned': datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"),
+        'notes': data.get('notes', '')
     }
-    
+
     try:
         db.session.execute(text(query), params)
         db.session.commit()
     except Exception as e:
         print(e)
         return {"error": "Error creating doctor patient relationship"}, 500
-    
+
     return {"message": "Doctor patient relationship created successfully"}, 201
+
 
 
 

@@ -39,7 +39,6 @@ parameters:
               - first_name
               - last_name
               - phone_number
-              - identification
             properties: 
               email:
                 type: string
@@ -56,9 +55,6 @@ parameters:
               phone_number:
                 type: string
                 description: Phone number.
-              identification:
-                type: string
-                description: identification.
           doctor: 
             type: object
             description: Doctor information

@@ -96,3 +96,4 @@ def test_delete_transaction_success(client):
 
     resp2 = client.delete('/transactions/9001')
     assert resp2.status_code == 400
+

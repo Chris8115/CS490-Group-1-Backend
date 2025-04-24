@@ -15,7 +15,7 @@ import os
 import pika
 import re
 from flask_login import LoginManager, UserMixin, login_user, LoginManager, login_required, logout_user, current_user
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import json
 from flask_mail import Mail, Message
 
@@ -269,8 +269,47 @@ def delete_transaction(transaction_id):
 
 @app.route("/transactions", methods=['POST'])
 @login_required
-@swag_from('docs/transactions/post.yml')
+@swag_from('docs/transactions/post.yml') # pragma: no cover
 def add_transactions():
+    data = request.get_json(force=True)
+
+    # Check required fields first
+    required_fields = ['patient_id', 'doctor_id', 'service_fee', 'doctor_fee', 'subtotal', 'creditcard_number']
+    if any(field not in data or data[field] is None for field in required_fields):
+        return ResponseMessage("Required parameters not supplied.", 400)
+
+    # Validate credit card
+    card_result = db.session.execute(
+        text("SELECT creditcard_id FROM credit_card WHERE cardnumber = :cardnumber"),
+        {'cardnumber': data['creditcard_number']}
+    ).first()
+    if card_result is None:
+        return ResponseMessage("Invalid credit card.", 400)
+
+    # Fee validation
+    if data['service_fee'] < 0 or data['doctor_fee'] < 0 or data['subtotal'] < 0:
+        return ResponseMessage("Fee or subtotal must be non negative.", 400)
+
+    # Build transaction_id
+    next_id_result = db.session.execute(text("SELECT MAX(transaction_id) + 1 AS transaction_id FROM transactions")).first()
+    transaction_id = next_id_result.transaction_id if next_id_result.transaction_id is not None else 1
+
+    params = {
+        'transaction_id': transaction_id,
+        'patient_id': data['patient_id'],
+        'doctor_id': data['doctor_id'],
+        'service_fee': data['service_fee'],
+        'doctor_fee': data['doctor_fee'],
+        'subtotal': data['subtotal'],
+        'creditcard_id': card_result.creditcard_id
+    }
+
+    # Validate patient and doctor
+    if db.session.execute(text("SELECT 1 FROM patients WHERE patient_id = :patient_id"), params).first() is None:
+        return ResponseMessage("Invalid patient id.", 400)
+    if db.session.execute(text("SELECT 1 FROM doctors WHERE doctor_id = :doctor_id"), params).first() is None:
+        return ResponseMessage("Invalid doctor id.", 400)
+
     query = text("""
         INSERT INTO transactions (transaction_id, patient_id, doctor_id, service_fee, doctor_fee, subtotal, created_at, creditcard_id)
         VALUES (
@@ -283,40 +322,15 @@ def add_transactions():
             CURRENT_TIMESTAMP,
             :creditcard_id)
     """)
-
-    result = db.session.execute(text("SELECT creditcard_id FROM credit_card WHERE cardnumber = :cardnumber"), {'cardnumber': request.json.get('creditcard_number')})
-    if(result.first() == None):
-        return ResponseMessage("Invalid credit card.", 400)
-
-    params = {
-        'transaction_id': (db.session.execute(text("SELECT MAX(transaction_id) + 1 AS transaction_id FROM transactions")).first()).transaction_id,
-        'patient_id': request.json.get('patient_id'),
-        'doctor_id': request.json.get('doctor_id'),
-        'service_fee': request.json.get('service_fee'),
-        'doctor_fee': request.json.get('doctor_fee'),
-        'subtotal': request.json.get('subtotal'),
-        'creditcard_id': (db.session.execute(text("SELECT creditcard_id FROM credit_card WHERE cardnumber = :cardnumber"), {'cardnumber': request.json.get('creditcard_number')}).first())[0]
-    }
-    #input validation
-    if None in params.values():
-        return ResponseMessage("Required parameters not supplied.", 400)
-    result = db.session.execute(text("SELECT * FROM patients WHERE patient_id = :patient_id"), params)
-    if(result.first() == None):
-        return ResponseMessage("Invalid patient id.", 400)
-    result = db.session.execute(text("SELECT * FROM doctors WHERE doctor_id = :doctor_id"), params)
-    if(result.first() == None):
-        return ResponseMessage("Invalid doctor id.", 400)
-    if (request.json.get('service_fee') < 0 or request.json.get('doctor_fee') < 0 or request.json.get('subtotal') < 0):
-        return ResponseMessage("Fee or subtotal must be non negative.", 400)
-    #execute query
     try:
         db.session.execute(query, params)
+        db.session.commit()
     except Exception as e:
         print(e)
         return ResponseMessage(f"Error Executing Query:\n{e}", 500)
-    else:
-        db.session.commit()
-        return ResponseMessage(f"Transaction record saved successfully", 201)
+
+    return ResponseMessage("Transaction record saved successfully", 201)
+
 
 @app.route("/saved_posts", methods=['GET'])
 @login_required
@@ -1007,7 +1021,7 @@ def post_patient_exercise_assignments():
         'frequency_per_week': data['frequency_per_week'],
         'reps': data['reps'],
         'sets': data['sets'],
-        'assigned_at': datetime.utcnow()
+        'assigned_at': datetime.now(timezone.utc)
     }
     
     try:

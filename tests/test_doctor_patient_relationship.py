@@ -22,16 +22,18 @@ def client():
                 patient_id INTEGER NOT NULL,
                 status TEXT NOT NULL,
                 date_assigned TEXT NOT NULL,
+                notes TEXT,
                 PRIMARY KEY (doctor_id, patient_id)
             )
         """))
         db.session.execute(text("""
-            INSERT INTO doctor_patient_relationship (doctor_id, patient_id, status, date_assigned)
-            VALUES (1, 100, 'active', :dt)
+            INSERT INTO doctor_patient_relationship (doctor_id, patient_id, status, date_assigned, notes)
+            VALUES (1, 100, 'active', :dt, 'Initial entry')
         """), {'dt': datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")})
         db.session.commit()
     with app.test_client() as c:
         yield c
+
 
 def test_get_all_relationships(client):
     res = client.get("/doctor_patient_relationship")

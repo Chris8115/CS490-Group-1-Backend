@@ -1953,6 +1953,10 @@ def delete_reviews(review_id):
         db.session.commit()
         return Response(status=200)
 
+@app.route("/pharma_patients", methods=['GET'])
+def get_pharma_patients():
+    pass
+
 @app.route("/patients", methods=['GET'])
 @swag_from('docs/patients/get.yml')
 def get_patients():

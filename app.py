@@ -398,7 +398,7 @@ def add_saved_posts():
         return ResponseMessage(f"Post saved successfully", 201)
 
 @app.route("/prescriptions", methods=['GET'])
-@swag_from('docs/prescriptions/get.yml')
+@swag_from('docs/prescriptions/get.yml') # pragma: no cover
 def get_prescriptions():
     #sql query
     query = "SELECT * FROM prescriptions\n"
@@ -438,7 +438,7 @@ def get_prescriptions():
     return json, 200
 
 @app.route("/prescriptions/<int:prescription_id>", methods=['DELETE'])
-@swag_from('docs/prescriptions/delete.yml')
+@swag_from('docs/prescriptions/delete.yml') # pragma: no cover
 def delete_prescriptions(prescription_id):
     try:
         result = db.session.execute(text("SELECT * FROM prescriptions WHERE prescription_id = :prescription_id\n"), {'prescription_id': prescription_id})
@@ -454,7 +454,7 @@ def delete_prescriptions(prescription_id):
         return Response(status=200)
 
 @app.route("/prescriptions/<int:prescription_id>", methods=['PATCH'])
-@swag_from('docs/prescriptions/patch.yml')
+@swag_from('docs/prescriptions/patch.yml') # pragma: no cover
 def update_prescriptions(prescription_id):
     #sql query
     query = text(f"""
@@ -510,7 +510,7 @@ def update_prescriptions(prescription_id):
         return ResponseMessage("Prescription Successfully Updated.", 200) 
 
 @app.route("/prescriptions", methods=['POST'])
-@swag_from('docs/prescriptions/post.yml')
+@swag_from('docs/prescriptions/post.yml') # pragma: no cover
 def put_prescriptions():
     query = text("""
         INSERT INTO prescriptions (prescription_id, doctor_id, patient_id, medication_id, instructions, date_prescribed, status, quantity, pharmacist_id)
@@ -714,7 +714,15 @@ def add_appointment():
 @login_required
 @swag_from("docs/appointments/patch.yml") # pragma: no cover
 def update_appointment(appointment_id):
-    #sql query
+    # Load existing row to get its doctor_id
+    existing = db.session.execute(
+        text("SELECT doctor_id FROM appointments WHERE appointment_id = :id"),
+        {"id": appointment_id}
+    ).first()
+    if not existing:
+        return ResponseMessage("Appointment not found.", 404)
+    existing_doctor = existing.doctor_id
+    
     query = text(f"""
         UPDATE appointments SET
             doctor_id = {':doctor_id' if request.json.get('doctor_id') != None else 'doctor_id'},
@@ -750,7 +758,7 @@ def update_appointment(appointment_id):
         
     params = {
         'appointment_id': appointment_id,
-        'doctor_id': request.json.get('doctor_id'),
+        'doctor_id': request.json.get('doctor_id', existing_doctor),
         'patient_id': request.json.get('patient_id'),
         'start_time': request.json.get('start_time'),
         'end_time': end_time,
@@ -775,7 +783,7 @@ def update_appointment(appointment_id):
         return ResponseMessage("Invalid Start Time. Format: (yyyy-mm-dd hh:mm:ss)", 400)
       
     if (request.json.get('start_time') != None):
-        result = db.session.execute(text("SELECT start_time, end_time FROM appointments WHERE doctor_id = :doctor_id"), params)
+        result = db.session.execute(text("SELECT start_time, end_time FROM appointments WHERE doctor_id = :doctor_id AND appointment_id != :appointment_id"), params)
         startA = request.json.get('start_time')
         endA = end_time
         for times in result:

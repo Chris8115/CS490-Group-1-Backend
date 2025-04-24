@@ -1205,7 +1205,8 @@ def get_doctor_patient_relationship():
             'doctor_id': row.doctor_id,
             'patient_id': row.patient_id,
             'status': row.status,
-            'date_assigned': row.date_assigned
+            'date_assigned': row.date_assigned,
+            'notes': row.notes
         })
     return json, 200
 
@@ -1288,17 +1289,20 @@ def post_doctor_patient_relationship():
     if not str(data['status']).strip():
         return {"error": "Status cannot be empty"}, 400
 
+    notes = data.get('notes', '')
+
     from datetime import datetime
     query = """
         INSERT INTO doctor_patient_relationship (doctor_id, patient_id, status, date_assigned)
-        VALUES (:doctor_id, :patient_id, :status, :date_assigned)
+        VALUES (:doctor_id, :patient_id, :status, :date_assigned, :notes)
     """
     params = {
         'doctor_id': data['doctor_id'],
         'patient_id': data['patient_id'],
         'status': data['status'],
         # Automatically set date_assigned to the current date and time
-        'date_assigned': datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+        'date_assigned': datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"),
+        'notes': notes
     }
     
     try:

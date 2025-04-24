@@ -1,7 +1,7 @@
 Doctor Patient Relationships records
 ---
 tags:
-    - Services
+  - Services
 description: >
   Creates a new doctor–patient relationship record in the `doctor_patient_relationship` table using the JSON body.
   The `date_assigned` field is automatically set to the current date and time.
@@ -11,7 +11,8 @@ description: >
   {
     "doctor_id": 1,
     "patient_id": 2,
-    "status": "pending"
+    "status": "pending",
+    "notes": "First consultation scheduled."
   }
   
   creates a new doctor–patient relationship record.
@@ -39,6 +40,9 @@ parameters:
         status:
           type: string
           description: Initial relationship status (e.g., "pending", "active").
+        notes:
+          type: string
+          description: Optional notes about the relationship.
       required:
         - doctor_id
         - patient_id

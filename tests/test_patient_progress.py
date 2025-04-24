@@ -5,7 +5,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 import pytest
 from flask import Response
 from sqlalchemy import text
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from app import app, db
 
@@ -41,7 +41,7 @@ def client():
         """))
 
         db.session.execute(text("INSERT INTO patients (patient_id) VALUES (42)"))
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         for idx, days in enumerate((0, 1), start=1):
             logged = (now - timedelta(days=days)).strftime("%Y-%m-%d %H:%M:%S")
             db.session.execute(text("""

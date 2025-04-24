@@ -2223,6 +2223,14 @@ def create_user(role):
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], new_filename)
         file.save(filepath)
         identification_path = filepath
+    if role == 'doctor':
+        file = request.files.get('profile_pic')
+        if file and allowed_file(file.filename):
+            ext = os.path.splitext(file.filename)[1].lower()
+            new_filename = f"{user_id}{ext}"
+            filepath = os.path.join(app.config['PIC_FOLDER'], new_filename)
+            file.save(filepath)
+            profile_path = filepath
     #sql query
     user_query = text("""
         INSERT INTO users (user_id, email, password, first_name, last_name, phone_number, role, created_at)
@@ -2420,6 +2428,8 @@ def create_user(role):
     else:
         db.session.commit()
         file.save(identification_path)
+        if role == 'doctor':
+            file.save(profile_path)
         return ResponseMessage(f"User successfully created. (id: {user_params['user_id']})", 201)
         
 def ResponseMessage(message, code):

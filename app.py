@@ -1955,7 +1955,33 @@ def delete_reviews(review_id):
 
 @app.route("/pharma_patients", methods=['GET'])
 def get_pharma_patients():
-    pass
+    query = text(f"""
+        SELECT P.patient_id, U.first_name, U.last_name, P.medical_history, P.ssn
+        FROM patients AS P
+        INNER JOIN users AS U ON U.user_id = P.patient_id
+        WHERE {'P.patient_id = :patient_id' if request.args.get('patient_id') else 'TRUE'}
+        AND {"U.first_name LIKE :first_name" if request.args.get('first_name') else 'TRUE'}
+        AND {"U.last_name LIKE :last_name" if request.args.get('last_name') else 'TRUE'}
+    """)
+    params = {
+        'patient_id': request.args.get('patient_id'),
+        'first_name': f"%{request.args.get('first_name')}%",
+        'last_name': f"%{request.args.get('last_name')}%",
+    }
+    result = db.session.execute(query, params)
+    response_json = {
+        'patients': []
+    }
+    for row in result:
+        response_json.append({
+            'patient_id': row.patient_id,
+            'first_name': row.first_name,
+            'last_name': row.last_name,
+            'medical_history': row.medical_history,
+            'ssn': row.ssn
+        })
+    return response_json
+        
 
 @app.route("/patients", methods=['GET'])
 @swag_from('docs/patients/get.yml')

@@ -62,6 +62,7 @@ parameters:
               - license_number
               - specialization
               - profile
+              - office
             properties: 
               license_number:
                 type: integer
@@ -72,6 +73,9 @@ parameters:
               profile:
                 type: string
                 description: Profile bio/description.
+              office:
+                type: string
+                description: Doctor's default meeting location.
           patient: 
             type: object
             description: patient information

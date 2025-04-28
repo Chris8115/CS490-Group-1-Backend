@@ -156,7 +156,13 @@ def listen_for_meds():
 
 @app.route("/")
 def home():
-    return "<h1>It works!</h1>"
+        return f"""
+        <h1>BetterU Index</h1>
+        <ul style="font-size:24pt">
+            <li><a href='http://{HOST}:3000/'>BetterU Home</a></li>
+            <li><a href='http://{HOST}:5000/apidocs'>API Documentation</a></li>
+            <li><a href='http://{HOST}:15672/'>RabbitMQ Dashboard</a></li>
+        </ul>"""
 
 @app.route("/mail/<int:user_id>", methods=['POST']) # pragma: no cover
 @swag_from("docs/email/post.yml") # pragma: no cover
@@ -2046,23 +2052,29 @@ def patch_patients(patient_id):
 @swag_from('docs/doctors/get.yml')
 def get_doctors():
     #sql query
-    query = "SELECT * FROM doctors\n"
+    query = "SELECT D.*, U.first_name, U.last_name FROM doctors AS D INNER JOIN users AS U ON D.doctor_id = U.user_id\n"
     #get inputs
     params = {
         'id': "" if request.args.get('doctor_id') == None else request.args.get('doctor_id'),
         'license': "" if request.args.get('license_number') == None else request.args.get('license_number'),
         'special': "" if request.args.get('specialization') == None else '%' + request.args.get('specialization') + '%',
+        'first_name': "" if request.args.get('first_name') == None else '%' + request.args.get('first_name') + '%',
+        'last_name': "" if request.args.get('last_name') == None else '%' + request.args.get('last_name') + '%',
     }
-    if(params['id'] != "" or params['license'] != "" or params['special'] != ""):
+    if(params['id'] != "" or params['license'] != "" or params['special'] != "" or params['first_name'] != "" or params['last_name'] != ""):
         query += ("WHERE " + ("doctor_id = :id\n" if params['id'] != "" else "TRUE\n"))
         query += ("AND " + ("license_number = :license\n" if params['license'] != "" else "TRUE\n"))
         query += ("AND " + ("specialization LIKE :special\n" if params['special'] != "" else "TRUE\n"))
+        query += ("AND " + ("first_name LIKE :first_name\n" if params['first_name'] != "" else "TRUE\n"))
+        query += ("AND " + ("last_name LIKE :last_name\n" if params['last_name'] != "" else "TRUE\n"))
     #execute query
     result = db.session.execute(text(query), params)
     json = {'doctors': []}
     for row in result:
         json['doctors'].append({
             'doctor_id': row.doctor_id,
+            'first_name': row.first_name,
+            'last_name': row.last_name,
             'license_number': row.license_number,
             'specialization': row.specialization,
             'profile': row.profile,

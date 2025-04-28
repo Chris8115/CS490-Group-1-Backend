@@ -1712,7 +1712,7 @@ def get_forum_posts():
         query += ("AND " + ("user_id = :uid\n" if params['uid'] != "" else "TRUE\n"))
         query += ("AND " + ("title LIKE :title\n" if params['title'] != "" else "TRUE\n"))
         query += ("AND " + ("post_type LIKE :type\n" if params['type'] != "" else "TRUE\n"))
-        query += (f"ORDER BY F.created_at {'ASC' if params['order_by'].upper() == 'ASC' else 'DESC'}")
+        query += (f"ORDER BY F. {'ASC' if params['order_by'].upper() == 'ASC' else 'DESC'}")
         print(query)
     #execute query
     result = db.session.execute(text(query), params)
@@ -2066,6 +2066,7 @@ def get_doctors():
             'license_number': row.license_number,
             'specialization': row.specialization,
             'profile': row.profile,
+            'office': row.office,
             'picture': f"http://{HOST}:5000/static/profile_pics/{row.doctor_id}.png"
         })
     return json, 200
@@ -2113,6 +2114,9 @@ def patch_doctor(doctor_id):
     if 'profile' in data:
         update_fields.append("profile = :profile")
         params['profile'] = data['profile']
+    if 'office' in data:
+        update_fields.append("office = :office")
+        params['office'] = data['office']
     
     if not update_fields:
         return {"error": "No update fields provided."}, 400
@@ -2291,12 +2295,13 @@ def create_user(role):
         VALUES (:pharmacist_id, :pharmacy_location)
     """)
     doctor_query = text("""
-        INSERT INTO doctors (doctor_id, license_number, specialization, profile, office)
+        INSERT INTO doctors (doctor_id, license_number, specialization, profile, address, office)
         VALUES (
             :doctor_id,
             :license_number,
             :specialization,
             :profile,
+            :address,
             :office
         )
     """)
@@ -2356,7 +2361,8 @@ def create_user(role):
         'license_number': doctor_json.get('license_number'),
         'specialization': doctor_json.get('specialization'),
         'profile': doctor_json.get('profile') if doctor_json.get('profile') != "" else "N/A",
-        'office': address_id
+        'address': address_id,
+        'office': doctor_json.get('office') if doctor_json.get('office') != "" else "N/A",
     } if doctor_json != None else None 
     pharmacist_params = {
         'pharmacist_id': user_params['user_id'],

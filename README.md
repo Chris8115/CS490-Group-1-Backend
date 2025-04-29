@@ -9,3 +9,6 @@
 
 > [!NOTE]  
 > API documentation has been moved to SwaggerUI on `/apidocs` endpoint.
+
+## Testing
+- Run UI testing with `python -m pytest UI_Testing/`

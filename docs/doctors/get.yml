@@ -17,6 +17,18 @@ parameters:
       schema:
         type: string
     - in: query
+      name: first_name
+      required: false
+      description: includes results like `first_name` column
+      schema:
+        type: string
+    - in: query
+      name: last_name
+      required: false
+      description: includes results like `last_name` column
+      schema:
+        type: string
+    - in: query
       name: license_number
       required: false
       description: includes results matching `license_number` column

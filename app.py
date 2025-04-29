@@ -156,7 +156,13 @@ def listen_for_meds():
 
 @app.route("/")
 def home():
-    return "<h1>It works!</h1>"
+        return f"""
+        <h1>BetterU Index</h1>
+        <ul style="font-size:24pt">
+            <li><a href='http://{HOST}:3000/'>BetterU Home</a></li>
+            <li><a href='http://{HOST}:5000/apidocs'>API Documentation</a></li>
+            <li><a href='http://{HOST}:15672/'>RabbitMQ Dashboard</a></li>
+        </ul>"""
 
 @app.route("/mail/<int:user_id>", methods=['POST']) # pragma: no cover
 @swag_from("docs/email/post.yml") # pragma: no cover
@@ -615,7 +621,7 @@ def appointments():
         query += ("AND " + ("status = :status\n" if params['status'] != "" else "TRUE\n"))
         query += ("AND " + ("reason LIKE :reason\n" if params['reason'] != "" else "TRUE\n"))
         query += ("AND " + ("start_time LIKE :start_time\n" if params['start_time'] != "" else "TRUE\n"))
-        query += (f"ORDER BY start_time {"ASC" if params['order_by'].upper() == "ASC" else "DESC"}") #the unsafe way but has limited values so its fine
+        query += (f"ORDER BY start_time {'ASC' if params['order_by'].upper() == 'ASC' else 'DESC'}") #the unsafe way but has limited values so its fine
     #execute query
     result = db.session.execute(text(query), params)
     json = {'appointments': []}
@@ -2076,26 +2082,33 @@ def patch_patients(patient_id):
 @swag_from('docs/doctors/get.yml')
 def get_doctors():
     #sql query
-    query = "SELECT * FROM doctors\n"
+    query = "SELECT D.*, U.first_name, U.last_name FROM doctors AS D INNER JOIN users AS U ON D.doctor_id = U.user_id\n"
     #get inputs
     params = {
         'id': "" if request.args.get('doctor_id') == None else request.args.get('doctor_id'),
         'license': "" if request.args.get('license_number') == None else request.args.get('license_number'),
         'special': "" if request.args.get('specialization') == None else '%' + request.args.get('specialization') + '%',
+        'first_name': "" if request.args.get('first_name') == None else '%' + request.args.get('first_name') + '%',
+        'last_name': "" if request.args.get('last_name') == None else '%' + request.args.get('last_name') + '%',
     }
-    if(params['id'] != "" or params['license'] != "" or params['special'] != ""):
+    if(params['id'] != "" or params['license'] != "" or params['special'] != "" or params['first_name'] != "" or params['last_name'] != ""):
         query += ("WHERE " + ("doctor_id = :id\n" if params['id'] != "" else "TRUE\n"))
         query += ("AND " + ("license_number = :license\n" if params['license'] != "" else "TRUE\n"))
         query += ("AND " + ("specialization LIKE :special\n" if params['special'] != "" else "TRUE\n"))
+        query += ("AND " + ("first_name LIKE :first_name\n" if params['first_name'] != "" else "TRUE\n"))
+        query += ("AND " + ("last_name LIKE :last_name\n" if params['last_name'] != "" else "TRUE\n"))
     #execute query
     result = db.session.execute(text(query), params)
     json = {'doctors': []}
     for row in result:
         json['doctors'].append({
             'doctor_id': row.doctor_id,
+            'first_name': row.first_name,
+            'last_name': row.last_name,
             'license_number': row.license_number,
             'specialization': row.specialization,
             'profile': row.profile,
+            'office': row.office,
             'picture': f"http://{HOST}:5000/static/profile_pics/{row.doctor_id}.png"
         })
     return json, 200
@@ -2143,6 +2156,9 @@ def patch_doctor(doctor_id):
     if 'profile' in data:
         update_fields.append("profile = :profile")
         params['profile'] = data['profile']
+    if 'office' in data:
+        update_fields.append("office = :office")
+        params['office'] = data['office']
     
     if not update_fields:
         return {"error": "No update fields provided."}, 400
@@ -2321,12 +2337,13 @@ def create_user(role):
         VALUES (:pharmacist_id, :pharmacy_location)
     """)
     doctor_query = text("""
-        INSERT INTO doctors (doctor_id, license_number, specialization, profile, office)
+        INSERT INTO doctors (doctor_id, license_number, specialization, profile, address, office)
         VALUES (
             :doctor_id,
             :license_number,
             :specialization,
             :profile,
+            :address,
             :office
         )
     """)
@@ -2386,7 +2403,8 @@ def create_user(role):
         'license_number': doctor_json.get('license_number'),
         'specialization': doctor_json.get('specialization'),
         'profile': doctor_json.get('profile') if doctor_json.get('profile') != "" else "N/A",
-        'office': address_id
+        'address': address_id,
+        'office': doctor_json.get('office') if doctor_json.get('office') != "" else "N/A",
     } if doctor_json != None else None 
     pharmacist_params = {
         'pharmacist_id': user_params['user_id'],
@@ -2488,7 +2506,8 @@ def create_user(role):
         return ResponseMessage(f"Server/SQL Error. Exception: \n{e}", 500)
     else:
         db.session.commit()
-        file.save(identification_path)
+        if role == 'patient':
+            file.save(identification_path)
         if role == 'doctor':
             file.save(profile_path)
         return ResponseMessage(f"User successfully created. (id: {user_params['user_id']})", 201)

@@ -46,3 +46,6 @@ parameters:
         profile:
           type: string
           description: Updated doctor profile information.
+        office:
+          type: string
+          description: Doctor's default meeting location.

@@ -40,8 +40,8 @@ CREATE TABLE "doctor_patient_relationship" (
 	"doctor_id"	INTEGER,
 	"patient_id"	INTEGER,
 	"status"	TEXT NOT NULL,
-	"notes"     TEXT,
 	"date_assigned"	TIMESTAMP NOT NULL,
+	"notes" TEXT,
 	CONSTRAINT "doctor_id" FOREIGN KEY("doctor_id") REFERENCES "users"("user_id"),
 	CONSTRAINT "patient_id" FOREIGN KEY("patient_id") REFERENCES "users"("user_id")
 );
@@ -51,10 +51,11 @@ CREATE TABLE "doctors" (
 	"license_number"	INTEGER NOT NULL,
 	"specialization"	TEXT NOT NULL,
 	"profile"	TEXT NOT NULL,
-	"office"	INTEGER,
+	"address"	INTEGER,
+	"office"	TEXT,
 	PRIMARY KEY("doctor_id"),
-	CONSTRAINT "doctor_id" FOREIGN KEY("doctor_id") REFERENCES "users"("user_id"),
-	CONSTRAINT "office" FOREIGN KEY("office") REFERENCES "address"("address_id")
+	CONSTRAINT "address" FOREIGN KEY("address") REFERENCES "address"("address_id"),
+	CONSTRAINT "doctor_id" FOREIGN KEY("doctor_id") REFERENCES "users"("user_id")
 );
 DROP TABLE IF EXISTS "exercise_plans";
 CREATE TABLE "exercise_plans" (
@@ -113,7 +114,7 @@ CREATE TABLE "patient_exercise_assignments" (
 	"sets"	INTEGER NOT NULL DEFAULT 0,
 	CONSTRAINT "patient_exercise_assignments_pk" PRIMARY KEY("assignment_id"),
 	CONSTRAINT "doctor_id" FOREIGN KEY("doctor_id") REFERENCES "users"("user_id"),
-	FOREIGN KEY("exercise_id") REFERENCES "exercise_plans"("exercise_id"),
+	FOREIGN KEY("exercise_id") REFERENCES "forum_posts"("post_id"),
 	CONSTRAINT "patient_id" FOREIGN KEY("patient_id") REFERENCES "users"("user_id")
 );
 DROP TABLE IF EXISTS "patient_progress";

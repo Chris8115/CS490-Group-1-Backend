@@ -13,13 +13,13 @@ def test_patient_registration():
     driver.find_element(By.XPATH, "//button[contains(text(), 'Patient')]").click()
 
     # Basic Info
-    driver.find_element(By.NAME, "first_name").send_keys("John")
-    driver.find_element(By.NAME, "last_name").send_keys("Doe")
-    driver.find_element(By.NAME, "email").send_keys("john.doe@example.com")
+    driver.find_element(By.NAME, "first_name").send_keys("Eugene")
+    driver.find_element(By.NAME, "last_name").send_keys("Krabs")
+    driver.find_element(By.NAME, "email").send_keys("Eugene.Krabs@krustykrab.com")
     driver.find_element(By.NAME, "phone_number").send_keys("1234567890")
-    driver.find_element(By.NAME, "password").send_keys("Secret123!")
+    driver.find_element(By.NAME, "password").send_keys("password")
     # find the second password field by label text 
-    driver.find_element(By.XPATH, "//label[contains(text(),'Confirm Password')]/following-sibling::input").send_keys("Secret123!")
+    driver.find_element(By.XPATH, "//label[contains(text(),'Confirm Password')]/following-sibling::input").send_keys("password")
 
 
     # Upload ID
@@ -35,12 +35,12 @@ def test_patient_registration():
     driver.find_element(By.NAME, "ssn").send_keys("123456789")
 
     # Address
-    driver.find_element(By.NAME, "address").send_keys("154 Summit Street")
+    driver.find_element(By.NAME, "address").send_keys("3451 Anchor Way")
     driver.find_element(By.NAME, "address2").send_keys("")
-    driver.find_element(By.NAME, "city").send_keys("Newark")
-    driver.find_element(By.NAME, "state").send_keys("NJ")
-    driver.find_element(By.NAME, "country").send_keys("USA")
-    driver.find_element(By.NAME, "zip").send_keys("07102")
+    driver.find_element(By.NAME, "city").send_keys("Bikini Bottom")
+    driver.find_element(By.NAME, "state").send_keys("Pacific Ocean")
+    driver.find_element(By.NAME, "country").send_keys("Underwater")
+    driver.find_element(By.NAME, "zip").send_keys("12345")
 
     # Credit card
     driver.find_element(By.NAME, "cardnumber").send_keys("4111111111111111")
@@ -56,7 +56,7 @@ def test_patient_registration():
     driver.find_element(By.NAME, "additional").send_keys("No known allergies")
 
    # EULA
-    driver.find_element(By.NAME, "eulaName").send_keys("John Doe")
+    driver.find_element(By.NAME, "eulaName").send_keys("Eugene Krabs")
     driver.find_element(By.NAME, "date").send_keys("2025-04-29")
 
     # Submit

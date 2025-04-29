@@ -1718,7 +1718,7 @@ def get_forum_posts():
         query += ("AND " + ("user_id = :uid\n" if params['uid'] != "" else "TRUE\n"))
         query += ("AND " + ("title LIKE :title\n" if params['title'] != "" else "TRUE\n"))
         query += ("AND " + ("post_type LIKE :type\n" if params['type'] != "" else "TRUE\n"))
-        query += (f"ORDER BY F. {'ASC' if params['order_by'].upper() == 'ASC' else 'DESC'}")
+        query += (f"ORDER BY F.created_at {'ASC' if params['order_by'].upper() == 'ASC' else 'DESC'}")
         print(query)
     #execute query
     result = db.session.execute(text(query), params)

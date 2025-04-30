@@ -98,6 +98,15 @@ def order_prescription(medication_id):
     print(f"Ordered medication ID: {medication_id}")
     connection.close()
 
+def send_patient_to_pharmacy(params):
+    message = json.dumps(params)
+    connection = pika.BlockingConnection(pika.ConnectionParameters(HOST))
+    channel = connection.channel()
+    channel.queue_declare(queue='patient_publish')
+    channel.basic_publish(exchange='', routing_key='patient_publish', body=message)
+    print(f"Sent Patient {message}")
+    connection.close()
+
 def listen_for_orders():
   with app.app_context():
         def order_callback(ch, method, properties, body):
@@ -1959,6 +1968,36 @@ def delete_reviews(review_id):
         db.session.commit()
         return Response(status=200)
 
+@app.route("/pharma_patients", methods=['GET'])
+def get_pharma_patients():
+    query = text(f"""
+        SELECT P.patient_id, U.first_name, U.last_name, P.medical_history, P.ssn
+        FROM patients AS P
+        INNER JOIN users AS U ON U.user_id = P.patient_id
+        WHERE {'P.patient_id = :patient_id' if request.args.get('patient_id') else 'TRUE'}
+        AND {"U.first_name LIKE :first_name" if request.args.get('first_name') else 'TRUE'}
+        AND {"U.last_name LIKE :last_name" if request.args.get('last_name') else 'TRUE'}
+    """)
+    params = {
+        'patient_id': request.args.get('patient_id'),
+        'first_name': f"%{request.args.get('first_name')}%",
+        'last_name': f"%{request.args.get('last_name')}%",
+    }
+    result = db.session.execute(query, params)
+    response_json = {
+        'patients': []
+    }
+    for row in result:
+        response_json.append({
+            'patient_id': row.patient_id,
+            'first_name': row.first_name,
+            'last_name': row.last_name,
+            'medical_history': row.medical_history,
+            'ssn': row.ssn
+        })
+    return response_json
+        
+
 @app.route("/patients", methods=['GET'])
 @swag_from('docs/patients/get.yml')
 def get_patients():
@@ -2264,20 +2303,26 @@ def create_user(role):
     #runs no matter if patient or doctor
     file = request.files.get('identification')
     user_id = (db.session.execute(text("SELECT MAX(user_id) + 1 AS user_id FROM users")).first()).user_id
+    identification_path = None
+    profile_path = None
     if file and allowed_file(file.filename):
         ext = os.path.splitext(file.filename)[1].lower()
         new_filename = f"{user_id}{ext}"
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], new_filename)
-        file.save(filepath)
+        #file.save(filepath)
         identification_path = filepath
+    else:
+        return ResponseMessage("Valid identification not provided, must be of format PNG", 500)
     if role == 'doctor':
         file = request.files.get('profile_pic')
         if file and allowed_file(file.filename):
             ext = os.path.splitext(file.filename)[1].lower()
             new_filename = f"{user_id}{ext}"
             filepath = os.path.join(app.config['PIC_FOLDER'], new_filename)
-            file.save(filepath)
+            #file.save(filepath)
             profile_path = filepath
+        else:
+            return ResponseMessage("Valid profile picture not provided, must be of format PNG", 500)
     #sql query
     user_query = text("""
         INSERT INTO users (user_id, email, password, first_name, last_name, phone_number, role, created_at)
@@ -2468,18 +2513,24 @@ def create_user(role):
             db.session.execute(pharmacist_query, pharmacist_params)
         elif(user_params['role'] == 'doctor'):
             db.session.execute(doctor_query, doctor_params)
+            file.save(profile_path)
         elif(user_params['role'] == 'patient'):
             db.session.execute(creditcard_query, creditcard_params)
             db.session.execute(patient_query, patient_params)
+        file.save(identification_path)
     except Exception as e:
         print(e)
-        return ResponseMessage(f"Server/SQL Error. Exception: \n{e}", 500)
+        return ResponseMessage(f"Server Error. Please try again later.", 500)
     else:
         db.session.commit()
         if role == 'patient':
-            file.save(identification_path)
-        if role == 'doctor':
-            file.save(profile_path)
+            send_patient_to_pharmacy({
+                'patient_id': user_params['user_id'],
+                'first_name': user_params['first_name'],
+                'last_name': user_params['last_name'],
+                'medical_history': patient_params['medical_history'],
+                'ssn': patient_params['ssn']
+            })
         return ResponseMessage(f"User successfully created. (id: {user_params['user_id']})", 201)
         
 def ResponseMessage(message, code):

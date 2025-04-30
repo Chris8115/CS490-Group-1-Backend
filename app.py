@@ -51,7 +51,7 @@ if not os.path.exists(UPLOAD_FOLDER):
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-PIC_FOLDER = os.path.join(os.path.dirname(__file__), 'static/profile_pictures')
+PIC_FOLDER = os.path.join(os.path.dirname(__file__), 'static/profile_pics')
 if not os.path.exists(PIC_FOLDER):
     os.makedirs(PIC_FOLDER)
 

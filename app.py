@@ -1267,6 +1267,11 @@ def patch_doctor_patient_relationship(doctor_id, patient_id):
         update_fields.append("status = :status")
         params['status'] = data['status']
     
+    # Notes update
+    if 'notes' in data:
+        update_fields.append("notes = :notes")
+        params['notes'] = data['notes']
+
     # Ensure at least one updatable field (other than date_assigned) is provided.
     if not update_fields:
         return {"error": "No update fields provided."}, 400

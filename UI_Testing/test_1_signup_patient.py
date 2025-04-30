@@ -48,7 +48,7 @@ def test_patient_registration():
     driver.find_element(By.NAME, "exp_date").send_keys("2025-12-31")
 
     # Medical History
-    element = driver.find_element(By.NAME, "smoker")
+    element = driver.find_element(By.NAME, "alcoholAddiction")
     driver.execute_script("arguments[0].scrollIntoView(true);", element)
     driver.execute_script("arguments[0].click();", element)
 

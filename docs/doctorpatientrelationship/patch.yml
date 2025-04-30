@@ -1,7 +1,7 @@
 Doctor Patient Relationships records
 ---
 tags:
-    - Services
+  - Services
 description: >
   Updates an existing doctor–patient relationship record in the `doctor_patient_relationship` table using the JSON body.
   The `date_assigned` field is automatically updated to the current date and time.
@@ -9,7 +9,8 @@ description: >
   Example: A PATCH request to `/doctor_patient_relationship/1/2` with the following JSON:
   
   {
-    "status": "active"
+    "status": "active",
+    "notes": "Initial consultation completed."
   }
   
   updates the relationship record between the doctor with ID 1 and the patient with ID 2.
@@ -45,3 +46,6 @@ parameters:
         status:
           type: string
           description: Updated relationship status (e.g., "active", "pending", etc.).
+        notes:
+          type: string
+          description: Optional notes or comments to be associated with the relationship.

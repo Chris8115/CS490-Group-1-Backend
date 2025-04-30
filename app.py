@@ -1896,14 +1896,13 @@ def post_review():
     from datetime import datetime
     query = """
         INSERT INTO reviews (patient_id, doctor_id, rating, review_text, created_at)
-        VALUES (:patient_id, :doctor_id, :rating, :review_text, :created_at)
+        VALUES (:patient_id, :doctor_id, :rating, :review_text, CURRENT_DATE)
     """
     params = {
         'patient_id': data['patient_id'],
         'doctor_id': data['doctor_id'],
         'rating': data['rating'],
-        'review_text': data.get('review_text', ""),
-        'created_at': datetime.now(timezone.utc)
+        'review_text': data.get('review_text', "")
     }
     
     try:

@@ -732,7 +732,7 @@ def add_appointment():
         result = db.session.execute(text("SELECT * FROM doctors WHERE doctor_id = :doctor_id"), params)
         if(result.first() == None):
             return ResponseMessage("Invalid doctor id.", 400)
-        result = db.session.execute(text("SELECT start_time, end_time FROM appointments WHERE doctor_id = :doctor_id"), params)
+        result = db.session.execute(text("SELECT start_time, end_time FROM appointments WHERE doctor_id = :doctor_id AND LOWER(status) != 'canceled'"), params)
         startA = request.json.get('start_time')
         endA = end_time
         for times in result:

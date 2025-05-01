@@ -45,8 +45,6 @@ responses:
                     type: integer
                   weight:
                     type: number
-                  weight_goal:
-                    type: integer
                   calories:
                     type: number
                   water_intake:

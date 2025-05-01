@@ -867,7 +867,6 @@ def get_patient_progress():
             'progress_id': row.progress_id,
             'patient_id': row.patient_id,
             'weight': row.weight,
-            'weight_goal': row.weight_goal,
             'calories': row.calories,
             'water_intake': row.water_intake,
             'date_logged': row.date_logged
@@ -897,12 +896,11 @@ def delete_patient_progress(progress_id):
 def add_patient_progress():
     #sql query
     query = text("""
-        INSERT INTO patient_progress (progress_id, patient_id, weight, weight_goal, calories, water_intake, date_logged)
+        INSERT INTO patient_progress (progress_id, patient_id, weight, calories, water_intake, date_logged)
         VALUES (
             :progress_id,
             :patient_id,
             :weight,
-            :weight_goal,
             :calories,
             :water_intake,
             CURRENT_TIMESTAMP
@@ -914,8 +912,7 @@ def add_patient_progress():
         'patient_id': request.json.get('patient_id'),
         'weight': request.json.get('weight'),
         'calories': request.json.get('calories'),
-        'weight_goal': request.json.get('weight_goal'),
-        'water_intake': request.json.get('water_intake')
+        'water_intake': request.json.get('water_intake') or ""
     }
     #input validation
     if None in list(params.values())[:-1]:
@@ -926,8 +923,6 @@ def add_patient_progress():
             return ResponseMessage("Invalid patient id.", 400)
         if(request.json.get('weight') <= 0 or request.json.get('weight') >= 1500):
             return ResponseMessage("Invalid weight.", 400)
-        if(request.json.get('weight_goal') <= 0 or request.json.get('weight_goal') >= 1500):
-            return ResponseMessage("Invalid weight goal.", 400)
         if(request.json.get('calories') <= 0 or request.json.get('calories') >= 30000):
             return ResponseMessage("Invalid calories.", 400)
         #execute query

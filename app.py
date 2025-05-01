@@ -869,7 +869,7 @@ def get_patient_progress():
             'weight': row.weight,
             'weight_goal': row.weight_goal,
             'calories': row.calories,
-            'notes': row.notes,
+            'water_intake': row.water_intake,
             'date_logged': row.date_logged
         })
     return json, 200
@@ -897,14 +897,14 @@ def delete_patient_progress(progress_id):
 def add_patient_progress():
     #sql query
     query = text("""
-        INSERT INTO patient_progress (progress_id, patient_id, weight, weight_goal, calories, notes, date_logged)
+        INSERT INTO patient_progress (progress_id, patient_id, weight, weight_goal, calories, water_intake, date_logged)
         VALUES (
             :progress_id,
             :patient_id,
             :weight,
             :weight_goal,
             :calories,
-            :notes,
+            :water_intake,
             CURRENT_TIMESTAMP
             )
     """)
@@ -915,7 +915,7 @@ def add_patient_progress():
         'weight': request.json.get('weight'),
         'calories': request.json.get('calories'),
         'weight_goal': request.json.get('weight_goal'),
-        'notes': request.json.get('notes')
+        'water_intake': request.json.get('water_intake')
     }
     #input validation
     if None in list(params.values())[:-1]:

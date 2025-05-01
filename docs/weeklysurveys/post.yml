@@ -1,10 +1,11 @@
 Patients records
 ---
 tags:
-    - Patients
-summary: Submit a new weekly survey
+  - Patients
+summary: Submit a new patient progress report
 description: >
-  Submits a new weekly survey entry for a patient, including weight goal and optional comments.
+  Submits a new patient progress report including weight, weight goal, calories consumed, and water intake.
+  The `date_logged` field is automatically set to the current timestamp.
 requestBody:
   required: true
   content:
@@ -13,18 +14,29 @@ requestBody:
         type: object
         required:
           - patient_id
+          - weight
           - weight_goal
+          - calories
         properties:
           patient_id:
             type: integer
+            description: ID of the patient submitting the progress.
+          weight:
+            type: number
+            description: Current weight of the patient (must be between 1 and 1500).
           weight_goal:
             type: integer
-          comments:
+            description: Target weight of the patient (must be between 1 and 1500).
+          calories:
+            type: number
+            description: Total calories consumed (must be between 1 and 30000).
+          water_intake:
             type: string
+            description: Optional notes or description of water intake (e.g., "8 cups").
 responses:
   201:
-    description: Survey submitted successfully.
+    description: Patient progress entry successfully created.
   400:
-    description: Required fields missing or invalid.
+    description: Required fields missing or contain invalid values.
   500:
-    description: Server error while submitting survey.
+    description: Server error while submitting patient progress.

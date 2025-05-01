@@ -896,7 +896,7 @@ def delete_patient_progress(progress_id):
 def add_patient_progress():
     #sql query
     query = text("""
-        INSERT INTO patient_progress (progress_id, patient_id, weight, weight_goal, calories, water_intake, date_logged)
+        INSERT INTO patient_progress (progress_id, patient_id, weight, calories, water_intake, date_logged)
         VALUES (
             :progress_id,
             :patient_id,
@@ -912,7 +912,7 @@ def add_patient_progress():
         'patient_id': request.json.get('patient_id'),
         'weight': request.json.get('weight'),
         'calories': request.json.get('calories'),
-        'water_intake': request.json.get('water_intake')
+        'water_intake': request.json.get('water_intake') or ""
     }
     #input validation
     if None in list(params.values())[:-1]:

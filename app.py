@@ -2433,15 +2433,10 @@ def create_user(role):
         'exp_date': creditcard_json.get('exp_date'),
     } if creditcard_json != None else None 
 
-    if patient_json.get('medical_history') == "":
-        medical_history = ""
-    else:
-        medical_history = patient_json.get('medical_history')
-
     patient_params = {
         'patient_id': user_params['user_id'],
         'address_id': address_params['address_id'],
-        'medical_history': medical_history,
+        'medical_history': patient_json.get('medical_history') if patient_json.get('medical_history') else "",
         'creditcard_id': creditcard_params['creditcard_id'],
         'ssn': patient_json.get('ssn')
     } if patient_json != None else None 

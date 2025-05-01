@@ -2437,10 +2437,16 @@ def create_user(role):
         'cvv': creditcard_json.get('cvv'),
         'exp_date': creditcard_json.get('exp_date'),
     } if creditcard_json != None else None 
+
+    if patient_json.get('medical_history') == "":
+        medical_history = ""
+    else:
+        medical_history = patient_json.get('medical_history')
+
     patient_params = {
         'patient_id': user_params['user_id'],
         'address_id': address_params['address_id'],
-        'medical_history': patient_json.get('medical_history'),
+        'medical_history': medical_history,
         'creditcard_id': creditcard_params['creditcard_id'],
         'ssn': patient_json.get('ssn')
     } if patient_json != None else None 
@@ -2479,9 +2485,7 @@ def create_user(role):
         #user fields
         if(None in patient_params.values()):
             return ResponseMessage("Required parameters missing from patient fields.", 400)
-        
-        if(patient_params['medical_history'] == ""):
-            return ResponseMessage("Unless newborn babies are beginning their weight loss journey young, medical history should be non-empty", 400)
+
         if(re.search(valid_license, str(patient_params['ssn'])) == None):
             return ResponseMessage("Invalid SSN.", 400)
         #address fields
@@ -2534,7 +2538,7 @@ def create_user(role):
                 'patient_id': user_params['user_id'],
                 'first_name': user_params['first_name'],
                 'last_name': user_params['last_name'],
-                'medical_history': patient_params['medical_history'],
+                'medical_history': medical_history,
                 'ssn': patient_params['ssn']
             })
         return ResponseMessage(f"User successfully created. (id: {user_params['user_id']})", 201)

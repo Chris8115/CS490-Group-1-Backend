@@ -6,6 +6,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+import datetime
 
 def test_doctor_registration():
     driver = webdriver.Chrome()
@@ -54,7 +55,7 @@ def test_doctor_registration():
 
     # EULA Section
     driver.find_element(By.NAME, "eulaName").send_keys("Sponge Bob")
-    driver.find_element(By.NAME, "date").send_keys(time.strftime("%Y-%m-%d"))
+    driver.find_element(By.NAME, "date").send_keys(datetime.date.today().strftime("%m-%d-%Y"))
 
     # Submit
     submit_button = driver.find_element(By.CSS_SELECTOR, "button[type='submit']")

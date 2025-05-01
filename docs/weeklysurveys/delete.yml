@@ -1,0 +1,21 @@
+Patients records
+---
+tags:
+    - Patients
+summary: Delete a weekly survey entry
+description: >
+  Deletes a weekly survey by its `weekly_survey_id`.
+parameters:
+  - in: path
+    name: weekly_survey_id
+    required: true
+    schema:
+      type: integer
+    description: The ID of the weekly survey to delete.
+responses:
+  200:
+    description: Survey deleted successfully.
+  404:
+    description: Survey not found.
+  500:
+    description: Server error while deleting survey.

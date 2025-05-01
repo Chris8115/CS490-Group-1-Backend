@@ -1,0 +1,30 @@
+Patients records
+---
+tags:
+    - Patients
+summary: Submit a new weekly survey
+description: >
+  Submits a new weekly survey entry for a patient, including weight goal and optional comments.
+requestBody:
+  required: true
+  content:
+    application/json:
+      schema:
+        type: object
+        required:
+          - patient_id
+          - weight_goal
+        properties:
+          patient_id:
+            type: integer
+          weight_goal:
+            type: integer
+          comments:
+            type: string
+responses:
+  201:
+    description: Survey submitted successfully.
+  400:
+    description: Required fields missing or invalid.
+  500:
+    description: Server error while submitting survey.

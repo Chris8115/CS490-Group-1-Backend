@@ -2543,6 +2543,77 @@ def create_user(role):
                 'ssn': patient_params['ssn']
             })
         return ResponseMessage(f"User successfully created. (id: {user_params['user_id']})", 201)
+    
+@app.route("/patient_weekly_surveys", methods=['GET'])
+@swag_from('docs/weeklysurveys/get.yml')
+def get_patient_weekly_surveys():
+    params = {
+        'patient_id': request.args.get('patient_id', default=None, type=int)
+    }
+
+    query = "SELECT * FROM patient_weekly_surveys"
+    if params['patient_id'] is not None:
+        query += " WHERE patient_id = :patient_id"
+
+    try:
+        result = db.session.execute(text(query), {k: v for k, v in params.items() if v is not None})
+        surveys = [{
+            'weekly_survey_id': row.weekly_survey_id,
+            'patient_id': row.patient_id,
+            'submitted_at': row.submitted_at,
+            'weight_goal': row.weight_goal,
+            'comments': row.comments
+        } for row in result]
+        return {'patient_weekly_surveys': surveys}, 200
+    except Exception as e:
+        print(e)
+        return {"error": "Failed to fetch surveys"}, 500
+
+@app.route("/patient_weekly_surveys", methods=['POST'])
+@swag_from('docs/weeklysurveys/post.yml')
+def post_patient_weekly_survey():
+    data = request.get_json(force=True)
+
+    if not data.get('patient_id') or not data.get('weight_goal'):
+        return {"error": "Missing required fields: patient_id and weight_goal"}, 400
+
+    try:
+        query = text("""
+            INSERT INTO patient_weekly_surveys (patient_id, weight_goal, comments)
+            VALUES (:patient_id, :weight_goal, :comments)
+        """)
+        db.session.execute(query, {
+            'patient_id': data['patient_id'],
+            'weight_goal': data['weight_goal'],
+            'comments': data.get('comments', '')
+        })
+        db.session.commit()
+        return {"message": "Survey submitted successfully"}, 201
+    except Exception as e:
+        print(e)
+        return {"error": "Failed to submit survey"}, 500
+    
+@app.route("/patient_weekly_surveys/<int:weekly_survey_id>", methods=['DELETE'])
+@swag_from('docs/weeklysurveys/delete.yml')
+def delete_patient_weekly_survey(weekly_survey_id):
+    try:
+        result = db.session.execute(
+            text("SELECT * FROM patient_weekly_surveys WHERE weekly_survey_id = :id"),
+            {'id': weekly_survey_id}
+        )
+        if result.first() is None:
+            return {"error": "Survey not found"}, 404
+
+        db.session.execute(
+            text("DELETE FROM patient_weekly_surveys WHERE weekly_survey_id = :id"),
+            {'id': weekly_survey_id}
+        )
+        db.session.commit()
+        return {"message": "Survey deleted successfully"}, 200
+    except Exception as e:
+        print(e)
+        return {"error": "Failed to delete survey"}, 500
+
         
 def ResponseMessage(message, code):
     print(f"REST call returned with code {code},\nMessage: {message}")

@@ -360,7 +360,7 @@ def add_transactions():
 @swag_from('docs/savedposts/get.yml') # pragma: no cover
 def get_saved_posts():
     #sql query
-    query = "SELECT * FROM saved_posts AS S JOIN users AS U ON S.user_id = U.user_id JOIN forum_posts AS F ON F.post_id = S.post_id\n"
+    query = "SELECT U.user_id, first_name, last_name, post_id, title, saved_at FROM saved_posts AS S JOIN users AS U ON S.user_id = U.user_id JOIN forum_posts AS F ON F.post_id = S.post_id\n"
     #get inputs
     params = {
         'uid': "" if request.args.get('user_id') == None else request.args.get('user_id'),
@@ -376,7 +376,7 @@ def get_saved_posts():
     json = {'saved_posts': []}
     for row in result:
         json['saved_posts'].append({
-            'user_id': row.user_id,
+            'user_id': row.U.user_id,
             'first_name': row.first_name,
             'last_name': row.last_name,
             'post_id': row.post_id,
@@ -1592,7 +1592,7 @@ def delete_pharmacists(pharmacist_id):
 @swag_from('docs/forumcomments/get.yml')
 def get_forum_comments():
     #sql query
-    query = "SELECT * FROM forum_comments AS F JOIN users AS U ON F.user_id = U.user_id\n"
+    query = "SELECT comment_id, post_id, F.user_id, first_name, last_name, comment_text, F.created_at FROM forum_comments AS F JOIN users AS U ON F.user_id = U.user_id\n"
     #get inputs
     params = {
         'cid': "" if request.args.get('comment_id') == None else request.args.get('comment_id'),
@@ -1601,7 +1601,7 @@ def get_forum_comments():
     }
     if(params['pid'] != "" or params['uid'] != "" or params['cid'] != ""):
         query += ("WHERE " + ("post_id = :pid\n" if params['pid'] != "" else "TRUE\n"))
-        query += ("AND " + ("user_id = :uid\n" if params['uid'] != "" else "TRUE\n"))
+        query += ("AND " + ("F.user_id = :uid\n" if params['uid'] != "" else "TRUE\n"))
         query += ("AND " + ("comment_id = :cid\n" if params['cid'] != "" else "TRUE\n"))
     #execute query
     result = db.session.execute(text(query), params)
@@ -1729,7 +1729,7 @@ def get_forum_posts():
     }
     if(params['pid'] != "" or params['uid'] != "" or params['title'] != "" or params['type'] != "" or params['order_by'] != ""):
         query += ("WHERE " + ("post_id = :pid\n" if params['pid'] != "" else "TRUE\n"))
-        query += ("AND " + ("user_id = :uid\n" if params['uid'] != "" else "TRUE\n"))
+        query += ("AND " + ("F.user_id = :uid\n" if params['uid'] != "" else "TRUE\n"))
         query += ("AND " + ("title LIKE :title\n" if params['title'] != "" else "TRUE\n"))
         query += ("AND " + ("post_type LIKE :type\n" if params['type'] != "" else "TRUE\n"))
         query += (f"ORDER BY F.created_at {'ASC' if params['order_by'].upper() == 'ASC' else 'DESC'}")

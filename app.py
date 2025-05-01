@@ -19,8 +19,10 @@ from datetime import datetime, timedelta, timezone
 import json
 from flask_mail import Mail, Message
 from flask import send_from_directory
+import sys
 
 HOST = 'localhost'
+PORT = '5000'
 
 app = Flask(__name__, static_url_path='/static', static_folder='static')
 CORS(app, supports_credentials=True, origins=[f"http://{HOST}:3000"]) 
@@ -169,7 +171,7 @@ def home():
         <h1>BetterU Index</h1>
         <ul style="font-size:24pt">
             <li><a href='http://{HOST}:3000/'>BetterU Home</a></li>
-            <li><a href='http://{HOST}:5000/apidocs'>API Documentation</a></li>
+            <li><a href='http://{HOST}:{PORT}/apidocs'>API Documentation</a></li>
             <li><a href='http://{HOST}:15672/'>RabbitMQ Dashboard</a></li>
         </ul>"""
 
@@ -2123,7 +2125,7 @@ def get_doctors():
             'specialization': row.specialization,
             'profile': row.profile,
             'office': row.office,
-            'picture': f"http://{HOST}:5000/static/profile_pics/{row.doctor_id}.png"
+            'picture': f"http://{HOST}:{PORT}/static/profile_pics/{row.doctor_id}.png"
         })
     return json, 200
 
@@ -2546,4 +2548,12 @@ if __name__ == "__main__":
     import threading
     threading.Thread(target=listen_for_orders, daemon=True).start()
     threading.Thread(target=listen_for_meds, daemon=True).start()
-    app.run(debug=True)
+    
+    if len(sys.argv) > 1:
+        app.run(debug=True)
+    else:
+        PORT = '8080'
+        port = int(os.getenv("PORT", 8080))
+        app.run(host="0.0.0.0", port=port) 
+    
+    

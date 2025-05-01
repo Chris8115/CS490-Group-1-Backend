@@ -362,7 +362,7 @@ def add_transactions():
 @swag_from('docs/savedposts/get.yml') # pragma: no cover
 def get_saved_posts():
     #sql query
-    query = "SELECT * FROM saved_posts AS S JOIN users AS U ON S.user_id = U.user_id JOIN forum_posts AS F ON F.post_id = S.post_id\n"
+    query = "SELECT U.user_id, first_name, last_name, post_id, title, saved_at FROM saved_posts AS S JOIN users AS U ON S.user_id = U.user_id JOIN forum_posts AS F ON F.post_id = S.post_id\n"
     #get inputs
     params = {
         'uid': "" if request.args.get('user_id') == None else request.args.get('user_id'),
@@ -378,7 +378,7 @@ def get_saved_posts():
     json = {'saved_posts': []}
     for row in result:
         json['saved_posts'].append({
-            'user_id': row.user_id,
+            'user_id': row.U.user_id,
             'first_name': row.first_name,
             'last_name': row.last_name,
             'post_id': row.post_id,
@@ -1594,7 +1594,7 @@ def delete_pharmacists(pharmacist_id):
 @swag_from('docs/forumcomments/get.yml')
 def get_forum_comments():
     #sql query
-    query = "SELECT * FROM forum_comments AS F JOIN users AS U ON F.user_id = U.user_id\n"
+    query = "SELECT comment_id, post_id, F.user_id, first_name, last_name, comment_text, F.created_at FROM forum_comments AS F JOIN users AS U ON F.user_id = U.user_id\n"
     #get inputs
     params = {
         'cid': "" if request.args.get('comment_id') == None else request.args.get('comment_id'),
@@ -2547,13 +2547,16 @@ if __name__ == "__main__":
     import threading
     threading.Thread(target=listen_for_orders, daemon=True).start()
     threading.Thread(target=listen_for_meds, daemon=True).start()
-    
-    if len(sys.argv) > 1:
-        app.run(debug=True)
-    else:
+
+    print(len(sys.argv))
+
+    if len(sys.argv) == 1:
         PORT = '8080'
-        HOST = "0.0.0.0"
+        HOST = "betteru-693739504712.us-central1.run.app"
         port = int(os.getenv("PORT", 8080))
-        app.run(host="0.0.0.0", port=port) 
+        app.run(host="0.0.0.0", port=port, debug=True) 
+    else:
+        app.run(debug=True)
+        
     
     

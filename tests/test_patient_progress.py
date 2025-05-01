@@ -34,7 +34,7 @@ def client():
                 weight      REAL    NOT NULL,
                 weight_goal REAL    NOT NULL,
                 calories    INTEGER NOT NULL,
-                notes       TEXT,
+                water_intake       TEXT,
                 date_logged TEXT    NOT NULL,
                 FOREIGN KEY(patient_id) REFERENCES patients(patient_id)
             )
@@ -46,14 +46,14 @@ def client():
             logged = (now - timedelta(days=days)).strftime("%Y-%m-%d %H:%M:%S")
             db.session.execute(text("""
                 INSERT INTO patient_progress
-                  (progress_id, patient_id, weight, weight_goal, calories, notes, date_logged)
-                VALUES (:pid, 42, :wt, :wg, :cal, :notes, :logged)
+                  (progress_id, patient_id, weight, weight_goal, calories, water_intake, date_logged)
+                VALUES (:pid, 42, :wt, :wg, :cal, :water_intake, :logged)
             """), {
                 "pid": idx,
                 "wt": 180.0 - idx,
                 "wg": 160.0 + idx,
                 "cal": 2000 + idx * 100,
-                "notes": f"Entry {idx}",
+                "water_intake": f"Entry {idx}",
                 "logged": logged
             })
         db.session.commit()
@@ -122,7 +122,7 @@ def test_post_validation_errors(client, field, value, msg):
         "weight": 175.0,
         "weight_goal":165.0,
         "calories":2200,
-        "notes":"Test"
+        "water_intake":"Test"
     }
     payload[field] = value
     rv = client.post("/patient_progress", json=payload)
@@ -135,11 +135,11 @@ def test_post_success(client):
         "weight": 174.5,
         "weight_goal":164.0,
         "calories":2150,
-        "notes":"New entry"
+        "water_intake":"New entry"
     }
     rv = client.post("/patient_progress", json=payload)
     assert rv.status_code == 201
     assert b"patient progress entry successfully created" in rv.data
 
     all_rows = client.get("/patient_progress").get_json()["patient_progress"]
-    assert any(r["notes"]=="New entry" for r in all_rows)
+    assert any(r["water_intake"]=="New entry" for r in all_rows)

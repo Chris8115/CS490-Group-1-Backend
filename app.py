@@ -1731,7 +1731,7 @@ def get_forum_posts():
     }
     if(params['pid'] != "" or params['uid'] != "" or params['title'] != "" or params['type'] != "" or params['order_by'] != ""):
         query += ("WHERE " + ("post_id = :pid\n" if params['pid'] != "" else "TRUE\n"))
-        query += ("AND " + ("F.user_id = :uid\n" if params['uid'] != "" else "TRUE\n"))
+        query += ("AND " + ("U.user_id = :uid\n" if params['uid'] != "" else "TRUE\n"))
         query += ("AND " + ("title LIKE :title\n" if params['title'] != "" else "TRUE\n"))
         query += ("AND " + ("post_type LIKE :type\n" if params['type'] != "" else "TRUE\n"))
         query += (f"ORDER BY F.created_at {'ASC' if params['order_by'].upper() == 'ASC' else 'DESC'}")
@@ -1898,14 +1898,13 @@ def post_review():
     from datetime import datetime
     query = """
         INSERT INTO reviews (patient_id, doctor_id, rating, review_text, created_at)
-        VALUES (:patient_id, :doctor_id, :rating, :review_text, :created_at)
+        VALUES (:patient_id, :doctor_id, :rating, :review_text, CURRENT_DATE)
     """
     params = {
         'patient_id': data['patient_id'],
         'doctor_id': data['doctor_id'],
         'rating': data['rating'],
-        'review_text': data.get('review_text', ""),
-        'created_at': datetime.now(timezone.utc)
+        'review_text': data.get('review_text', "")
     }
     
     try:

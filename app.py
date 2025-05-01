@@ -2548,13 +2548,16 @@ if __name__ == "__main__":
     import threading
     threading.Thread(target=listen_for_orders, daemon=True).start()
     threading.Thread(target=listen_for_meds, daemon=True).start()
-    
-    if len(sys.argv) > 1:
-        app.run(debug=True)
-    else:
+
+    print(len(sys.argv))
+
+    if len(sys.argv) == 1:
         PORT = '8080'
         HOST = "betteru-693739504712.us-central1.run.app"
         port = int(os.getenv("PORT", 8080))
         app.run(host="0.0.0.0", port=port, debug=True) 
+    else:
+        app.run(debug=True)
+        
     
     

@@ -2553,8 +2553,8 @@ if __name__ == "__main__":
         app.run(debug=True)
     else:
         PORT = '8080'
-        HOST = "0.0.0.0"
+        HOST = "betteru-693739504712.us-central1.run.app"
         port = int(os.getenv("PORT", 8080))
-        app.run(host="0.0.0.0", port=port) 
+        app.run(host="0.0.0.0", port=port, debug=True) 
     
     

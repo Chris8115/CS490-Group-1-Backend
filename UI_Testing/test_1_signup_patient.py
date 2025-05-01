@@ -4,8 +4,6 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import datetime
 
-import time
-
 def test_patient_registration():
     driver = webdriver.Chrome()
     driver.get("http://localhost:3000/sign-up")

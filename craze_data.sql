@@ -404,4 +404,15 @@ INSERT INTO "users" VALUES (27,'acorssq@nsw.gov.au','uM9xLlrqHt@','Aguste','Cors
 INSERT INTO "users" VALUES (28,'nvendittir@pen.io','nT7}otGg,R98s0A','Nadya','Venditti','6258234420','doctor','signed','2024-11-04 06:23:37');
 INSERT INTO "users" VALUES (29,'jcostards@unesco.org','jY1glFD+lzU1l','Jessamyn','Costard','1756775435','patient','signed','2024-12-03 10:51:14');
 INSERT INTO "users" VALUES (30,'araubenheimt@nbcnews.com','vJ68SdA{lG','Alyse','Raubenheim','5239185295','pharmacist','signed','2024-12-04 02:14:53');
+INSERT INTO "patient_weekly_surveys" (weekly_survey_id, patient_id, submitted_at, weight_goal, comments) VALUES
+(1, 2, '2025-04-21 10:30:00', 195, 'Aiming to break the plateau—adjusting meal timing.'),
+(2, 5, '2025-04-21 11:45:00', 190, 'Trying to cut sugary snacks this week.'),
+(3, 8, '2025-04-22 08:15:00', 185, 'Incorporating more cardio, feeling good.'),
+(4, 11, '2025-04-22 09:00:00', 180, 'Work stress impacted routine—trying again.'),
+(5, 14, '2025-04-23 14:00:00', 175, 'Pain is manageable—able to walk more.'),
+(6, 17, '2025-04-23 16:30:00', 170, 'Energy levels improving after adjusting thyroid meds.'),
+(7, 20, '2025-04-24 07:00:00', 185, 'Physical therapy going well—goal is feeling strong.'),
+(8, 23, '2025-04-24 18:20:00', 160, 'Adding yoga for flexibility.'),
+(9, 26, '2025-04-25 09:55:00', 200, 'Staying consistent, anxiety lower this week.'),
+(10, 29, '2025-04-25 15:30:00', 180, 'Managing joint stiffness better—goal in sight.');
 COMMIT;

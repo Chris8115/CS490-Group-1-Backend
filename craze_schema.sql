@@ -125,7 +125,7 @@ CREATE TABLE "patient_progress" (
 	"weight"	REAL NOT NULL,
 	"weight_goal"	INTEGER NOT NULL DEFAULT 200,
 	"calories"	REAL NOT NULL,
-	"notes"	TEXT,
+	"water_intake"	TEXT,
 	CONSTRAINT "patient_progress_pk" PRIMARY KEY("progress_id"),
 	CONSTRAINT "patient_id" FOREIGN KEY("patient_id") REFERENCES "users"("user_id")
 );
@@ -211,5 +211,14 @@ CREATE TABLE "users" (
 	"eula"	TEXT NOT NULL DEFAULT 'signed',
 	"created_at"	TIMESTAMP NOT NULL,
 	CONSTRAINT "users_pk" PRIMARY KEY("user_id")
+);
+DROP TABLE IF EXISTS "patient_weekly_surveys";
+CREATE TABLE "patient_weekly_surveys" (
+    "weekly_survey_id"      INTEGER PRIMARY KEY,
+    "patient_id"     INTEGER NOT NULL,
+    "submitted_at"   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "weight_goal"    INTEGER NOT NULL,
+    "comments"       TEXT,
+    CONSTRAINT "fk_patient" FOREIGN KEY("patient_id") REFERENCES "patients"("patient_id")
 );
 COMMIT;

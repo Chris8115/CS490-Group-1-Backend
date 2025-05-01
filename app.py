@@ -1603,7 +1603,7 @@ def get_forum_comments():
     }
     if(params['pid'] != "" or params['uid'] != "" or params['cid'] != ""):
         query += ("WHERE " + ("post_id = :pid\n" if params['pid'] != "" else "TRUE\n"))
-        query += ("AND " + ("user_id = :uid\n" if params['uid'] != "" else "TRUE\n"))
+        query += ("AND " + ("F.user_id = :uid\n" if params['uid'] != "" else "TRUE\n"))
         query += ("AND " + ("comment_id = :cid\n" if params['cid'] != "" else "TRUE\n"))
     #execute query
     result = db.session.execute(text(query), params)
@@ -1731,7 +1731,7 @@ def get_forum_posts():
     }
     if(params['pid'] != "" or params['uid'] != "" or params['title'] != "" or params['type'] != "" or params['order_by'] != ""):
         query += ("WHERE " + ("post_id = :pid\n" if params['pid'] != "" else "TRUE\n"))
-        query += ("AND " + ("user_id = :uid\n" if params['uid'] != "" else "TRUE\n"))
+        query += ("AND " + ("U.user_id = :uid\n" if params['uid'] != "" else "TRUE\n"))
         query += ("AND " + ("title LIKE :title\n" if params['title'] != "" else "TRUE\n"))
         query += ("AND " + ("post_type LIKE :type\n" if params['type'] != "" else "TRUE\n"))
         query += (f"ORDER BY F.created_at {'ASC' if params['order_by'].upper() == 'ASC' else 'DESC'}")

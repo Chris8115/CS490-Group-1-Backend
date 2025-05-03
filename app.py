@@ -121,6 +121,7 @@ def listen_for_orders():
                         medication_id = {':medication_id' if params['medication_id'] != None else 'medication_id'},
                         status = {':status' if params['status'] != None else 'status'},
                         patient_id = {':patient_id' if params['patient_id'] != None else 'patient_id'}
+                        quantity = {':quantity' if params['quantity'] != None else 'quantity'}
                     WHERE prescription_id = :order_id
                 """), params)
             except Exception as e:
@@ -606,7 +607,7 @@ def put_prescriptions():
         return ResponseMessage(f"Error Executing Query:\n{e}", 500)
     else:
         db.session.commit()
-        order_prescription(f"{params['medication_id']},{params['patient_id']}")
+        order_prescription(f"{params['medication_id']},{params['patient_id']},{params['quantity']}")
         return ResponseMessage(f"Prescription entry successfully created (id: {params['prescription_id']})", 201)
 
 @app.route("/appointments", methods=['GET'])

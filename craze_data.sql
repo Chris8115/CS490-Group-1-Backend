@@ -174,7 +174,7 @@ INSERT INTO "patient_exercise_assignments" VALUES (8,2,1,'2025-03-10',10,5,10,3)
 INSERT INTO "patient_exercise_assignments" VALUES (9,20,19,'2024-08-22',8,5,10,3);
 INSERT INTO "patient_exercise_assignments" VALUES (10,23,22,'2024-03-21',13,5,10,3);
 INSERT INTO "patient_exercise_assignments" VALUES (11,29,22,'2025-04-17 20:43:10.602491',19,7,10,3);
-#INSERT INTO "patient_progress" VALUES (1,2,'2025-03-06 17:47:50',130.0,1993.0, 3.5);
+INSERT INTO "patient_progress" VALUES (1,2,'2025-03-06 17:47:50',130.0,1993.0, 3.5);
 INSERT INTO "patient_progress" VALUES (2,8,'2024-06-05 17:41:16',227.0,2668.0, 3.9);
 INSERT INTO "patient_progress" VALUES (3,11,'2025-02-11 21:42:54',189.0,2491.0, 3.8);
 INSERT INTO "patient_progress" VALUES (4,23,'2024-06-28 20:40:45',274.0,2809.0, 3.7);
@@ -232,11 +232,11 @@ INSERT INTO "prescriptions" VALUES (5,13,26,5,'Take two tablets daily with a gla
 INSERT INTO "prescriptions" VALUES (6,16,2,6,'Apply one dose every 12 hours, or as directed.','2025-02-01 10:04:09','Rejected',49,24);
 INSERT INTO "prescriptions" VALUES (7,19,20,7,'Take one dose three times daily, spaced evenly throughout the day.','2024-10-28 00:22:11','Ready',25,3);
 INSERT INTO "prescriptions" VALUES (8,22,20,8,'Take one tablet before meals, up to three times daily.','2024-08-28 00:50:03','Accepted',43,18);
-#INSERT INTO "prescriptions" VALUES (9,25,2,9,'Use once per day, preferably at the same time each day.','2024-05-16 17:23:15','Accepted',73,24);
+INSERT INTO "prescriptions" VALUES (9,25,2,9,'Use once per day, preferably at the same time each day.','2024-05-16 17:23:15','Accepted',73,24);
 INSERT INTO "prescriptions" VALUES (10,28,26,10,'Take one capsule every other day with food.','2024-08-07 10:36:33','Rejected',37,15);
 INSERT INTO "prescriptions" VALUES (11,1,11,10,'Take one tablet by mouth twice daily with meals.','2024-03-16 02:16:35','Accepted',59,9);
 INSERT INTO "prescriptions" VALUES (12,4,11,2,'Take one capsule once daily in the evening before bed.','2024-07-21 05:26:44','Ready',79,18);
-#INSERT INTO "prescriptions" VALUES (13,7,2,3,'Administer one dose every 4 hours as needed','2025-02-02 21:28:48','Ready',42,15);
+INSERT INTO "prescriptions" VALUES (13,7,2,3,'Administer one dose every 4 hours as needed','2025-02-02 21:28:48','Ready',42,15);
 INSERT INTO "prescriptions" VALUES (14,10,20,4,'Take one pill every morning on an empty stomach.','2024-08-01 13:10:09','Rejected',22,15);
 INSERT INTO "prescriptions" VALUES (15,13,29,5,'Take two tablets daily with a glass of water.','2024-09-11 18:03:41','Accepted',29,6);
 INSERT INTO "prescriptions" VALUES (16,16,14,6,'Apply one dose every 12 hours, or as directed.','2024-05-02 06:18:15','Canceled',74,3);
@@ -254,7 +254,7 @@ INSERT INTO "prescriptions" VALUES (27,19,23,7,'Take one dose three times daily,
 INSERT INTO "prescriptions" VALUES (28,22,14,8,'Take one tablet before meals, up to three times daily.','2024-07-03 23:40:31','Rejected',87,24);
 INSERT INTO "prescriptions" VALUES (29,25,26,9,'Use once per day, preferably at the same time each day.','2024-06-27 20:26:17','Ready',74,12);
 INSERT INTO "prescriptions" VALUES (30,28,20,10,'Take one capsule every other day with food.','2024-06-11 16:07:07','Canceled',59,18);
-#INSERT INTO "reviews" VALUES (1,2,1,3,'Better than expected, but the doctor seemed a bit rushed near the end of the visit.','1/26/2025');
+INSERT INTO "reviews" VALUES (1,2,1,3,'Better than expected, but the doctor seemed a bit rushed near the end of the visit.','1/26/2025');
 INSERT INTO "reviews" VALUES (2,5,4,3,'I had to wait longer than I''d like, but overall the appointment went smoothly once I saw the doctor.','3/5/2025');
 INSERT INTO "reviews" VALUES (3,8,7,3,'The doctor answered my questions, though I wish the explanations had been more detailed.','1/17/2025');
 INSERT INTO "reviews" VALUES (4,11,10,3,'Decent visit. Care was fine, but the waiting area and scheduling process could use improvement.','2/9/2025');

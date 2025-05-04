@@ -2448,7 +2448,7 @@ def create_user(role):
     valid_zip = r"^\d{1,5}$"
     valid_cardnum = r"^\d{14,18}$"
     valid_cvv = r"^\d{3}$"
-    valid_date = r"\d{4}-\d{2}-\d{2}"
+    valid_date = r"^\d{4}-\d{2}$"
     if None in list(user_params.values())[1:]:
         return ResponseMessage("Required parameters missing from user fields.", 400)
     user_params['phone_number'] = re.sub(r"(-|\s|\)|\()", "", user_params['phone_number'])

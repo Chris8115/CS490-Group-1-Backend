@@ -2654,7 +2654,6 @@ def ResponseMessage(message, code):
     return {'message': message}, code
 
 if __name__ == "__main__":
-    import threading
     threading.Thread(target=listen_for_orders, daemon=True).start()
     threading.Thread(target=listen_for_meds, daemon=True).start()
     

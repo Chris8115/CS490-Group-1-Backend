@@ -53,6 +53,7 @@ CREATE TABLE "doctors" (
 	"profile"	TEXT NOT NULL,
 	"address"	INTEGER,
 	"office"	TEXT,
+	"rate"	REAL NOT NULL DEFAULT 59.99,
 	PRIMARY KEY("doctor_id"),
 	CONSTRAINT "address" FOREIGN KEY("address") REFERENCES "address"("address_id"),
 	CONSTRAINT "doctor_id" FOREIGN KEY("doctor_id") REFERENCES "users"("user_id")

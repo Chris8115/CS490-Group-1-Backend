@@ -3,6 +3,7 @@ import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import pytest
+import threading
 from sqlalchemy import text
 from datetime import datetime, timedelta
 from app import app, db

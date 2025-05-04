@@ -15,7 +15,7 @@ import os
 import pika
 import re
 from flask_login import LoginManager, UserMixin, login_user, LoginManager, login_required, logout_user, current_user
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, date
 import json
 from flask_mail import Mail, Message
 from flask import send_from_directory
@@ -2495,8 +2495,20 @@ def create_user(role):
         #credit card fields
         if(None in list(creditcard_params.values())[1:]):
             return ResponseMessage("Required parameters missing from credit card fields.", 400)
+        
+        exp_str = creditcard_params['exp_date']
+        exp_year, exp_month = map(int, exp_str.split("-"))
+        today = date.today()
+        current_year = today.year
+        current_month = today.month
+        if (exp_year, exp_month) <= (current_year, current_month):
+            return ResponseMessage("Card Expired.", 400)
+        
+        
         if(re.search(valid_date, creditcard_params['exp_date']) == None):
             return ResponseMessage("Invalid expiration date.", 400)
+        else:
+            creditcard_params['exp_date'] += "-01"
         if(re.search(valid_cardnum, str(creditcard_params['cardnumber'])) == None):
             return ResponseMessage("Invalid creditcard number.", 400)
         if(re.search(valid_cvv, str(creditcard_params['cvv'])) == None):

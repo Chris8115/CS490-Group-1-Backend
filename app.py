@@ -183,8 +183,8 @@ def home():
             <li><a href='http://{HOST}:15672/'>RabbitMQ Dashboard</a></li>
         </ul>"""
 
-@app.route("/mail/<int:user_id>", methods=['POST']) # pragma: no cover
-@swag_from("docs/email/post.yml") # pragma: no cover
+@app.route("/mail/<int:user_id>", methods=['POST'])
+@swag_from("docs/email/post.yml")
 def email(user_id):
     email_address = db.session.execute(text("SELECT email FROM users WHERE user_id = :uid"), {'uid': user_id}).first()
     if(email_address == None):

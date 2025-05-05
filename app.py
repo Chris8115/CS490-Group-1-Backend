@@ -2668,6 +2668,7 @@ if __name__ == "__main__":
         PORT = '5000'
         HOST = os.getenv("SECRET_HOST")
         public_host = app.config.get('PUBLIC_HOST', 'localhost')
+        print("PUBLIC HOST", public_host)
         port = int(os.getenv("PORT", 5000))
         app.run(host=HOST, port=port) 
     

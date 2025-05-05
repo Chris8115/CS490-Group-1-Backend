@@ -26,6 +26,7 @@ import sys
 HOST = 'localhost'
 PORT = '5000'
 PUBLIC_HOST = 'localhost'
+HTTP_TYPE = "http"
 
 app = Flask(__name__, static_url_path='/static', static_folder='static')
 CORS(app, supports_credentials=True, origins=[f"http://{HOST}:3000"]) 
@@ -2145,7 +2146,7 @@ def get_doctors():
             'specialization': row.specialization,
             'profile': row.profile,
             'office': row.office,
-            'picture': f"http://{PUBLIC_HOST}:{PORT}/static/profile_pics/{row.doctor_id}.png"
+            'picture': f"{HTTP_TYPE}://{PUBLIC_HOST}:{PORT}/static/profile_pics/{row.doctor_id}.png"
         })
     return json, 200
 
@@ -2661,6 +2662,7 @@ if __name__ == "__main__":
     threading.Thread(target=listen_for_meds, daemon=True).start()
     
     if len(sys.argv) > 1:
+        print("HTTP_TYPE", HTTP_TYPE)
         print("PUBLIC HOST", PUBLIC_HOST)
         print("HOST", HOST)
         app.run(debug=True)
@@ -2669,6 +2671,7 @@ if __name__ == "__main__":
         PORT = '5000'
         HOST = os.getenv("SECRET_HOST")
         PUBLIC_HOST = os.getenv('PUBLIC_HOST')
+        HTTP_TYPE = "https"
         print("PUBLIC HOST", PUBLIC_HOST)
         print("HOST", HOST)
         port = int(os.getenv("PORT", 5000))

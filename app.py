@@ -168,6 +168,7 @@ def listen_for_meds():
 @app.route("/")
 def home():
         return f"""
+        <meta test='home'></meta>
         <h1>BetterU Index</h1>
         <ul style="font-size:24pt">
             <li><a href='http://{HOST}:3000/'>BetterU Home</a></li>
@@ -2629,9 +2630,9 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         app.run(debug=True)
     else:
-        PORT = '8080'
+        PORT = '5000'
         HOST = "0.0.0.0"
-        port = int(os.getenv("PORT", 8080))
+        port = int(os.getenv("PORT", 5000))
         app.run(host="0.0.0.0", port=port) 
     
     

@@ -2662,7 +2662,7 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         app.run(debug=True)
     else:
-        print("****You are not in debug mode, add any 1 param to run as localhost***") #test
+        print("***You are not in debug mode, add any 1 param to run as localhost***") #test
         PORT = '5000'
         HOST = os.getenv("SECRET_HOST")
         public_host = app.config.get('PUBLIC_HOST')

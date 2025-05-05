@@ -15,8 +15,10 @@ import os
 import pika
 import re
 from flask_login import LoginManager, UserMixin, login_user, LoginManager, login_required, logout_user, current_user
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, date
 import json
+import requests
+import threading
 from flask_mail import Mail, Message
 from flask import send_from_directory
 import sys
@@ -163,11 +165,16 @@ def listen_for_meds():
         channel.queue_declare(queue='new_medication')
         channel.basic_consume(queue='new_medication', on_message_callback=medication_callback)
         channel.start_consuming()
-        
+
+def request_email(user_id, json):
+    def make_request():
+        requests.post(f"http://{HOST}:{PORT}/mail/{user_id}", json=json)
+    thread = threading.Thread(target=make_request, daemon=True).start()
 
 @app.route("/")
 def home():
         return f"""
+        <meta test='home'></meta>
         <h1>BetterU Index</h1>
         <ul style="font-size:24pt">
             <li><a href='http://{HOST}:3000/'>BetterU Home</a></li>
@@ -362,7 +369,7 @@ def add_transactions():
 @swag_from('docs/savedposts/get.yml') # pragma: no cover
 def get_saved_posts():
     #sql query
-    query = "SELECT U.user_id, first_name, last_name, post_id, title, saved_at FROM saved_posts AS S JOIN users AS U ON S.user_id = U.user_id JOIN forum_posts AS F ON F.post_id = S.post_id\n"
+    query = "SELECT * FROM saved_posts AS S JOIN users AS U ON S.user_id = U.user_id JOIN forum_posts AS F ON F.post_id = S.post_id\n"
     #get inputs
     params = {
         'uid': "" if request.args.get('user_id') == None else request.args.get('user_id'),
@@ -378,7 +385,7 @@ def get_saved_posts():
     json = {'saved_posts': []}
     for row in result:
         json['saved_posts'].append({
-            'user_id': row.U.user_id,
+            'user_id': row.user_id,
             'first_name': row.first_name,
             'last_name': row.last_name,
             'post_id': row.post_id,
@@ -571,19 +578,12 @@ def put_prescriptions():
         'patient_id': request.json.get('patient_id'),
         'medication_id': request.json.get('medication_id'),
         'instructions': request.json.get('instructions'),
-        #'date_prescribed': request.json.get('date_prescribed'),
-        #'status': request.json.get('status'),
         'quantity': request.json.get('quantity'),
         'pharmacist_id': request.json.get('pharmacist_id')
     }
     #input validation
     if None in params.values():
         return ResponseMessage("Required parameters not supplied.", 400)
-    #valid_datetime = r"^\d{4}-\d{2}-\d{2} [0-5][0-9]:[0-5][0-9]:[0-5][0-9]$"
-    #if((re.search(valid_datetime, request.json.get('date_prescribed'))) is None):
-    #    return ResponseMessage("Invalid Datetime. Format: (yyyy-mm-dd hh:mm:ss)", 400)
-    #if (request.json.get('status')).lower() not in ["accepted", "rejected", "pending", "canceled"]:
-    #    return ResponseMessage("Invalid Status. Format: (`accepted`, `rejected`, `pending`, `canceled`)", 400)
     if request.json.get('quantity') <= 0:
         return ResponseMessage("Quantity must be > 0", 400)
     try:
@@ -689,6 +689,19 @@ def add_appointment():
             CURRENT_TIMESTAMP,
             :notes)
     """)
+    transaction_query = text("""
+        INSERT INTO transactions (transaction_id, patient_id, doctor_id, service_fee, doctor_fee, subtotal, created_at, creditcard_id)
+        VALUES (
+            :appointment_id,
+            :patient_id,
+            :doctor_id,
+            :service_fee,
+            (SELECT rate FROM doctors WHERE doctor_id = :doctor_id),
+            (SELECT ROUND(rate*0.1371,2) FROM doctors WHERE doctor_id = :doctor_id),
+            CURRENT_TIMESTAMP,
+            (SELECT creditcard_id FROM patients WHERE patient_id = :patient_id )
+        )
+    """)
     # NOTE: doing appointment_id this way could bring about a race condition.... but lets be real this is never happening.
     location = request.json.get('location')
     if location is None:
@@ -755,7 +768,7 @@ def add_appointment():
 def update_appointment(appointment_id):
     # Load existing row to get its doctor_id
     existing = db.session.execute(
-        text("SELECT doctor_id FROM appointments WHERE appointment_id = :id"),
+        text("SELECT * FROM appointments WHERE appointment_id = :id"),
         {"id": appointment_id}
     ).first()
     if not existing:
@@ -835,11 +848,22 @@ def update_appointment(appointment_id):
         return ResponseMessage("Invalid patient ID.", 400)
     try:
         db.session.execute(query, params)
+        if(params['status'] and params['status'].lower() in ['canceled', 'rejected']):   
+            db.session.execute(text("DELETE FROM transactions WHERE transaction_id = :appointment_id"), params)
     except Exception as e:
         print(e)
         return ResponseMessage(f"Server/SQL Error. Exeption: \n{e}", 500)
     else:
         db.session.commit()
+        if(params['status'] and params['status'].lower() in ['canceled', 'rejected']):
+            request_email(existing.patient_id,
+                {'email_subject': "Notice of appointment cancellation.",
+                'email_body': f"This email is to inform you that your appointment on {existing.start_time} has been cancelled by either you or your doctor."})
+        elif(params['status'] and params['status'].lower() in ['accepted']):
+            request_email(existing.patient_id, {
+                'email_subject': 'Appointment accepted.',
+                'email_body': f"This email is to confirm that your appointment with your doctor on {existing.start_time} has been accepted. Consult your Patient Dashboard for appointment location and other information."
+            })
         return ResponseMessage("Appointment Successfully Updated.", 200) 
 
 @app.route("/patient_progress", methods=['GET'])
@@ -867,9 +891,8 @@ def get_patient_progress():
             'progress_id': row.progress_id,
             'patient_id': row.patient_id,
             'weight': row.weight,
-            'weight_goal': row.weight_goal,
             'calories': row.calories,
-            'notes': row.notes,
+            'water_intake': row.water_intake,
             'date_logged': row.date_logged
         })
     return json, 200
@@ -897,14 +920,13 @@ def delete_patient_progress(progress_id):
 def add_patient_progress():
     #sql query
     query = text("""
-        INSERT INTO patient_progress (progress_id, patient_id, weight, weight_goal, calories, notes, date_logged)
+        INSERT INTO patient_progress (progress_id, patient_id, weight, calories, water_intake, date_logged)
         VALUES (
             :progress_id,
             :patient_id,
             :weight,
-            :weight_goal,
             :calories,
-            :notes,
+            :water_intake,
             CURRENT_TIMESTAMP
             )
     """)
@@ -914,8 +936,7 @@ def add_patient_progress():
         'patient_id': request.json.get('patient_id'),
         'weight': request.json.get('weight'),
         'calories': request.json.get('calories'),
-        'weight_goal': request.json.get('weight_goal'),
-        'notes': request.json.get('notes')
+        'water_intake': request.json.get('water_intake') or ""
     }
     #input validation
     if None in list(params.values())[:-1]:
@@ -926,8 +947,6 @@ def add_patient_progress():
             return ResponseMessage("Invalid patient id.", 400)
         if(request.json.get('weight') <= 0 or request.json.get('weight') >= 1500):
             return ResponseMessage("Invalid weight.", 400)
-        if(request.json.get('weight_goal') <= 0 or request.json.get('weight_goal') >= 1500):
-            return ResponseMessage("Invalid weight goal.", 400)
         if(request.json.get('calories') <= 0 or request.json.get('calories') >= 30000):
             return ResponseMessage("Invalid calories.", 400)
         #execute query
@@ -1594,7 +1613,7 @@ def delete_pharmacists(pharmacist_id):
 @swag_from('docs/forumcomments/get.yml')
 def get_forum_comments():
     #sql query
-    query = "SELECT comment_id, post_id, F.user_id, first_name, last_name, comment_text, F.created_at FROM forum_comments AS F JOIN users AS U ON F.user_id = U.user_id\n"
+    query = "SELECT * FROM forum_comments AS F JOIN users AS U ON F.user_id = U.user_id\n"
     #get inputs
     params = {
         'cid': "" if request.args.get('comment_id') == None else request.args.get('comment_id'),
@@ -2437,10 +2456,11 @@ def create_user(role):
         'cvv': creditcard_json.get('cvv'),
         'exp_date': creditcard_json.get('exp_date'),
     } if creditcard_json != None else None 
+
     patient_params = {
         'patient_id': user_params['user_id'],
         'address_id': address_params['address_id'],
-        'medical_history': patient_json.get('medical_history'),
+        'medical_history': patient_json.get('medical_history') if patient_json.get('medical_history') else "",
         'creditcard_id': creditcard_params['creditcard_id'],
         'ssn': patient_json.get('ssn')
     } if patient_json != None else None 
@@ -2452,7 +2472,7 @@ def create_user(role):
     valid_zip = r"^\d{1,5}$"
     valid_cardnum = r"^\d{14,18}$"
     valid_cvv = r"^\d{3}$"
-    valid_date = r"\d{4}-\d{2}-\d{2}"
+    valid_date = r"^\d{4}-\d{2}$"
     if None in list(user_params.values())[1:]:
         return ResponseMessage("Required parameters missing from user fields.", 400)
     user_params['phone_number'] = re.sub(r"(-|\s|\)|\()", "", user_params['phone_number'])
@@ -2480,8 +2500,7 @@ def create_user(role):
         if(None in patient_params.values()):
             return ResponseMessage("Required parameters missing from patient fields.", 400)
         
-        if(patient_params['medical_history'] == ""):
-            return ResponseMessage("Unless newborn babies are beginning their weight loss journey young, medical history should be non-empty", 400)
+
         if(re.search(valid_license, str(patient_params['ssn'])) == None):
             return ResponseMessage("Invalid SSN.", 400)
         #address fields
@@ -2500,8 +2519,20 @@ def create_user(role):
         #credit card fields
         if(None in list(creditcard_params.values())[1:]):
             return ResponseMessage("Required parameters missing from credit card fields.", 400)
+        
+        exp_str = creditcard_params['exp_date']
+        exp_year, exp_month = map(int, exp_str.split("-"))
+        today = date.today()
+        current_year = today.year
+        current_month = today.month
+        if (exp_year, exp_month) <= (current_year, current_month):
+            return ResponseMessage("Card Expired.", 400)
+        
+        
         if(re.search(valid_date, creditcard_params['exp_date']) == None):
             return ResponseMessage("Invalid expiration date.", 400)
+        else:
+            creditcard_params['exp_date'] += "-01"
         if(re.search(valid_cardnum, str(creditcard_params['cardnumber'])) == None):
             return ResponseMessage("Invalid creditcard number.", 400)
         if(re.search(valid_cvv, str(creditcard_params['cvv'])) == None):
@@ -2537,26 +2568,102 @@ def create_user(role):
                 'medical_history': patient_params['medical_history'],
                 'ssn': patient_params['ssn']
             })
+            request_email(user_params['user_id'], {
+                'email_subject': "Welcome to BetterU!",
+                'email_body': "You have successfully created your account for BetterU. As a patient, get started by going to your dashboard and selecting your doctor. You can also browse the Discussion Forum to see exercises! Thank you for choosing BetterU."
+            })
+        elif role == 'doctor':
+            request_email(user_params['user_id'], {
+                'email_subject': "Welcome to BetterU!",
+                'email_body': "You have successfully created your account for BetterU. As a doctor, you can manage your patients and appointments through the Dashboard, and create posts on the Discussion Forum! Thank you for choosing BetterU."
+            })
         return ResponseMessage(f"User successfully created. (id: {user_params['user_id']})", 201)
+    
+@app.route("/patient_weekly_surveys", methods=['GET'])
+@swag_from('docs/weeklysurveys/get.yml')
+def get_patient_weekly_surveys():
+    params = {
+        'patient_id': request.args.get('patient_id', default=None, type=int)
+    }
+
+    query = "SELECT * FROM patient_weekly_surveys"
+    if params['patient_id'] is not None:
+        query += " WHERE patient_id = :patient_id"
+
+    try:
+        result = db.session.execute(text(query), {k: v for k, v in params.items() if v is not None})
+        surveys = [{
+            'weekly_survey_id': row.weekly_survey_id,
+            'patient_id': row.patient_id,
+            'submitted_at': row.submitted_at,
+            'weight_goal': row.weight_goal,
+            'comments': row.comments
+        } for row in result]
+        return {'patient_weekly_surveys': surveys}, 200
+    except Exception as e:
+        print(e)
+        return {"error": "Failed to fetch surveys"}, 500
+
+@app.route("/patient_weekly_surveys", methods=['POST'])
+@swag_from('docs/weeklysurveys/post.yml')
+def post_patient_weekly_survey():
+    data = request.get_json(force=True)
+
+    if not data.get('patient_id') or not data.get('weight_goal'):
+        return {"error": "Missing required fields: patient_id and weight_goal"}, 400
+
+    try:
+        query = text("""
+            INSERT INTO patient_weekly_surveys (patient_id, weight_goal, comments)
+            VALUES (:patient_id, :weight_goal, :comments)
+        """)
+        db.session.execute(query, {
+            'patient_id': data['patient_id'],
+            'weight_goal': data['weight_goal'],
+            'comments': data.get('comments', '')
+        })
+        db.session.commit()
+        return {"message": "Survey submitted successfully"}, 201
+    except Exception as e:
+        print(e)
+        return {"error": "Failed to submit survey"}, 500
+    
+@app.route("/patient_weekly_surveys/<int:weekly_survey_id>", methods=['DELETE'])
+@swag_from('docs/weeklysurveys/delete.yml')
+def delete_patient_weekly_survey(weekly_survey_id):
+    try:
+        result = db.session.execute(
+            text("SELECT * FROM patient_weekly_surveys WHERE weekly_survey_id = :id"),
+            {'id': weekly_survey_id}
+        )
+        if result.first() is None:
+            return {"error": "Survey not found"}, 404
+
+        db.session.execute(
+            text("DELETE FROM patient_weekly_surveys WHERE weekly_survey_id = :id"),
+            {'id': weekly_survey_id}
+        )
+        db.session.commit()
+        return {"message": "Survey deleted successfully"}, 200
+    except Exception as e:
+        print(e)
+        return {"error": "Failed to delete survey"}, 500
+
         
 def ResponseMessage(message, code):
     print(f"REST call returned with code {code},\nMessage: {message}")
     return {'message': message}, code
 
 if __name__ == "__main__":
-    import threading
     threading.Thread(target=listen_for_orders, daemon=True).start()
     threading.Thread(target=listen_for_meds, daemon=True).start()
-
-    print(len(sys.argv))
-
-    if len(sys.argv) == 1:
-        PORT = '8080'
-        HOST = "betteru-693739504712.us-central1.run.app"
-        port = int(os.getenv("PORT", 8080))
-        app.run(host="0.0.0.0", port=port, debug=True) 
-    else:
+    
+    if len(sys.argv) > 1:
         app.run(debug=True)
-        
+    else:
+        PORT = '5000'
+        HOST = "0.0.0.0"
+        port = int(os.getenv("PORT", 5000))
+        app.run(host="0.0.0.0", port=port) 
     
     

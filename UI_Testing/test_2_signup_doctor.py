@@ -1,11 +1,12 @@
 # UI_Testing/test_signup_doctor.py
 
 import os
-import time
+import datetime
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+import datetime
 
 def test_doctor_registration():
     driver = webdriver.Chrome()
@@ -29,7 +30,7 @@ def test_doctor_registration():
     driver.find_element(By.XPATH, "//label[contains(text(),'Upload Profile Picture')]/following-sibling::input").send_keys(profile_pic_path)
 
     # Short Bio
-    driver.find_element(By.NAME, "profile").send_keys("Experienced cardiologist with 10 years of practice.")
+    driver.find_element(By.NAME, "profile").send_keys("Experienced fry cook with 10 years of practice.")
 
     # Specialization
     driver.find_element(By.NAME, "specialization").send_keys("Grilling, Burgers")
@@ -54,16 +55,15 @@ def test_doctor_registration():
 
     # EULA Section
     driver.find_element(By.NAME, "eulaName").send_keys("Sponge Bob")
-    driver.find_element(By.NAME, "date").send_keys(time.strftime("%Y-%m-%d"))
+    today = datetime.date.today().strftime('%Y-%m-%d')
+    driver.find_element(By.NAME, "date").send_keys(today)
 
     # Submit
     submit_button = driver.find_element(By.CSS_SELECTOR, "button[type='submit']")
     driver.execute_script("arguments[0].scrollIntoView(true);", submit_button)
     driver.execute_script("arguments[0].click();", submit_button)
 
-    try:
-        WebDriverWait(driver, 10).until(
-            EC.url_contains("/log-in")
-        )
-    finally:
-        driver.quit()
+    WebDriverWait(driver, 10).until(EC.url_contains("/log-in"))
+
+    assert "/log-in" in driver.current_url
+    

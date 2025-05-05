@@ -80,7 +80,6 @@ parameters:
             type: object
             description: patient information
             required:
-              - medical_history
               - ssn
             properties: 
               medical_history:

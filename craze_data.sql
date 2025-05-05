@@ -174,36 +174,36 @@ INSERT INTO "patient_exercise_assignments" VALUES (8,2,1,'2025-03-10',10,5,10,3)
 INSERT INTO "patient_exercise_assignments" VALUES (9,20,19,'2024-08-22',8,5,10,3);
 INSERT INTO "patient_exercise_assignments" VALUES (10,23,22,'2024-03-21',13,5,10,3);
 INSERT INTO "patient_exercise_assignments" VALUES (11,29,22,'2025-04-17 20:43:10.602491',19,7,10,3);
-INSERT INTO "patient_progress" VALUES (1,2,'2025-03-06 17:47:50',130.0,200,1993.0,'Weight plateaued this week—considering adjustments to calorie intake.');
-INSERT INTO "patient_progress" VALUES (2,8,'2024-06-05 17:41:16',227.0,200,2668.0,'Making gradual swaps to healthier snacks improved daily calorie goals.');
-INSERT INTO "patient_progress" VALUES (3,11,'2025-02-11 21:42:54',189.0,200,2491.0,'Stress levels affected food choices—looking for coping strategies.');
-INSERT INTO "patient_progress" VALUES (4,23,'2024-06-28 20:40:45',274.0,200,2809.0,NULL);
-INSERT INTO "patient_progress" VALUES (5,23,'2024-12-31 09:34:56',327.0,200,2283.0,'Noticed better sleep quality after evening workouts.');
-INSERT INTO "patient_progress" VALUES (6,8,'2025-01-12 11:46:44',139.0,200,2434.0,'Experiencing fatigue—might need to increase iron-rich foods in the diet.');
-INSERT INTO "patient_progress" VALUES (7,17,'2024-10-21 01:23:28',497.0,200,2736.0,'Struggling with late-night snacking this week—need tips to curb cravings.');
-INSERT INTO "patient_progress" VALUES (8,14,'2025-01-26 05:21:40',100.0,200,2140.0,'Feeling sore after exercises but noticing improved endurance overall.');
-INSERT INTO "patient_progress" VALUES (9,17,'2024-11-17 06:01:33',267.0,200,1684.0,'Cravings for sweets were stronger this week—tried substituting with fruits.');
-INSERT INTO "patient_progress" VALUES (10,26,'2024-11-02 12:25:41',432.0,200,2065.0,NULL);
-INSERT INTO "patient_progress" VALUES (11,5,'2025-01-01 00:03:54',224.0,200,2307.0,'Social events made it harder to control portion sizes this week.');
-INSERT INTO "patient_progress" VALUES (12,17,'2024-09-28 11:06:31',271.0,200,1769.0,'Weight loss slowed down; considering increasing activity levels.');
-INSERT INTO "patient_progress" VALUES (13,14,'2024-12-30 00:57:44',192.0,200,1938.0,'Experienced mood swings, possibly tied to dietary changes.');
-INSERT INTO "patient_progress" VALUES (14,5,'2024-08-22 17:45:29',154.0,200,2132.0,NULL);
-INSERT INTO "patient_progress" VALUES (15,11,'2024-12-05 15:09:47',177.0,200,2505.0,'Skipped a couple of workouts due to a busy schedule—working on consistency.');
-INSERT INTO "patient_progress" VALUES (16,11,'2024-03-17 13:11:58',481.0,200,1897.0,NULL);
-INSERT INTO "patient_progress" VALUES (17,11,'2024-09-30 09:36:44',253.0,200,2338.0,NULL);
-INSERT INTO "patient_progress" VALUES (18,2,'2024-08-13 18:21:44',246.0,200,2157.0,NULL);
-INSERT INTO "patient_progress" VALUES (19,29,'2024-08-02 00:10:04',393.0,200,1730.0,'Tried intermittent fasting but found it difficult to stick with long-term.');
-INSERT INTO "patient_progress" VALUES (20,14,'2024-03-28 02:26:14',266.0,200,2249.0,'Felt more energetic after meals with balanced protein intake.');
-INSERT INTO "patient_progress" VALUES (21,23,'2024-06-22 00:23:21',449.0,200,2912.0,'Noticed improved hydration made workouts easier to complete.');
-INSERT INTO "patient_progress" VALUES (22,20,'2024-04-01 10:23:01',395.0,200,1617.0,'Using smaller plates helped to visually manage portion control.');
-INSERT INTO "patient_progress" VALUES (23,20,'2024-05-11 10:02:09',287.0,200,1671.0,NULL);
-INSERT INTO "patient_progress" VALUES (24,17,'2025-01-30 20:58:32',408.0,200,2687.0,NULL);
-INSERT INTO "patient_progress" VALUES (25,11,'2025-01-23 12:23:12',209.0,200,1952.0,NULL);
-INSERT INTO "patient_progress" VALUES (26,20,'2024-07-03 17:21:33',115.0,200,2417.0,'Meal planning helped avoid impulsive fast-food stops.');
-INSERT INTO "patient_progress" VALUES (27,17,'2024-11-27 03:35:53',335.0,200,2550.0,'Felt more motivated tracking progress daily rather than weekly.');
-INSERT INTO "patient_progress" VALUES (28,26,'2024-11-18 07:43:48',296.0,200,2777.0,NULL);
-INSERT INTO "patient_progress" VALUES (29,8,'2024-04-23 14:12:01',395.0,200,2216.0,'Experimented with new recipes to keep meals enjoyable and healthy.');
-INSERT INTO "patient_progress" VALUES (30,26,'2025-01-20 02:41:03',219.0,200,2524.0,'Incorporating more fiber-rich foods helped with digestion issues.');
+INSERT INTO "patient_progress" VALUES (1,2,'2025-03-06 17:47:50',130.0,1993.0, 3.5);
+INSERT INTO "patient_progress" VALUES (2,8,'2024-06-05 17:41:16',227.0,2668.0, 3.9);
+INSERT INTO "patient_progress" VALUES (3,11,'2025-02-11 21:42:54',189.0,2491.0, 3.8);
+INSERT INTO "patient_progress" VALUES (4,23,'2024-06-28 20:40:45',274.0,2809.0, 3.7);
+INSERT INTO "patient_progress" VALUES (5,23,'2024-12-31 09:34:56',327.0,2283.0, 3.6);
+INSERT INTO "patient_progress" VALUES (6,8,'2025-01-12 11:46:44',139.0,2434.0, 3.5);
+INSERT INTO "patient_progress" VALUES (7,17,'2024-10-21 01:23:28',497.0,2736.0, 3.9);
+INSERT INTO "patient_progress" VALUES (8,14,'2025-01-26 05:21:40',100.0,2140.0, 3.8);
+INSERT INTO "patient_progress" VALUES (9,17,'2024-11-17 06:01:33',267.0,1684.0, 3.7);
+INSERT INTO "patient_progress" VALUES (10,26,'2024-11-02 12:25:41',432.0,2065.0, 3.6);
+INSERT INTO "patient_progress" VALUES (11,5,'2025-01-01 00:03:54',224.0,2307.0, 3.5);
+INSERT INTO "patient_progress" VALUES (12,17,'2024-09-28 11:06:31',271.0,1769.0, 3.9);
+INSERT INTO "patient_progress" VALUES (13,14,'2024-12-30 00:57:44',192.0,1938.0, 3.8);
+INSERT INTO "patient_progress" VALUES (14,5,'2024-08-22 17:45:29',154.0,2132.0, 3.7);
+INSERT INTO "patient_progress" VALUES (15,11,'2024-12-05 15:09:47',177.0,2505.0, 3.6);
+INSERT INTO "patient_progress" VALUES (16,11,'2024-03-17 13:11:58',481.0,1897.0, 3.5);
+INSERT INTO "patient_progress" VALUES (17,11,'2024-09-30 09:36:44',253.0,2338.0, 3.9);
+INSERT INTO "patient_progress" VALUES (18,2,'2024-08-13 18:21:44',246.0,2157.0, 3.8);
+INSERT INTO "patient_progress" VALUES (19,29,'2024-08-02 00:10:04',393.0,1730.0, 3.7);
+INSERT INTO "patient_progress" VALUES (20,14,'2024-03-28 02:26:14',266.0,2249.0, 3.6);
+INSERT INTO "patient_progress" VALUES (21,23,'2024-06-22 00:23:21',449.0,2912.0, 3.5);
+INSERT INTO "patient_progress" VALUES (22,20,'2024-04-01 10:23:01',395.0,1617.0, 3.9);
+INSERT INTO "patient_progress" VALUES (23,20,'2024-05-11 10:02:09',287.0,1671.0, 3.7);
+INSERT INTO "patient_progress" VALUES (24,17,'2025-01-30 20:58:32',408.0,2687.0, 3.6);
+INSERT INTO "patient_progress" VALUES (25,11,'2025-01-23 12:23:12',209.0,1952.0, 3.5);
+INSERT INTO "patient_progress" VALUES (26,20,'2024-07-03 17:21:33',115.0,2417.0, 3.9);
+INSERT INTO "patient_progress" VALUES (27,17,'2024-11-27 03:35:53',335.0,2550.0, 3.8);
+INSERT INTO "patient_progress" VALUES (28,26,'2024-11-18 07:43:48',296.0,2777.0, 3.7);
+INSERT INTO "patient_progress" VALUES (29,8,'2024-04-23 14:12:01',395.0,2216.0, 3.6);
+INSERT INTO "patient_progress" VALUES (30,26,'2025-01-20 02:41:03',219.0,2524.0, 3.5);
 INSERT INTO "patients" VALUES (2,1,'Type 2 diabetes diagnosed at 40, hypertension, and mild obesity. Recently started a low-carb diet and moderate exercise routine.',1,837291456);
 INSERT INTO "patients" VALUES (5,2,'Asthma since childhood, seasonal allergies, and a history of migraines. Currently on an inhaler and antihistamines.',2,192847563);
 INSERT INTO "patients" VALUES (8,3,'Coronary artery disease, underwent bypass surgery at 55. On cholesterol-lowering medication and a heart-healthy diet.',3,475920318);
@@ -404,4 +404,15 @@ INSERT INTO "users" VALUES (27,'acorssq@nsw.gov.au','uM9xLlrqHt@','Aguste','Cors
 INSERT INTO "users" VALUES (28,'nvendittir@pen.io','nT7}otGg,R98s0A','Nadya','Venditti','6258234420','doctor','signed','2024-11-04 06:23:37');
 INSERT INTO "users" VALUES (29,'jcostards@unesco.org','jY1glFD+lzU1l','Jessamyn','Costard','1756775435','patient','signed','2024-12-03 10:51:14');
 INSERT INTO "users" VALUES (30,'araubenheimt@nbcnews.com','vJ68SdA{lG','Alyse','Raubenheim','5239185295','pharmacist','signed','2024-12-04 02:14:53');
+INSERT INTO "patient_weekly_surveys" (weekly_survey_id, patient_id, submitted_at, weight_goal, comments) VALUES
+(1, 2, '2025-04-21 10:30:00', 195, 'Aiming to break the plateau—adjusting meal timing.'),
+(2, 5, '2025-04-21 11:45:00', 190, 'Trying to cut sugary snacks this week.'),
+(3, 8, '2025-04-22 08:15:00', 185, 'Incorporating more cardio, feeling good.'),
+(4, 11, '2025-04-22 09:00:00', 180, 'Work stress impacted routine—trying again.'),
+(5, 14, '2025-04-23 14:00:00', 175, 'Pain is manageable—able to walk more.'),
+(6, 17, '2025-04-23 16:30:00', 170, 'Energy levels improving after adjusting thyroid meds.'),
+(7, 20, '2025-04-24 07:00:00', 185, 'Physical therapy going well—goal is feeling strong.'),
+(8, 23, '2025-04-24 18:20:00', 160, 'Adding yoga for flexibility.'),
+(9, 26, '2025-04-25 09:55:00', 200, 'Staying consistent, anxiety lower this week.'),
+(10, 29, '2025-04-25 15:30:00', 180, 'Managing joint stiffness better—goal in sight.');
 COMMIT;

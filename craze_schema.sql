@@ -53,6 +53,7 @@ CREATE TABLE "doctors" (
 	"profile"	TEXT NOT NULL,
 	"address"	INTEGER,
 	"office"	TEXT,
+	"rate"	REAL NOT NULL DEFAULT 59.99,
 	PRIMARY KEY("doctor_id"),
 	CONSTRAINT "address" FOREIGN KEY("address") REFERENCES "address"("address_id"),
 	CONSTRAINT "doctor_id" FOREIGN KEY("doctor_id") REFERENCES "users"("user_id")
@@ -123,9 +124,8 @@ CREATE TABLE "patient_progress" (
 	"patient_id"	INTEGER,
 	"date_logged"	TIMESTAMP NOT NULL,
 	"weight"	REAL NOT NULL,
-	"weight_goal"	INTEGER NOT NULL DEFAULT 200,
 	"calories"	REAL NOT NULL,
-	"notes"	TEXT,
+	"water_intake"	TEXT,
 	CONSTRAINT "patient_progress_pk" PRIMARY KEY("progress_id"),
 	CONSTRAINT "patient_id" FOREIGN KEY("patient_id") REFERENCES "users"("user_id")
 );
@@ -211,5 +211,14 @@ CREATE TABLE "users" (
 	"eula"	TEXT NOT NULL DEFAULT 'signed',
 	"created_at"	TIMESTAMP NOT NULL,
 	CONSTRAINT "users_pk" PRIMARY KEY("user_id")
+);
+DROP TABLE IF EXISTS "patient_weekly_surveys";
+CREATE TABLE "patient_weekly_surveys" (
+    "weekly_survey_id"      INTEGER PRIMARY KEY,
+    "patient_id"     INTEGER NOT NULL,
+    "submitted_at"   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "weight_goal"    INTEGER NOT NULL,
+    "comments"       TEXT,
+    CONSTRAINT "fk_patient" FOREIGN KEY("patient_id") REFERENCES "patients"("patient_id")
 );
 COMMIT;

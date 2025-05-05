@@ -39,8 +39,6 @@ app.config['SWAGGER'] = {
     'uiversion': 3,
 }
 
-app.config['PUBLIC_HOST'] = os.getenv("PUBLIC_HOST")
-
 app.config['MAIL_SERVER']="smtp.gmail.com"
 app.config['MAIL_PORT']="465"
 app.config['MAIL_USERNAME']="betteru490@gmail.com"
@@ -2667,7 +2665,7 @@ if __name__ == "__main__":
         print("****You are not in debug mode, add any 1 param to run as localhost***") #test
         PORT = '5000'
         HOST = os.getenv("SECRET_HOST")
-        public_host = app.config.get('PUBLIC_HOST', 'localhost')
+        public_host = app.config.get('PUBLIC_HOST')
         print("PUBLIC HOST", public_host)
         port = int(os.getenv("PORT", 5000))
         app.run(host=HOST, port=port) 

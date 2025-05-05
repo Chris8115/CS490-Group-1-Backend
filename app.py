@@ -2665,7 +2665,7 @@ if __name__ == "__main__":
         print("HOST", HOST)
         app.run(debug=True)
     else:
-        print("***You are not in debug mode, add any 1 param to run as localhost***")
+        print("*You are not in debug mode, add any 1 param to run as localhost*")
         PORT = '5000'
         HOST = os.getenv("SECRET_HOST")
         PUBLIC_HOST = os.getenv('PUBLIC_HOST')

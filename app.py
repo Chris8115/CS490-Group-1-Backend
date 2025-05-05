@@ -178,7 +178,7 @@ def home():
         <meta test='home'></meta>
         <h1>BetterU Index</h1>
         <ul style="font-size:24pt">
-            <li><a href='{public_host}:3000'>BetterU Home</a></li>
+            <li><a href='http://{public_host}:3000'>BetterU Home</a></li>
             <li><a href='http://{HOST}:{PORT}/apidocs'>API Documentation</a></li>
             <li><a href='http://{HOST}:15672/'>RabbitMQ Dashboard</a></li>
         </ul>"""

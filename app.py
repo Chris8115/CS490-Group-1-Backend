@@ -17,6 +17,8 @@ import re
 from flask_login import LoginManager, UserMixin, login_user, LoginManager, login_required, logout_user, current_user
 from datetime import datetime, timedelta, timezone, date
 import json
+import requests
+import threading
 from flask_mail import Mail, Message
 from flask import send_from_directory
 import sys
@@ -163,7 +165,11 @@ def listen_for_meds():
         channel.queue_declare(queue='new_medication')
         channel.basic_consume(queue='new_medication', on_message_callback=medication_callback)
         channel.start_consuming()
-        
+
+def request_email(user_id, json):
+    def make_request():
+        requests.post(f"http://{HOST}:{PORT}/mail/{user_id}", json=json)
+    thread = threading.Thread(target=make_request, daemon=True).start()
 
 @app.route("/")
 def home():
@@ -572,19 +578,12 @@ def put_prescriptions():
         'patient_id': request.json.get('patient_id'),
         'medication_id': request.json.get('medication_id'),
         'instructions': request.json.get('instructions'),
-        #'date_prescribed': request.json.get('date_prescribed'),
-        #'status': request.json.get('status'),
         'quantity': request.json.get('quantity'),
         'pharmacist_id': request.json.get('pharmacist_id')
     }
     #input validation
     if None in params.values():
         return ResponseMessage("Required parameters not supplied.", 400)
-    #valid_datetime = r"^\d{4}-\d{2}-\d{2} [0-5][0-9]:[0-5][0-9]:[0-5][0-9]$"
-    #if((re.search(valid_datetime, request.json.get('date_prescribed'))) is None):
-    #    return ResponseMessage("Invalid Datetime. Format: (yyyy-mm-dd hh:mm:ss)", 400)
-    #if (request.json.get('status')).lower() not in ["accepted", "rejected", "pending", "canceled"]:
-    #    return ResponseMessage("Invalid Status. Format: (`accepted`, `rejected`, `pending`, `canceled`)", 400)
     if request.json.get('quantity') <= 0:
         return ResponseMessage("Quantity must be > 0", 400)
     try:
@@ -690,6 +689,19 @@ def add_appointment():
             CURRENT_TIMESTAMP,
             :notes)
     """)
+    transaction_query = text("""
+        INSERT INTO transactions (transaction_id, patient_id, doctor_id, service_fee, doctor_fee, subtotal, created_at, creditcard_id)
+        VALUES (
+            :appointment_id,
+            :patient_id,
+            :doctor_id,
+            :service_fee,
+            (SELECT rate FROM doctors WHERE doctor_id = :doctor_id),
+            (SELECT ROUND(rate*0.1371,2) FROM doctors WHERE doctor_id = :doctor_id),
+            CURRENT_TIMESTAMP,
+            (SELECT creditcard_id FROM patients WHERE patient_id = :patient_id )
+        )
+    """)
     # NOTE: doing appointment_id this way could bring about a race condition.... but lets be real this is never happening.
     location = request.json.get('location')
     if location is None:
@@ -756,7 +768,7 @@ def add_appointment():
 def update_appointment(appointment_id):
     # Load existing row to get its doctor_id
     existing = db.session.execute(
-        text("SELECT doctor_id FROM appointments WHERE appointment_id = :id"),
+        text("SELECT * FROM appointments WHERE appointment_id = :id"),
         {"id": appointment_id}
     ).first()
     if not existing:
@@ -836,11 +848,22 @@ def update_appointment(appointment_id):
         return ResponseMessage("Invalid patient ID.", 400)
     try:
         db.session.execute(query, params)
+        if(params['status'] and params['status'].lower() in ['canceled', 'rejected']):   
+            db.session.execute(text("DELETE FROM transactions WHERE transaction_id = :appointment_id"), params)
     except Exception as e:
         print(e)
         return ResponseMessage(f"Server/SQL Error. Exeption: \n{e}", 500)
     else:
         db.session.commit()
+        if(params['status'] and params['status'].lower() in ['canceled', 'rejected']):
+            request_email(existing.patient_id,
+                {'email_subject': "Notice of appointment cancellation.",
+                'email_body': f"This email is to inform you that your appointment on {existing.start_time} has been cancelled by either you or your doctor."})
+        elif(params['status'] and params['status'].lower() in ['accepted']):
+            request_email(existing.patient_id, {
+                'email_subject': 'Appointment accepted.',
+                'email_body': f"This email is to confirm that your appointment with your doctor on {existing.start_time} has been accepted. Consult your Patient Dashboard for appointment location and other information."
+            })
         return ResponseMessage("Appointment Successfully Updated.", 200) 
 
 @app.route("/patient_progress", methods=['GET'])
@@ -2545,6 +2568,15 @@ def create_user(role):
                 'medical_history': patient_params['medical_history'],
                 'ssn': patient_params['ssn']
             })
+            request_email(user_params['user_id'], {
+                'email_subject': "Welcome to BetterU!",
+                'email_body': "You have successfully created your account for BetterU. As a patient, get started by going to your dashboard and selecting your doctor. You can also browse the Discussion Forum to see exercises! Thank you for choosing BetterU."
+            })
+        elif role == 'doctor':
+            request_email(user_params['user_id'], {
+                'email_subject': "Welcome to BetterU!",
+                'email_body': "You have successfully created your account for BetterU. As a doctor, you can manage your patients and appointments through the Dashboard, and create posts on the Discussion Forum! Thank you for choosing BetterU."
+            })
         return ResponseMessage(f"User successfully created. (id: {user_params['user_id']})", 201)
     
 @app.route("/patient_weekly_surveys", methods=['GET'])
@@ -2623,7 +2655,6 @@ def ResponseMessage(message, code):
     return {'message': message}, code
 
 if __name__ == "__main__":
-    import threading
     threading.Thread(target=listen_for_orders, daemon=True).start()
     threading.Thread(target=listen_for_meds, daemon=True).start()
     

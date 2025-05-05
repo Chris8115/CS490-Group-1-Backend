@@ -2145,7 +2145,7 @@ def get_doctors():
             'specialization': row.specialization,
             'profile': row.profile,
             'office': row.office,
-            'picture': f"http://{HOST}:{PORT}/static/profile_pics/{row.doctor_id}.png"
+            'picture': f"http://{PUBLIC_HOST}:{PORT}/static/profile_pics/{row.doctor_id}.png"
         })
     return json, 200
 

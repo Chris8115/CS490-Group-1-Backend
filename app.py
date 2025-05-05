@@ -25,6 +25,7 @@ import sys
 
 HOST = 'localhost'
 PORT = '5000'
+PUBLIC_HOST = 'localhost'
 
 app = Flask(__name__, static_url_path='/static', static_folder='static')
 CORS(app, supports_credentials=True, origins=[f"http://{HOST}:3000"]) 
@@ -179,7 +180,7 @@ def home():
         <h1>BetterU Index</h1>
         <ul style="font-size:24pt">
             <li><a href='http://{PUBLIC_HOST}:3000'>BetterU Home</a></li>
-            <li><a href='http://{HOST}:{PORT}/apidocs'>API Documentation</a></li>
+            <li><a href='http://{PUBLIC_HOST}:{PORT}/apidocs'>API Documentation</a></li>
             <li><a href='http://{HOST}:15672/'>RabbitMQ Dashboard</a></li>
         </ul>"""
 
@@ -2660,13 +2661,16 @@ if __name__ == "__main__":
     threading.Thread(target=listen_for_meds, daemon=True).start()
     
     if len(sys.argv) > 1:
+        print("PUBLIC HOST", PUBLIC_HOST)
+        print("HOST", HOST)
         app.run(debug=True)
     else:
         print("***You are not in debug mode, add any 1 param to run as localhost***") #test
         PORT = '5000'
         HOST = os.getenv("SECRET_HOST")
-        PUBLIC_HOST = app.config.get('PUBLIC_HOST')
+        PUBLIC_HOST = os.getenv('PUBLIC_HOST')
         print("PUBLIC HOST", PUBLIC_HOST)
+        print("HOST", HOST)
         port = int(os.getenv("PORT", 5000))
         app.run(host=HOST, port=port) 
     

@@ -25,7 +25,6 @@ import sys
 
 HOST = 'localhost'
 PORT = '5000'
-public_host = 'localhost'
 
 app = Flask(__name__, static_url_path='/static', static_folder='static')
 CORS(app, supports_credentials=True, origins=[f"http://{HOST}:3000"]) 
@@ -46,6 +45,7 @@ app.config['MAIL_PASSWORD']= os.getenv("GMAIL_APP_PASSWORD")
 app.config['MAIL_USE_TLS']=False
 app.config['MAIL_USE_SSL']=True
 
+app.config['PUBLIC_HOST']= os.getenv("PUBLIC_HOST")
 app.config['SECRET_KEY'] = os.getenv("CRAZE_SECRET_KEY") #super duper secret 🤫
 app.config['SESSION_COOKIE_SECURE']=False
 
@@ -178,7 +178,7 @@ def home():
         <meta test='home'></meta>
         <h1>BetterU Index</h1>
         <ul style="font-size:24pt">
-            <li><a href='http://{public_host}:3000'>BetterU Home</a></li>
+            <li><a href='http://{PUBLIC_HOST}:3000'>BetterU Home</a></li>
             <li><a href='http://{HOST}:{PORT}/apidocs'>API Documentation</a></li>
             <li><a href='http://{HOST}:15672/'>RabbitMQ Dashboard</a></li>
         </ul>"""
@@ -2665,7 +2665,7 @@ if __name__ == "__main__":
         print("***You are not in debug mode, add any 1 param to run as localhost***") #test
         PORT = '5000'
         HOST = os.getenv("SECRET_HOST")
-        public_host = app.config.get('PUBLIC_HOST')
+        PUBLIC_HOST = app.config.get('PUBLIC_HOST')
         print("PUBLIC HOST", public_host)
         port = int(os.getenv("PORT", 5000))
         app.run(host=HOST, port=port) 

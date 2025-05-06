@@ -44,7 +44,7 @@ def test_patient_registration():
     # Credit card
     driver.find_element(By.NAME, "cardnumber").send_keys("4111111111111111")
     driver.find_element(By.NAME, "cvv").send_keys("123")
-    driver.find_element(By.NAME, "exp_date").send_keys("2025-12-31")
+    driver.find_element(By.NAME, "exp_date").send_keys("2025-12")
 
     # Medical History
     element = driver.find_element(By.NAME, "alcoholAddiction")

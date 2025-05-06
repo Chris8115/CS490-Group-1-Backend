@@ -45,6 +45,7 @@ def test_login_check_returns_user_id(client, monkeypatch):
         def __init__(self):
             self.user_id = 42
             self.role = 'patient'
+            self.email='email@gmail.com'
 
         def get_id(self):
             return str(self.user_id)

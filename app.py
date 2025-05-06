@@ -171,7 +171,7 @@ def listen_for_meds():
 
 def request_email(user_id, json):
     def make_request():
-        requests.post(f"http://{HOST}{PORT}/mail/{user_id}", json=json)
+        requests.post(f"http://{PUBLIC_HOST}{PORT}/mail/{user_id}", json=json)
     thread = threading.Thread(target=make_request, daemon=True).start()
 
 @app.route("/")

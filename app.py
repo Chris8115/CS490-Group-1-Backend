@@ -246,7 +246,7 @@ def logout():
 @login_required
 @swag_from('docs/auth/login_check.yml') # pragma: no cover
 def login_check():
-    return {'user_id': current_user.user_id, 'role': current_user.role, 'message':f"User is logged in. ID: {current_user.get_id()}"}, 200
+    return {'user_id': current_user.user_id, 'role': current_user.role, 'email': current_user.email, 'message':f"User is logged in. ID: {current_user.get_id()}"}, 200
 
 @app.route("/transactions", methods=['GET']) # pragma: no cover
 @login_required

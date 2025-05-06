@@ -245,7 +245,7 @@ def logout():
 @login_required
 @swag_from('docs/auth/login_check.yml') # pragma: no cover
 def login_check():
-    return ResponseMessage(f"User is logged in. ID: {current_user.get_id()}", 200)
+    return {'user_id': current_user.user_id, 'role': current_user.role, 'message':f"User is logged in. ID: {current_user.get_id()}"}, 200
 
 @app.route("/transactions", methods=['GET']) # pragma: no cover
 @login_required
@@ -608,7 +608,7 @@ def put_prescriptions():
         return ResponseMessage(f"Error Executing Query:\n{e}", 500)
     else:
         db.session.commit()
-        order_prescription(f"{params['medication_id']},{params['patient_id']}")
+        order_prescription(f"{params['medication_id']},{params['patient_id']},{params['quantity']}")
         return ResponseMessage(f"Prescription entry successfully created (id: {params['prescription_id']})", 201)
 
 @app.route("/appointments", methods=['GET'])

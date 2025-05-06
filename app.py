@@ -24,7 +24,7 @@ from flask import send_from_directory
 import sys
 
 HOST = 'localhost'
-PORT = '5000'
+PORT = ':5000'
 PUBLIC_HOST = 'localhost'
 HTTP_TYPE = "http"
 
@@ -171,7 +171,7 @@ def listen_for_meds():
 
 def request_email(user_id, json):
     def make_request():
-        requests.post(f"http://{HOST}:{PORT}/mail/{user_id}", json=json)
+        requests.post(f"http://{HOST}{PORT}/mail/{user_id}", json=json)
     thread = threading.Thread(target=make_request, daemon=True).start()
 
 @app.route("/")
@@ -181,7 +181,7 @@ def home():
         <h1>BetterU Index</h1>
         <ul style="font-size:24pt">
             <li><a href='http://{PUBLIC_HOST}:3000'>BetterU Home</a></li>
-            <li><a href='http://{PUBLIC_HOST}:{PORT}/apidocs'>API Documentation</a></li>
+            <li><a href='http://{PUBLIC_HOST}{PORT}/apidocs'>API Documentation</a></li>
             <li><a href='http://{HOST}:15672/'>RabbitMQ Dashboard</a></li>
         </ul>"""
 
@@ -210,8 +210,8 @@ def docs():
     return render_template("build/html/index.html")
 
 @app.route('/login', methods=['GET', 'POST'])
-@swag_from("docs/auth/login_get.yml", methods=['GET']) # pragma: no cover
-@swag_from("docs/auth/login_post.yml", methods=['POST']) # pragma: no cover
+@swag_from("docs/auth/login_get.yml", methods=['GET'])
+@swag_from("docs/auth/login_post.yml", methods=['POST'])
 def login():
     if(request.args.get('next') != None):
         return ResponseMessage(f"Login Error: Login required to access route {request.args.get('next')}", 401)
@@ -237,20 +237,20 @@ def login():
 
 @app.route('/logout', methods=['GET', 'POST'])
 @login_required
-@swag_from('docs/auth/logout.yml', methods=['GET', 'POST']) # pragma: no cover
+@swag_from('docs/auth/logout.yml', methods=['GET', 'POST']) 
 def logout():
     logout_user()
     return ResponseMessage("User Logged out.", 200)
 
 @app.route('/login_check')
 @login_required
-@swag_from('docs/auth/login_check.yml') # pragma: no cover
+@swag_from('docs/auth/login_check.yml') 
 def login_check():
-    return ResponseMessage(f"User is logged in. ID: {current_user.get_id()}", 200)
+    return {'user_id': current_user.user_id, 'role': current_user.role, 'message':f"User is logged in. ID: {current_user.get_id()}"}, 200
 
-@app.route("/transactions", methods=['GET']) # pragma: no cover
+@app.route("/transactions", methods=['GET']) 
 @login_required
-@swag_from('docs/transactions/get.yml') # pragma: no cover
+@swag_from('docs/transactions/get.yml') 
 def get_transactions():
     print(current_user)
     #sql query
@@ -287,7 +287,7 @@ def get_transactions():
 
 @app.route("/transactions/<int:transaction_id>", methods=['DELETE'])
 @login_required
-@swag_from('docs/transactions/delete.yml') # pragma: no cover
+@swag_from('docs/transactions/delete.yml') 
 def delete_transaction(transaction_id):
     try:
         result = db.session.execute(text("SELECT * FROM transactions WHERE transaction_id = :transaction_id\n"), {'transaction_id': transaction_id})
@@ -304,7 +304,7 @@ def delete_transaction(transaction_id):
 
 @app.route("/transactions", methods=['POST'])
 @login_required
-@swag_from('docs/transactions/post.yml') # pragma: no cover
+@swag_from('docs/transactions/post.yml') 
 def add_transactions():
     data = request.get_json(force=True)
 
@@ -369,7 +369,7 @@ def add_transactions():
 
 @app.route("/saved_posts", methods=['GET'])
 @login_required
-@swag_from('docs/savedposts/get.yml') # pragma: no cover
+@swag_from('docs/savedposts/get.yml') 
 def get_saved_posts():
     #sql query
     query = "SELECT * FROM saved_posts AS S JOIN users AS U ON S.user_id = U.user_id JOIN forum_posts AS F ON F.post_id = S.post_id\n"
@@ -399,7 +399,7 @@ def get_saved_posts():
 
 @app.route("/saved_posts", methods=['DELETE'])
 @login_required
-@swag_from('docs/savedposts/delete.yml') # pragma: no cover
+@swag_from('docs/savedposts/delete.yml') 
 def delete_saved_posts():
     params = {
         'post_id': request.json.get('post_id'),
@@ -420,7 +420,7 @@ def delete_saved_posts():
 
 @app.route("/saved_posts", methods=['POST'])
 @login_required
-@swag_from('docs/savedposts/post.yml') # pragma: no cover
+@swag_from('docs/savedposts/post.yml') 
 def add_saved_posts():
     query = text("""
         INSERT INTO saved_posts (user_id, post_id, saved_at)
@@ -447,7 +447,7 @@ def add_saved_posts():
         return ResponseMessage(f"Post saved successfully", 201)
 
 @app.route("/prescriptions", methods=['GET'])
-@swag_from('docs/prescriptions/get.yml') # pragma: no cover
+@swag_from('docs/prescriptions/get.yml') 
 def get_prescriptions():
     #sql query
     query = "SELECT * FROM prescriptions\n"
@@ -487,7 +487,7 @@ def get_prescriptions():
     return json, 200
 
 @app.route("/prescriptions/<int:prescription_id>", methods=['DELETE'])
-@swag_from('docs/prescriptions/delete.yml') # pragma: no cover
+@swag_from('docs/prescriptions/delete.yml') 
 def delete_prescriptions(prescription_id):
     try:
         result = db.session.execute(text("SELECT * FROM prescriptions WHERE prescription_id = :prescription_id\n"), {'prescription_id': prescription_id})
@@ -503,7 +503,7 @@ def delete_prescriptions(prescription_id):
         return Response(status=200)
 
 @app.route("/prescriptions/<int:prescription_id>", methods=['PATCH'])
-@swag_from('docs/prescriptions/patch.yml') # pragma: no cover
+@swag_from('docs/prescriptions/patch.yml') 
 def update_prescriptions(prescription_id):
     #sql query
     query = text(f"""
@@ -559,7 +559,7 @@ def update_prescriptions(prescription_id):
         return ResponseMessage("Prescription Successfully Updated.", 200) 
 
 @app.route("/prescriptions", methods=['POST'])
-@swag_from('docs/prescriptions/post.yml') # pragma: no cover
+@swag_from('docs/prescriptions/post.yml') 
 def put_prescriptions():
     query = text("""
         INSERT INTO prescriptions (prescription_id, doctor_id, patient_id, medication_id, instructions, date_prescribed, status, quantity, pharmacist_id)
@@ -609,12 +609,12 @@ def put_prescriptions():
         return ResponseMessage(f"Error Executing Query:\n{e}", 500)
     else:
         db.session.commit()
-        order_prescription(f"{params['medication_id']},{params['patient_id']}")
+        order_prescription(f"{params['medication_id']},{params['patient_id']},{params['quantity']}")
         return ResponseMessage(f"Prescription entry successfully created (id: {params['prescription_id']})", 201)
 
 @app.route("/appointments", methods=['GET'])
 @login_required
-@swag_from('docs/appointments/get.yml') # pragma: no cover
+@swag_from('docs/appointments/get.yml') 
 def appointments():
     #sql query
     query = "SELECT * FROM appointments\n"
@@ -657,7 +657,7 @@ def appointments():
 
 @app.route("/appointments/<int:appointment_id>", methods=['DELETE'])
 @login_required
-@swag_from('docs/appointments/delete.yml') # pragma: no cover
+@swag_from('docs/appointments/delete.yml') 
 def delete_appointments(appointment_id):
     try:
         result = db.session.execute(text("SELECT * FROM appointments WHERE appointment_id = :appointment_id\n"), {'appointment_id': appointment_id})
@@ -674,7 +674,7 @@ def delete_appointments(appointment_id):
 
 @app.route("/appointments", methods=['POST'])
 @login_required
-@swag_from('docs/appointments/post.yml') # pragma: no cover
+@swag_from('docs/appointments/post.yml') 
 def add_appointment():
     #sql query
     query = text("""
@@ -767,7 +767,7 @@ def add_appointment():
 
 @app.route("/appointments/<int:appointment_id>", methods=['PATCH'])
 @login_required
-@swag_from("docs/appointments/patch.yml") # pragma: no cover
+@swag_from("docs/appointments/patch.yml") 
 def update_appointment(appointment_id):
     # Load existing row to get its doctor_id
     existing = db.session.execute(
@@ -871,7 +871,7 @@ def update_appointment(appointment_id):
 
 @app.route("/patient_progress", methods=['GET'])
 @login_required
-@swag_from('docs/patientprogress/get.yml') # pragma: no cover
+@swag_from('docs/patientprogress/get.yml') 
 def get_patient_progress():
     #sql query
     query = "SELECT * FROM patient_progress\n"
@@ -902,7 +902,7 @@ def get_patient_progress():
 
 @app.route("/patient_progress/<int:progress_id>", methods=['DELETE'])
 @login_required
-@swag_from('docs/patientprogress/delete.yml') # pragma: no cover
+@swag_from('docs/patientprogress/delete.yml') 
 def delete_patient_progress(progress_id):
     try:
         result = db.session.execute(text("SELECT * FROM patient_progress WHERE progress_id = :progress_id\n"), {'progress_id': progress_id})
@@ -919,7 +919,7 @@ def delete_patient_progress(progress_id):
 
 @app.route("/patient_progress", methods=['POST'])
 @login_required
-@swag_from('docs/patientprogress/post.yml') # pragma: no cover
+@swag_from('docs/patientprogress/post.yml') 
 def add_patient_progress():
     #sql query
     query = text("""
@@ -963,7 +963,7 @@ def add_patient_progress():
 
 @app.route("/patient_exercise_assignments", methods=['GET'])
 @login_required
-@swag_from('docs/patientexerciseassignments/get.yml') # pragma: no cover
+@swag_from('docs/patientexerciseassignments/get.yml') 
 def get_patient_exercise_assignments():
     #sql query
     query = "SELECT * FROM patient_exercise_assignments\n"
@@ -998,7 +998,7 @@ def get_patient_exercise_assignments():
     return json, 200
 
 @app.route("/patient_exercise_assignments/<int:assignment_id>", methods=['PATCH'])
-@swag_from('docs/patientexerciseassignments/patch.yml') # pragma: no cover
+@swag_from('docs/patientexerciseassignments/patch.yml') 
 def patch_patient_exercise_assignments(assignment_id):
     data = request.get_json(force=True)
     
@@ -1049,7 +1049,7 @@ def patch_patient_exercise_assignments(assignment_id):
 
 
 @app.route("/patient_exercise_assignments", methods=['POST'])
-@swag_from('docs/patientexerciseassignments/post.yml') # pragma: no cover
+@swag_from('docs/patientexerciseassignments/post.yml') 
 def post_patient_exercise_assignments():
     data = request.get_json(force=True)
     
@@ -1083,7 +1083,7 @@ def post_patient_exercise_assignments():
 
 @app.route("/patient_exercise_assignments/<int:assignment_id>", methods=['DELETE'])
 @login_required
-@swag_from('docs/patientexerciseassignments/delete.yml') # pragma: no cover
+@swag_from('docs/patientexerciseassignments/delete.yml') 
 def delete_patient_exercise_assignments(assignment_id):
     try:
         result = db.session.execute(text("SELECT * FROM patient_exercise_assignments WHERE assignment_id = :assignment_id\n"), {'assignment_id': assignment_id})
@@ -1099,7 +1099,7 @@ def delete_patient_exercise_assignments(assignment_id):
         return Response(status=200)
 
 @app.route("/medications", methods=['GET'])
-@swag_from('docs/medications/get.yml') # pragma: no cover
+@swag_from('docs/medications/get.yml') 
 def get_medications():
     #sql query
     query = "SELECT * FROM medications\n"
@@ -1123,7 +1123,7 @@ def get_medications():
     return json, 200
 
 @app.route("/medications/<int:medication_id>", methods=['DELETE'])
-@swag_from('docs/medications/delete.yml') # pragma: no cover
+@swag_from('docs/medications/delete.yml') 
 def delete_medications(medication_id):
     try:
         result = db.session.execute(text("SELECT * FROM medications WHERE medication_id = :medication_id\n"), {'medication_id': medication_id})
@@ -1139,7 +1139,7 @@ def delete_medications(medication_id):
         return Response(status=200)
 
 @app.route("/inventory", methods=['GET'])
-@swag_from('docs/inventory/get.yml') # pragma: no cover
+@swag_from('docs/inventory/get.yml') 
 def get_inventory():
     #sql query
     query = "SELECT * FROM inventory\n"
@@ -1164,7 +1164,7 @@ def get_inventory():
     return json, 200
 
 @app.route("/inventory/<int:inventory_id>", methods=['DELETE'])
-@swag_from('docs/inventory/delete.yml') # pragma: no cover
+@swag_from('docs/inventory/delete.yml') 
 def delete_inventory(inventory_id):
     try:
         result = db.session.execute(text("SELECT * FROM inventory WHERE inventory_id = :inventory_id\n"), {'inventory_id': inventory_id})
@@ -1181,7 +1181,7 @@ def delete_inventory(inventory_id):
 
 @app.route("/exercise_plans", methods=['GET'])
 @login_required
-@swag_from('docs/exerciseplans/get.yml') # pragma: no cover
+@swag_from('docs/exerciseplans/get.yml') 
 def get_exercise_plans():
     #sql query
     query = "SELECT * FROM exercise_plans\n"
@@ -1206,7 +1206,7 @@ def get_exercise_plans():
 
 @app.route("/exercise_plans/<int:exercise_id>", methods=['DELETE'])
 @login_required
-@swag_from('docs/exerciseplans/delete.yml') # pragma: no cover
+@swag_from('docs/exerciseplans/delete.yml') 
 def delete_exercise_plans(exercise_id):
     try:
         result = db.session.execute(text("SELECT * FROM exercise_plans WHERE exercise_id = :exercise_id\n"), {'exercise_id': exercise_id})
@@ -1222,7 +1222,7 @@ def delete_exercise_plans(exercise_id):
         return Response(status=200)
 
 @app.route("/doctor_patient_relationship", methods=['GET'])
-@swag_from('docs/doctorpatientrelationship/get.yml') # pragma: no cover
+@swag_from('docs/doctorpatientrelationship/get.yml') 
 def get_doctor_patient_relationship():
     #sql query
     query = "SELECT * FROM doctor_patient_relationship\n"
@@ -1250,7 +1250,7 @@ def get_doctor_patient_relationship():
     return json, 200
 
 @app.route("/doctor_patient_relationship/<int:doctor_id>/<int:patient_id>", methods=['DELETE'])
-@swag_from('docs/doctorpatientrelationship/delete.yml') # pragma: no cover
+@swag_from('docs/doctorpatientrelationship/delete.yml') 
 def delete_doctor_patient_relationship(doctor_id, patient_id):
     try:
         result = db.session.execute(text("SELECT * FROM doctor_patient_relationship WHERE doctor_id = :doctor_id AND patient_id = :patient_id\n"), {'doctor_id': doctor_id, 'patient_id': patient_id})
@@ -1268,7 +1268,7 @@ def delete_doctor_patient_relationship(doctor_id, patient_id):
 from datetime import datetime
 
 @app.route("/doctor_patient_relationship/<int:doctor_id>/<int:patient_id>", methods=['PATCH'])
-@swag_from('docs/doctorpatientrelationship/patch.yml') # pragma: no cover
+@swag_from('docs/doctorpatientrelationship/patch.yml') 
 def patch_doctor_patient_relationship(doctor_id, patient_id):
     data = request.get_json(force=True)
     
@@ -1323,7 +1323,7 @@ def patch_doctor_patient_relationship(doctor_id, patient_id):
     return {"message": "Doctor patient relationship updated successfully"}, 200
 
 @app.route("/doctor_patient_relationship", methods=['POST'])
-@swag_from('docs/doctorpatientrelationship/post.yml')  # pragma: no cover
+@swag_from('docs/doctorpatientrelationship/post.yml')  
 def post_doctor_patient_relationship():
     data = request.get_json(force=True)
 
@@ -1358,7 +1358,7 @@ def post_doctor_patient_relationship():
 
 
 @app.route("/credit_card", methods=['GET'])
-@swag_from('docs/creditcard/get.yml') # pragma: no cover
+@swag_from('docs/creditcard/get.yml') 
 def get_credit_card():
     #sql query
     query = "SELECT * FROM credit_card\n"
@@ -1387,7 +1387,7 @@ def get_credit_card():
     return json, 200
 
 @app.route("/credit_card/<int:creditcard_id>", methods=['DELETE'])
-@swag_from('docs/creditcard/delete.yml') # pragma: no cover
+@swag_from('docs/creditcard/delete.yml') 
 def delete_credit_card(creditcard_id):
     try:
         result = db.session.execute(text("SELECT * FROM credit_card WHERE creditcard_id = :creditcard_id\n"), {'creditcard_id': creditcard_id})
@@ -1407,7 +1407,7 @@ valid_cvv = r"^\d{3}$"
 valid_date = r"^\d{4}-\d{2}-\d{2}$"
 
 @app.route("/credit_card/<int:creditcard_id>", methods=['PATCH'])
-@swag_from('docs/creditcard/patch.yml') # pragma: no cover
+@swag_from('docs/creditcard/patch.yml') 
 def patch_credit_card(creditcard_id):
     data = request.get_json(force=True)
     
@@ -2146,7 +2146,7 @@ def get_doctors():
             'specialization': row.specialization,
             'profile': row.profile,
             'office': row.office,
-            'picture': f"{HTTP_TYPE}://{PUBLIC_HOST}/static/profile_pics/{row.doctor_id}.png"
+            'picture': f"{HTTP_TYPE}://{PUBLIC_HOST}{PORT}/static/profile_pics/{row.doctor_id}.png"
         })
     return json, 200
 

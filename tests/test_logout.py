@@ -38,17 +38,23 @@ def test_logout_route_registered():
     rules = {rule.rule for rule in app.url_map.iter_rules()}
     assert '/logout' in rules
 
-# Tests for login_check endpoint
 def test_login_check_returns_user_id(client, monkeypatch):
-    # Monkey-patch current_user.get_id to return a known ID
+    from flask_login import utils
+
     class DummyUser:
+        def __init__(self):
+            self.user_id = 42
+            self.role = 'patient'
+
         def get_id(self):
-            return '42'
-    monkeypatch.setattr('app.current_user', DummyUser())
+            return str(self.user_id)
+
+    monkeypatch.setattr(utils, "_get_user", lambda: DummyUser())
 
     resp = client.get('/login_check')
     assert resp.status_code == 200
     assert b"User is logged in. ID: 42" in resp.data
+
 
 def test_login_check_route_registered():
     # Ensure the login_check route exists

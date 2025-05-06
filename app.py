@@ -24,7 +24,7 @@ from flask import send_from_directory
 import sys
 
 HOST = 'localhost'
-PORT = '5000'
+PORT = ':5000'
 PUBLIC_HOST = 'localhost'
 HTTP_TYPE = "http"
 
@@ -171,7 +171,7 @@ def listen_for_meds():
 
 def request_email(user_id, json):
     def make_request():
-        requests.post(f"http://{HOST}:{PORT}/mail/{user_id}", json=json)
+        requests.post(f"http://{HOST}{PORT}/mail/{user_id}", json=json)
     thread = threading.Thread(target=make_request, daemon=True).start()
 
 @app.route("/")
@@ -181,7 +181,7 @@ def home():
         <h1>BetterU Index</h1>
         <ul style="font-size:24pt">
             <li><a href='http://{PUBLIC_HOST}:3000'>BetterU Home</a></li>
-            <li><a href='http://{PUBLIC_HOST}:{PORT}/apidocs'>API Documentation</a></li>
+            <li><a href='http://{PUBLIC_HOST}{PORT}/apidocs'>API Documentation</a></li>
             <li><a href='http://{HOST}:15672/'>RabbitMQ Dashboard</a></li>
         </ul>"""
 
@@ -2146,7 +2146,7 @@ def get_doctors():
             'specialization': row.specialization,
             'profile': row.profile,
             'office': row.office,
-            'picture': f"{HTTP_TYPE}://{PUBLIC_HOST}:{PORT}/static/profile_pics/{row.doctor_id}.png"
+            'picture': f"{HTTP_TYPE}://{PUBLIC_HOST}{PORT}/static/profile_pics/{row.doctor_id}.png"
         })
     return json, 200
 

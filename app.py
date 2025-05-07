@@ -270,6 +270,7 @@ def get_transactions():
         query += ("AND " + ("doctor_id = :did\n" if params['did'] != "" else "TRUE\n"))
         query += ("AND " + ("transaction_id = :tid\n" if params['tid'] != "" else "TRUE\n"))
         query += ("AND " + ("created_at LIKE :datetime\n" if params['datetime'] != "" else "TRUE\n"))
+    query += "ORDER BY created_at DESC"
     #execute query
     result = db.session.execute(text(query), params)
     json = {'transactions': []}
@@ -699,9 +700,9 @@ def add_appointment():
             :appointment_id,
             :patient_id,
             :doctor_id,
-            :service_fee,
-            (SELECT rate FROM doctors WHERE doctor_id = :doctor_id),
             (SELECT ROUND(rate*0.1371,2) FROM doctors WHERE doctor_id = :doctor_id),
+            (SELECT rate FROM doctors WHERE doctor_id = :doctor_id),
+            ROUND((SELECT ROUND(rate*0.1371,2) FROM doctors WHERE doctor_id = :doctor_id) + (SELECT rate FROM doctors WHERE doctor_id = :doctor_id), 2),
             CURRENT_TIMESTAMP,
             (SELECT creditcard_id FROM patients WHERE patient_id = :patient_id )
         )
@@ -759,6 +760,7 @@ def add_appointment():
                 return ResponseMessage("Invalid timeslot.", 400)
         #execute query
         db.session.execute(query, params)
+        db.session.execute(transaction_query, params)
     except Exception as e:
         print(e)
         return ResponseMessage(f"Error Executing Query:\n{e}", 500)
@@ -2147,6 +2149,7 @@ def get_doctors():
             'specialization': row.specialization,
             'profile': row.profile,
             'office': row.office,
+            'rate': row.rate,
             'picture': f"{HTTP_TYPE}://{DOMAIN_HOST}{PORT}/static/profile_pics/{row.doctor_id}.png"
         })
     return json, 200
@@ -2197,6 +2200,9 @@ def patch_doctor(doctor_id):
     if 'office' in data:
         update_fields.append("office = :office")
         params['office'] = data['office']
+    if 'rate' in data:
+        update_fields.append("rate = :rate")
+        params['rate'] = data['rate']
     
     if not update_fields:
         return {"error": "No update fields provided."}, 400
@@ -2381,14 +2387,15 @@ def create_user(role):
         VALUES (:pharmacist_id, :pharmacy_location)
     """)
     doctor_query = text("""
-        INSERT INTO doctors (doctor_id, license_number, specialization, profile, address, office)
+        INSERT INTO doctors (doctor_id, license_number, specialization, profile, address, office, rate)
         VALUES (
             :doctor_id,
             :license_number,
             :specialization,
             :profile,
             :address,
-            :office
+            :office,
+            :rate
         )
     """)
     creditcard_query = text("""
@@ -2449,6 +2456,7 @@ def create_user(role):
         'profile': doctor_json.get('profile') if doctor_json.get('profile') != "" else "N/A",
         'address': address_id,
         'office': doctor_json.get('office') if doctor_json.get('office') != "" else "N/A",
+        'rate': doctor_json.get('rate'),
     } if doctor_json != None else None 
     pharmacist_params = {
         'pharmacist_id': user_params['user_id'],
@@ -2477,6 +2485,7 @@ def create_user(role):
     valid_cardnum = r"^\d{14,18}$"
     valid_cvv = r"^\d{3}$"
     valid_date = r"^\d{4}-\d{2}$"
+    valid_rate = r"^\d+[.]\d{2}$"
     if None in list(user_params.values())[1:]:
         return ResponseMessage("Required parameters missing from user fields.", 400)
     user_params['phone_number'] = re.sub(r"(-|\s|\)|\()", "", user_params['phone_number'])
@@ -2499,14 +2508,16 @@ def create_user(role):
             return ResponseMessage("Invalid license number, must be 9 digits", 400)
         if(len(doctor_params['specialization']) == 0):
             return ResponseMessage("Specialization must be nonempty", 400)
+        if(float(doctor_params['rate']) <= 0):
+            return ResponseMessage("Rate must be greater than 0. This isn't a charity.")
     elif(user_params['role'] == 'patient'):
         #user fields
         if(None in patient_params.values()):
             return ResponseMessage("Required parameters missing from patient fields.", 400)
-        
 
         if(re.search(valid_license, str(patient_params['ssn'])) == None):
             return ResponseMessage("Invalid SSN.", 400)
+        patient_params['ssn'] = re.sub(r"(-|\s)", "", patient_params['ssn'])
         #address fields
         if(None in list(address_params.values())[3:]):
             return ResponseMessage("Required parameters missing from address fields.", 400)

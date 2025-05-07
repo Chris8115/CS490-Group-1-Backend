@@ -42,6 +42,23 @@ def client():
                 notes          TEXT
             )
         """))
+        db.session.execute(text("DROP TABLE IF EXISTS transactions"))
+        db.session.execute(text("""
+            CREATE TABLE "transactions" (
+            "transaction_id"	INTEGER NOT NULL,
+            "patient_id"	INTEGER,
+            "doctor_id"	INTEGER,
+            "service_fee"	REAL NOT NULL,
+            "doctor_fee"	REAL NOT NULL,
+            "subtotal"	REAL NOT NULL,
+            "created_at"	TIMESTAMP NOT NULL,
+            "creditcard_id"	INTEGER,
+            CONSTRAINT "transactions_pk" PRIMARY KEY("transaction_id"),
+            CONSTRAINT "creditcard_id" FOREIGN KEY("creditcard_id") REFERENCES "credit_card"("creditcard_id"),
+            CONSTRAINT "doctor_id" FOREIGN KEY("doctor_id") REFERENCES "doctors"("doctor_id"),
+            CONSTRAINT "customer_id" FOREIGN KEY("patient_id") REFERENCES "patients"("patient_id")
+        )                  
+        """))
         # Seed dependency rows
         db.session.execute(text("INSERT INTO patients (patient_id) VALUES (201)"))
         db.session.execute(text("INSERT INTO doctors  (doctor_id)   VALUES (101)"))

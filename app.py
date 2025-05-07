@@ -2508,16 +2508,21 @@ def create_user(role):
             return ResponseMessage("Invalid license number, must be 9 digits", 400)
         if(len(doctor_params['specialization']) == 0):
             return ResponseMessage("Specialization must be nonempty", 400)
-        if(float(doctor_params['rate']) <= 0):
-            return ResponseMessage("Rate must be greater than 0. This isn't a charity.")
+        try:
+            doctor_params['rate'] = re.sub(r"\$", "", doctor_params['rate'])
+            if(float(doctor_params['rate']) <= 0):
+                return ResponseMessage("Rate must be greater than 0. This isn't a charity.", 400)
+        except Exception as e:
+            print(e)
+            return ResponseMessage("Invalid format for rate.", 400)
     elif(user_params['role'] == 'patient'):
         #user fields
         if(None in patient_params.values()):
             return ResponseMessage("Required parameters missing from patient fields.", 400)
 
+        patient_params['ssn'] = re.sub(r"(-|\s)", "", patient_params['ssn'])
         if(re.search(valid_license, str(patient_params['ssn'])) == None):
             return ResponseMessage("Invalid SSN.", 400)
-        patient_params['ssn'] = re.sub(r"(-|\s)", "", patient_params['ssn'])
         #address fields
         if(None in list(address_params.values())[3:]):
             return ResponseMessage("Required parameters missing from address fields.", 400)

@@ -26,6 +26,7 @@ import sys
 HOST = 'localhost'
 PORT = ':5000'
 PUBLIC_HOST = 'localhost'
+DOMAIN_HOST = 'localhost'
 HTTP_TYPE = "http"
 
 app = Flask(__name__, static_url_path='/static', static_folder='static')
@@ -2146,7 +2147,7 @@ def get_doctors():
             'specialization': row.specialization,
             'profile': row.profile,
             'office': row.office,
-            'picture': f"{HTTP_TYPE}://{PUBLIC_HOST}{PORT}/static/profile_pics/{row.doctor_id}.png"
+            'picture': f"{HTTP_TYPE}://{DOMAIN_HOST}{PORT}/static/profile_pics/{row.doctor_id}.png"
         })
     return json, 200
 
@@ -2665,11 +2666,13 @@ if __name__ == "__main__":
         print("HTTP_TYPE", HTTP_TYPE)
         print("PUBLIC HOST", PUBLIC_HOST)
         print("HOST", HOST)
+        print("DOMAIN_HOST", DOMAIN_HOST)
         app.run(debug=True)
     else:
         print("*You are not in debug mode, add any 1 param to run as localhost*")
         PORT = ''
         HOST = "0.0.0.0"
+        DOMAIN_HOST = "better-u.org"
         PUBLIC_HOST = os.getenv('PUBLIC_HOST')
         HTTP_TYPE = "https"
         print("PUBLIC HOST", PUBLIC_HOST)

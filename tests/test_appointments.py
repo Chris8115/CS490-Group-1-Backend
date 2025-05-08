@@ -59,10 +59,6 @@ def client():
             "subtotal"	REAL NOT NULL,
             "created_at"	TIMESTAMP NOT NULL,
             "creditcard_id"	INTEGER,
-            CONSTRAINT "transactions_pk" PRIMARY KEY("transaction_id"),
-            CONSTRAINT "creditcard_id" FOREIGN KEY("creditcard_id") REFERENCES "credit_card"("creditcard_id"),
-            CONSTRAINT "doctor_id" FOREIGN KEY("doctor_id") REFERENCES "doctors"("doctor_id"),
-            CONSTRAINT "customer_id" FOREIGN KEY("patient_id") REFERENCES "patients"("patient_id")
         )                  
         """))
         db.session.execute(text("DROP TABLE IF EXISTS patients"))

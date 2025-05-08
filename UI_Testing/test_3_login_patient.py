@@ -20,6 +20,6 @@ def test_patient_login():
     # Wait for redirect to dashboard
     WebDriverWait(driver, 10).until(EC.url_contains("/patient/dashboard"))
 
-    assert "/dashboard" in driver.current_url
+    assert "/patient/dashboard" in driver.current_url
 
     driver.quit()

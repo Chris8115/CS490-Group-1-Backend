@@ -70,8 +70,8 @@ def client():
         )                  
         """))
         # Seed dependency rows
-        db.session.execute(text("INSERT INTO patients (patient_id) VALUES (201)"))
-        db.session.execute(text("INSERT INTO doctors  (doctor_id)   VALUES (101)"))
+        db.session.execute(text("INSERT INTO patients (patient_id, creditcard_id) VALUES (201, 1)"))
+        db.session.execute(text("INSERT INTO doctors  (doctor_id, rate)   VALUES (101, 23.55)"))
         # Seed appointments
         now = datetime(2025,4,23,10,0,0).strftime("%Y-%m-%d %H:%M:%S")
         later = (datetime(2025,4,23,10,0,0) + timedelta(hours=1)).strftime("%Y-%m-%d %H:%M:%S")

@@ -18,7 +18,6 @@ def client():
     with app.app_context():
         # Create dependency tables
         for tbl, ddl in {
-            'patients': "CREATE TABLE patients (patient_id INTEGER PRIMARY KEY)",
             'appointments': ""
         }.items():
             if tbl != 'appointments':
@@ -64,6 +63,15 @@ def client():
             CONSTRAINT "creditcard_id" FOREIGN KEY("creditcard_id") REFERENCES "credit_card"("creditcard_id"),
             CONSTRAINT "doctor_id" FOREIGN KEY("doctor_id") REFERENCES "doctors"("doctor_id"),
             CONSTRAINT "customer_id" FOREIGN KEY("patient_id") REFERENCES "patients"("patient_id")
+        )                  
+        """))
+        db.session.execute(text("DROP TABLE IF EXISTS patients"))
+        db.session.execute(text("""
+            CREATE TABLE "patients" (
+            "patient_id"	INTEGER NOT NULL,
+            "creditcard_id"	INTEGER NOT NULL,
+            PRIMARY KEY("patient_id"),
+            CONSTRAINT "creditcard_id" FOREIGN KEY("creditcard_id") REFERENCES "credit_card"("creditcard_id"),
         )                  
         """))
         # Seed dependency rows

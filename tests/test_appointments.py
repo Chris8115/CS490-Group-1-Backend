@@ -58,7 +58,7 @@ def client():
             "doctor_fee"	REAL NOT NULL,
             "subtotal"	REAL NOT NULL,
             "created_at"	TIMESTAMP NOT NULL,
-            "creditcard_id"	INTEGER,
+            "creditcard_id"	INTEGER
         )                  
         """))
         db.session.execute(text("DROP TABLE IF EXISTS patients"))

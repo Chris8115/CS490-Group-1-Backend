@@ -70,8 +70,7 @@ def client():
             CREATE TABLE "patients" (
             "patient_id"	INTEGER NOT NULL,
             "creditcard_id"	INTEGER NOT NULL,
-            PRIMARY KEY("patient_id"),
-            CONSTRAINT "creditcard_id" FOREIGN KEY("creditcard_id") REFERENCES "credit_card"("creditcard_id")
+            PRIMARY KEY("patient_id")
         )                  
         """))
         # Seed dependency rows

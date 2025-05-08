@@ -18,8 +18,6 @@ def client():
     with app.app_context():
         # Create dependency tables
         for tbl, ddl in {
-            'patients': "CREATE TABLE patients (patient_id INTEGER PRIMARY KEY)",
-            'doctors': "CREATE TABLE doctors (doctor_id INTEGER PRIMARY KEY)",
             'appointments': ""
         }.items():
             if tbl != 'appointments':
@@ -42,9 +40,38 @@ def client():
                 notes          TEXT
             )
         """))
+        db.session.execute(text("DROP TABLE IF EXISTS doctors"))
+        db.session.execute(text("""
+            CREATE TABLE "doctors" (
+            "doctor_id"	INTEGER NOT NULL,
+            "rate"	REAL NOT NULL DEFAULT 59.99,
+            PRIMARY KEY("doctor_id")
+        )
+        """))
+        db.session.execute(text("DROP TABLE IF EXISTS transactions"))
+        db.session.execute(text("""
+            CREATE TABLE "transactions" (
+            "transaction_id"	INTEGER NOT NULL,
+            "patient_id"	INTEGER,
+            "doctor_id"	INTEGER,
+            "service_fee"	REAL NOT NULL,
+            "doctor_fee"	REAL NOT NULL,
+            "subtotal"	REAL NOT NULL,
+            "created_at"	TIMESTAMP NOT NULL,
+            "creditcard_id"	INTEGER
+        )                  
+        """))
+        db.session.execute(text("DROP TABLE IF EXISTS patients"))
+        db.session.execute(text("""
+            CREATE TABLE "patients" (
+            "patient_id"	INTEGER NOT NULL,
+            "creditcard_id"	INTEGER NOT NULL,
+            PRIMARY KEY("patient_id")
+        )                  
+        """))
         # Seed dependency rows
-        db.session.execute(text("INSERT INTO patients (patient_id) VALUES (201)"))
-        db.session.execute(text("INSERT INTO doctors  (doctor_id)   VALUES (101)"))
+        db.session.execute(text("INSERT INTO patients (patient_id, creditcard_id) VALUES (201, 1)"))
+        db.session.execute(text("INSERT INTO doctors  (doctor_id, rate)   VALUES (101, 23.55)"))
         # Seed appointments
         now = datetime(2025,4,23,10,0,0).strftime("%Y-%m-%d %H:%M:%S")
         later = (datetime(2025,4,23,10,0,0) + timedelta(hours=1)).strftime("%Y-%m-%d %H:%M:%S")

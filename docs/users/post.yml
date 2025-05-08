@@ -63,6 +63,7 @@ parameters:
               - specialization
               - profile
               - office
+              - rate
             properties: 
               license_number:
                 type: integer
@@ -76,6 +77,11 @@ parameters:
               office:
                 type: string
                 description: Doctor's default meeting location.
+              rate:
+                type: number
+                format: decimal
+                multipleOf: 0.01
+                description: The doctor's appointment cost.
           patient: 
             type: object
             description: patient information

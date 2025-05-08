@@ -21,6 +21,7 @@ def test_doctor_registration():
     driver.find_element(By.NAME, "email").send_keys("Sponge.Bob@krustykrab.com")
     driver.find_element(By.NAME, "phone_number").send_keys("1234567899")
     driver.find_element(By.NAME, "password").send_keys("password")
+    driver.find_element(By.NAME, "rate").send_keys("$45.99")
 
     # Confirm password
     driver.find_element(By.XPATH, "//label[contains(text(),'Confirm Password')]/following-sibling::input").send_keys("password")

@@ -46,7 +46,7 @@ def client():
             CREATE TABLE "doctors" (
             "doctor_id"	INTEGER NOT NULL,
             "rate"	REAL NOT NULL DEFAULT 59.99,
-            PRIMARY KEY("doctor_id"),
+            PRIMARY KEY("doctor_id")
         )
         """))
         db.session.execute(text("DROP TABLE IF EXISTS transactions"))

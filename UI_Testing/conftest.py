@@ -17,17 +17,102 @@ def delete_user(user_id):
 # Runs before any tests
 def pytest_sessionstart(session):
     print("\n[Prerun] Cleaning up test users before suite starts...")
+    delete_latest_review_for_doctor(1)
     for email in TEST_EMAILS:
         user_id = get_user_id_by_email(email)
         if user_id:
+            # Remove any doctor-patient relationship involving this user
+            for other_email in TEST_EMAILS:
+                other_id = get_user_id_by_email(other_email)
+                if other_id and other_id != user_id:
+                    requests.delete(f"{BASE_URL}/doctor_patient_relationship/{1}/{user_id}")
+
             res = delete_user(user_id)
             print(f"[Prerun] Deleted user {user_id} ({email}): {res.status_code}")
+
 
 # Runs after all tests
 def pytest_sessionfinish(session, exitstatus):
     print("\n[Postrun] Cleaning up test users after suite ends...")
+    
+    delete_latest_review_for_doctor(1)
+    delete_latest_appointment_and_transaction()
+    delete_latest_patient_progress()
+
     for email in TEST_EMAILS:
         user_id = get_user_id_by_email(email)
         if user_id:
+            # Try removing doctor-patient relationship with both roles
+            for other_email in TEST_EMAILS:
+                other_id = get_user_id_by_email(other_email)
+                if other_id and other_id != user_id:
+                    # Try deleting both patient-doctor and doctor-patient combos
+                    requests.delete(f"{BASE_URL}/doctor_patient_relationship/{1}/{user_id}")
+            
             res = delete_user(user_id)
             print(f"[Postrun] Deleted user {user_id} ({email}): {res.status_code}")
+
+def delete_latest_review_for_doctor(doctor_id):
+    res = requests.get(f"{BASE_URL}/reviews", params={"doctor_id": doctor_id})
+    if res.status_code == 200:
+        reviews = res.json().get("reviews", [])
+        if reviews:
+            latest_review = sorted(reviews, key=lambda r: r["review_id"], reverse=True)[0]
+            review_id = latest_review["review_id"]
+            del_res = requests.delete(f"{BASE_URL}/reviews/{review_id}")
+            print(f"[Postrun] Deleted review {review_id} for doctor {doctor_id}: {del_res.status_code}")
+
+def delete_latest_appointment_and_transaction():
+    try:
+        session = get_authenticated_session()
+        res = session.get(f"{BASE_URL}/appointments")
+        if res.status_code == 200:
+            appointments = res.json().get("appointments", [])
+            if appointments:
+                latest = max(appointments, key=lambda a: a["appointment_id"])
+                appt_id = latest["appointment_id"]
+
+                tx_res = session.delete(f"{BASE_URL}/transactions/{appt_id}")
+                print(f"[Postrun] Deleted transaction {appt_id}: {tx_res.status_code}")
+
+                appt_res = session.delete(f"{BASE_URL}/appointments/{appt_id}")
+                print(f"[Postrun] Deleted appointment {appt_id}: {appt_res.status_code}")
+    except Exception as e:
+        print(f"[Postrun] Error during appointment cleanup: {e}")
+
+def delete_latest_patient_progress():
+    try:
+        session = get_authenticated_session()
+        patient_id = get_user_id_by_email("Eugene.Krabs@krustykrab.com")
+        if not patient_id:
+            print("[Postrun] No patient ID found.")
+            return
+
+        res = session.get(f"{BASE_URL}/patient_progress", params={"patient_id": patient_id})
+        if res.status_code == 200:
+            progress = res.json().get("patient_progress", [])
+            if progress:
+                latest = max(progress, key=lambda p: p["progress_id"])
+                progress_id = latest["progress_id"]
+                del_res = session.delete(f"{BASE_URL}/patient_progress/{progress_id}")
+                print(f"[Postrun] Deleted patient progress {progress_id}: {del_res.status_code}")
+            else:
+                print("[Postrun] No patient progress found to delete.")
+        else:
+            print(f"[Postrun] Failed to fetch patient progress: {res.status_code}")
+    except Exception as e:
+        print(f"[Postrun] Error deleting patient progress: {e}")
+
+
+def get_authenticated_session():
+    session = requests.Session()
+    login_data = {
+        "email": "Eugene.Krabs@krustykrab.com",
+        "password": "password"
+    }
+    res = session.post(f"{BASE_URL}/login", json=login_data)
+    if res.status_code == 200:
+        return session
+    raise Exception("Login failed for cleanup")
+
+

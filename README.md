@@ -12,3 +12,4 @@
 
 ## Testing
 - Run UI testing with `python -m pytest UI_Testing/`
+- Run Unit tests with `pytest tests/ --cov=app --cov-report=term-missing -q`

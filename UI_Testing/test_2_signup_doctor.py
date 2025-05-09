@@ -53,8 +53,10 @@ def test_doctor_registration():
         driver.execute_script("arguments[0].scrollIntoView(true);", submit_button)
         driver.execute_script("arguments[0].click();", submit_button)
 
+        print("Doctor registered successfully.")
         # Wait and check
         WebDriverWait(driver, 10).until(EC.url_contains("/log-in"))
+
         assert "/log-in" in driver.current_url
 
     finally:

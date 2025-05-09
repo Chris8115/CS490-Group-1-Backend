@@ -17,8 +17,10 @@ def test_patient_login():
     driver.execute_script("arguments[0].scrollIntoView(true);", login_btn)
     driver.execute_script("arguments[0].click();", login_btn)
 
+    print("Patient logged in successfully.")
     # Wait for redirect to dashboard
     WebDriverWait(driver, 10).until(EC.url_contains("/patient/dashboard"))
+
 
     assert "/patient/dashboard" in driver.current_url
 

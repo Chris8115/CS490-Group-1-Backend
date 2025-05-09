@@ -66,7 +66,8 @@ def test_patient_registration():
 
 
     WebDriverWait(driver, 10).until(EC.url_contains("/log-in"))
-
+    print("Patient registered successfully.")
+    
     assert "/log-in" in driver.current_url
 
     driver.quit()

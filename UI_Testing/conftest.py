@@ -33,11 +33,12 @@ def pytest_sessionstart(session):
 
 # Runs after all tests
 def pytest_sessionfinish(session, exitstatus):
-    delete_latest_review_for_doctor(1)
+    print("\n[Postrun] Cleaning up test users after suite ends...")
+    
     delete_latest_review_for_doctor(1)
     delete_latest_appointment_and_transaction()
+    delete_latest_patient_progress()
 
-    print("\n[Postrun] Cleaning up test users after suite ends...")
     for email in TEST_EMAILS:
         user_id = get_user_id_by_email(email)
         if user_id:
@@ -59,7 +60,7 @@ def delete_latest_review_for_doctor(doctor_id):
             latest_review = sorted(reviews, key=lambda r: r["review_id"], reverse=True)[0]
             review_id = latest_review["review_id"]
             del_res = requests.delete(f"{BASE_URL}/reviews/{review_id}")
-            print(f"Deleted review {review_id} for doctor {doctor_id}: {del_res.status_code}")
+            print(f"[Postrun] Deleted review {review_id} for doctor {doctor_id}: {del_res.status_code}")
 
 def delete_latest_appointment_and_transaction():
     try:
@@ -78,6 +79,30 @@ def delete_latest_appointment_and_transaction():
                 print(f"[Postrun] Deleted appointment {appt_id}: {appt_res.status_code}")
     except Exception as e:
         print(f"[Postrun] Error during appointment cleanup: {e}")
+
+def delete_latest_patient_progress():
+    try:
+        session = get_authenticated_session()
+        patient_id = get_user_id_by_email("Eugene.Krabs@krustykrab.com")
+        if not patient_id:
+            print("[Postrun] No patient ID found.")
+            return
+
+        res = session.get(f"{BASE_URL}/patient_progress", params={"patient_id": patient_id})
+        if res.status_code == 200:
+            progress = res.json().get("patient_progress", [])
+            if progress:
+                latest = max(progress, key=lambda p: p["progress_id"])
+                progress_id = latest["progress_id"]
+                del_res = session.delete(f"{BASE_URL}/patient_progress/{progress_id}")
+                print(f"[Postrun] Deleted patient progress {progress_id}: {del_res.status_code}")
+            else:
+                print("[Postrun] No patient progress found to delete.")
+        else:
+            print(f"[Postrun] Failed to fetch patient progress: {res.status_code}")
+    except Exception as e:
+        print(f"[Postrun] Error deleting patient progress: {e}")
+
 
 def get_authenticated_session():
     session = requests.Session()

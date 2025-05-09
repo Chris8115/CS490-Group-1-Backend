@@ -34,6 +34,9 @@ def pytest_sessionstart(session):
 # Runs after all tests
 def pytest_sessionfinish(session, exitstatus):
     delete_latest_review_for_doctor(1)
+    delete_latest_review_for_doctor(1)
+    delete_latest_appointment_and_transaction()
+
     print("\n[Postrun] Cleaning up test users after suite ends...")
     for email in TEST_EMAILS:
         user_id = get_user_id_by_email(email)
@@ -57,4 +60,34 @@ def delete_latest_review_for_doctor(doctor_id):
             review_id = latest_review["review_id"]
             del_res = requests.delete(f"{BASE_URL}/reviews/{review_id}")
             print(f"Deleted review {review_id} for doctor {doctor_id}: {del_res.status_code}")
+
+def delete_latest_appointment_and_transaction():
+    try:
+        session = get_authenticated_session()
+        res = session.get(f"{BASE_URL}/appointments")
+        if res.status_code == 200:
+            appointments = res.json().get("appointments", [])
+            if appointments:
+                latest = max(appointments, key=lambda a: a["appointment_id"])
+                appt_id = latest["appointment_id"]
+
+                tx_res = session.delete(f"{BASE_URL}/transactions/{appt_id}")
+                print(f"[Postrun] Deleted transaction {appt_id}: {tx_res.status_code}")
+
+                appt_res = session.delete(f"{BASE_URL}/appointments/{appt_id}")
+                print(f"[Postrun] Deleted appointment {appt_id}: {appt_res.status_code}")
+    except Exception as e:
+        print(f"[Postrun] Error during appointment cleanup: {e}")
+
+def get_authenticated_session():
+    session = requests.Session()
+    login_data = {
+        "email": "Eugene.Krabs@krustykrab.com",
+        "password": "password"
+    }
+    res = session.post(f"{BASE_URL}/login", json=login_data)
+    if res.status_code == 200:
+        return session
+    raise Exception("Login failed for cleanup")
+
 

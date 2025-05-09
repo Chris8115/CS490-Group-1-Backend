@@ -51,6 +51,6 @@ def test_patient_writes_review():
         WebDriverWait(driver, 10).until(
             EC.text_to_be_present_in_element((By.TAG_NAME, "h1"), "Review successfully submitted.")
         )
-        print("Review submitted successfully")
+        print("✅ Review submitted successfully")
     finally:
         driver.quit()

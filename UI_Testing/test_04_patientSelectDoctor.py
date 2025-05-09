@@ -30,7 +30,7 @@ def test_patient_chooses_doctor():
         # Wait briefly for relationship to be established
         time.sleep(3)
 
-        print("Doctor selection successful.")
+        print("✅ Doctor selection successful.")
 
     finally:
         driver.quit()

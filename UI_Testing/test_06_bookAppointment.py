@@ -36,7 +36,7 @@ def test_patient_books_appointment():
         WebDriverWait(driver, 10).until(
             EC.text_to_be_present_in_element((By.TAG_NAME, "h1"), "Appointment Requested")
         )
-        print("Appointment successfully requested.")
+        print("✅ Appointment successfully requested.")
 
     finally:
         driver.quit()

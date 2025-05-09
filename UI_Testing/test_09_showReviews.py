@@ -50,7 +50,7 @@ def test_first_review_after_switch():
             )
         )
 
-        print("First Review Text:", review_text.text)
+        print("✅ First Review Text:", review_text.text)
 
     finally:
         driver.quit()

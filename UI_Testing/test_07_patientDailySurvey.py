@@ -48,6 +48,6 @@ def test_patient_submits_daily_survey():
         )
 
 
-        print("Daily survey submitted successfully.")
+        print("✅ Daily survey submitted successfully.")
     finally:
         driver.quit()

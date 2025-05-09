@@ -5,7 +5,7 @@
 - (in venv) `pip install -r requirements.txt`
 - `python app.py`
 - Create the database `craze.db` by using the SQL files, `craze_schema.sql` and `craze_data.sql` in that order.
-   - Alternatively, copy and paste `craze.db.bak` and rename it to `craze.db`
+   - Alternatively, copy and paste `craze.db.bak` and rename it to `craze.db`.
 
 > [!NOTE]  
 > API documentation has been moved to SwaggerUI on `/apidocs` endpoint.

@@ -255,7 +255,7 @@ def login_check():
 def get_transactions():
     print(current_user)
     #sql query
-    query = "SELECT * FROM transactions\n"
+    query = "SELECT transaction_id, patient_id, doctor_id, service_fee, doctor_fee, subtotal, datetime(created_at, 'localtime') AS created_at, creditcard_id FROM transactions\n"
     #get inputs
     params = {
         'cid': "" if request.args.get('creditcard_id') == None else request.args.get('creditcard_id'),
@@ -374,7 +374,7 @@ def add_transactions():
 @swag_from('docs/savedposts/get.yml') 
 def get_saved_posts():
     #sql query
-    query = "SELECT * FROM saved_posts AS S JOIN users AS U ON S.user_id = U.user_id JOIN forum_posts AS F ON F.post_id = S.post_id\n"
+    query = "SELECT *, date(S.saved_at, 'localtime') AS saved_at_est FROM saved_posts AS S JOIN users AS U ON S.user_id = U.user_id JOIN forum_posts AS F ON F.post_id = S.post_id\n"
     #get inputs
     params = {
         'uid': "" if request.args.get('user_id') == None else request.args.get('user_id'),
@@ -395,7 +395,7 @@ def get_saved_posts():
             'last_name': row.last_name,
             'post_id': row.post_id,
             'title': row.title,
-            'saved_at': row.saved_at
+            'saved_at': row.saved_at_est
         })
     return json, 200
 
@@ -619,7 +619,7 @@ def put_prescriptions():
 @swag_from('docs/appointments/get.yml') 
 def appointments():
     #sql query
-    query = "SELECT * FROM appointments\n"
+    query = "SELECT *, datetime(start_time, 'localtime') AS start_time_est, datetime(end_time, 'localtime') AS end_time_est, datetime(created_at, 'localtime') AS created_at_est FROM appointments\n"
     #get inputs
     params = {
         'aid': "" if request.args.get('appointment_id') == None else request.args.get('appointment_id'),
@@ -646,12 +646,12 @@ def appointments():
             'appointment_id': row.appointment_id,
             'doctor_id': row.doctor_id,
             'patient_id': row.patient_id,
-            'start_time': row.start_time,
-            'end_time': row.end_time,
+            'start_time': row.start_time_est,
+            'end_time': row.end_time_est,
             'status': row.status,
             'location': row.location,
             'reason': row.reason,
-            'created_at': row.created_at,
+            'created_at': row.created_at_est,
             'details': row.details,
             'notes' : row.notes
         })
@@ -877,7 +877,7 @@ def update_appointment(appointment_id):
 @swag_from('docs/patientprogress/get.yml') 
 def get_patient_progress():
     #sql query
-    query = "SELECT * FROM patient_progress\n"
+    query = "SELECT *, datetime(date_logged, 'localtime') AS date_logged_est FROM patient_progress\n"
     #get inputs
     params = {
         'progid': "" if request.args.get('progress_id') == None else request.args.get('progress_id'),
@@ -899,7 +899,7 @@ def get_patient_progress():
             'weight': row.weight,
             'calories': row.calories,
             'water_intake': row.water_intake,
-            'date_logged': row.date_logged
+            'date_logged': row.date_logged_est
         })
     return json, 200
 
@@ -969,7 +969,7 @@ def add_patient_progress():
 @swag_from('docs/patientexerciseassignments/get.yml') 
 def get_patient_exercise_assignments():
     #sql query
-    query = "SELECT * FROM patient_exercise_assignments\n"
+    query = "SELECT *, datetime(assigned_at, 'localtime') AS assigned_at_est FROM patient_exercise_assignments\n"
     #get inputs
     params = {
         'aid': "" if request.args.get('assignment_id') == None else request.args.get('assignment_id'),
@@ -996,7 +996,7 @@ def get_patient_exercise_assignments():
             'frequency_per_week': row.frequency_per_week,
             'reps': row.reps,
             'sets': row.sets,
-            'assigned_at': row.assigned_at
+            'assigned_at': row.assigned_at_est
         })
     return json, 200
 
@@ -1228,7 +1228,7 @@ def delete_exercise_plans(exercise_id):
 @swag_from('docs/doctorpatientrelationship/get.yml') 
 def get_doctor_patient_relationship():
     #sql query
-    query = "SELECT * FROM doctor_patient_relationship\n"
+    query = "SELECT *, datetime(date_assigned, 'localtime') AS date_assigned_est FROM doctor_patient_relationship\n"
     #get inputs
     params = {
         'did': "" if request.args.get('doctor_id') == None else request.args.get('doctor_id'),
@@ -1247,7 +1247,7 @@ def get_doctor_patient_relationship():
             'doctor_id': row.doctor_id,
             'patient_id': row.patient_id,
             'status': row.status,
-            'date_assigned': row.date_assigned,
+            'date_assigned': row.date_assigned_est,
             'notes': row.notes
         })
     return json, 200
@@ -1619,7 +1619,7 @@ def delete_pharmacists(pharmacist_id):
 @swag_from('docs/forumcomments/get.yml')
 def get_forum_comments():
     #sql query
-    query = "SELECT * FROM forum_comments AS F JOIN users AS U ON F.user_id = U.user_id\n"
+    query = "SELECT *, datetime(F.created_at, 'localtime') AS created_at_est FROM forum_comments AS F JOIN users AS U ON F.user_id = U.user_id\n"
     #get inputs
     params = {
         'cid': "" if request.args.get('comment_id') == None else request.args.get('comment_id'),
@@ -1641,7 +1641,7 @@ def get_forum_comments():
             'first_name': row.first_name,
             'last_name': row.last_name,
             'comment_text': row.comment_text,
-            'created_at': row.created_at
+            'created_at': row.created_at_est
         })
     return json, 200
 
@@ -1745,7 +1745,7 @@ def patch_forum_comments(comment_id):
 @swag_from('docs/forumposts/get.yml')
 def get_forum_posts():
     #sql query
-    query = "SELECT F.post_id, U.user_id, U.first_name, U.last_name, F.title, F.content, F.post_type, F.created_at AS post_created_at FROM forum_posts AS F JOIN users AS U ON F.user_id = U.user_id\n"
+    query = "SELECT F.post_id, U.user_id, U.first_name, U.last_name, F.title, F.content, F.post_type, datetime(F.created_at, 'localtime') AS post_created_at FROM forum_posts AS F JOIN users AS U ON F.user_id = U.user_id\n"
     #get inputs
     params = {
         'pid': "" if request.args.get('post_id') == None else request.args.get('post_id'),
@@ -1877,7 +1877,7 @@ def update_forum_posts(post_id):
 @swag_from('docs/reviews/get.yml')
 def get_reviews():
     #sql query
-    query = "SELECT * FROM reviews\n"
+    query = "SELECT *, date(created_at, 'localtime') AS created_at_est FROM reviews\n"
     
     #get inputs
     params = {
@@ -1906,7 +1906,7 @@ def get_reviews():
             'patient_id': row.patient_id,
             'rating': row.rating,
             'review_text': row.review_text,
-            'created_at': row.created_at
+            'created_at': row.created_at_est
         })
     
     return json_response, 200
@@ -2224,7 +2224,7 @@ def patch_doctor(doctor_id):
 @swag_from('docs/users/get.yml')
 def get_users():
     #sql query
-    query = "SELECT * FROM users\n"
+    query = "SELECT *, datetime(created_at, 'localtime') AS created_at_est FROM users\n"
     #get inputs
     params = {
         'id': "" if request.args.get('user_id') == None else request.args.get('user_id'),
@@ -2251,7 +2251,7 @@ def get_users():
             'last_name': row.last_name,
             'phone_number': row.phone_number,
             'role': row.role,
-            'created_at': row.created_at
+            'created_at': row.created_at_est
         })
     return json, 200
 
@@ -2606,7 +2606,7 @@ def get_patient_weekly_surveys():
         'patient_id': request.args.get('patient_id', default=None, type=int)
     }
 
-    query = "SELECT * FROM patient_weekly_surveys"
+    query = "SELECT *, datetime(submitted_at, 'localtime') AS submitted_at_est FROM patient_weekly_surveys"
     if params['patient_id'] is not None:
         query += " WHERE patient_id = :patient_id"
 
@@ -2615,7 +2615,7 @@ def get_patient_weekly_surveys():
         surveys = [{
             'weekly_survey_id': row.weekly_survey_id,
             'patient_id': row.patient_id,
-            'submitted_at': row.submitted_at,
+            'submitted_at': row.submitted_at_est,
             'weight_goal': row.weight_goal,
             'comments': row.comments
         } for row in result]

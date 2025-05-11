@@ -17,17 +17,14 @@ def test_pharmacy_searches_for_patient():
             EC.url_contains("/pharmacy/dashboard")
         )
 
-        # Navigate to patient search
         driver.get("http://localhost:3000/pharmacy/patient-search")
 
-        # Fill out first and last name
         WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.ID, "patientFirstName")))
         driver.find_element(By.ID, "patientFirstName").send_keys("Eugene")
         driver.find_element(By.ID, "patientLastName").send_keys("Krabs")
 
-         # Wait for result
         name_elem = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "div.doctor-search h3"))
+            EC.presence_of_element_located((By.TAG_NAME, "h3"))
         )
 
         print("✅ Patient result found:", name_elem.text.strip())

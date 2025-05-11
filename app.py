@@ -374,7 +374,7 @@ def add_transactions():
 @swag_from('docs/savedposts/get.yml') 
 def get_saved_posts():
     #sql query
-    query = "SELECT *, datetime(saved_at, 'localtime') AS saved_at_est FROM saved_posts AS S JOIN users AS U ON S.user_id = U.user_id JOIN forum_posts AS F ON F.post_id = S.post_id\n"
+    query = "SELECT *, datetime(S.saved_at, 'localtime') AS saved_at_est FROM saved_posts AS S JOIN users AS U ON S.user_id = U.user_id JOIN forum_posts AS F ON F.post_id = S.post_id\n"
     #get inputs
     params = {
         'uid': "" if request.args.get('user_id') == None else request.args.get('user_id'),

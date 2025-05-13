@@ -70,7 +70,7 @@ def test_get_all_saved_posts(client):
     data = resp.get_json()
     assert 'saved_posts' in data
     assert len(data['saved_posts']) == 2
-    # verify one entry
+
     entry = next(item for item in data['saved_posts'] if item['user_id'] == 1)
     assert entry['first_name'] == 'Alice'
     assert entry['last_name'] == 'Smith'

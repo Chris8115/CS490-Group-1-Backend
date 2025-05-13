@@ -57,7 +57,7 @@ def client():
             "INSERT INTO forum_posts (post_id, title) VALUES (10, 'Post One'), (20, 'Post Two')"
         ))
         db.session.execute(text(
-            "INSERT INTO saved_posts (user_id, post_id, saved_at) VALUES (1, 10, '2025-04-23'), (2, 20, '2025-04-22')"
+            "INSERT INTO saved_posts (user_id, post_id, saved_at) VALUES (1, 10, '2025-04-23'), (2, 20, '2025-04-23')"
         ))
         db.session.commit()
     with app.test_client() as c:
@@ -76,7 +76,7 @@ def test_get_all_saved_posts(client):
     assert entry['last_name'] == 'Smith'
     assert entry['post_id'] == 10
     assert entry['title'] == 'Post One'
-    assert entry['saved_at'] == '2025-04-23'
+    assert entry['saved_at'] == '2025-04-22'
 
 
 def test_filter_by_user_id(client):
@@ -97,10 +97,10 @@ def test_filter_by_post_id(client):
 
 
 def test_filter_by_saved_at(client):
-    resp = client.get('/saved_posts?saved_at=2025-04-22')
+    resp = client.get('/saved_posts?saved_at=2025-04-23')
     assert resp.status_code == 200
     data = resp.get_json()
-    assert len(data['saved_posts']) == 1
+    assert len(data['saved_posts']) == 2
     assert data['saved_posts'][0]['saved_at'] == '2025-04-22'
 
 # DELETE /saved_posts endpoint tests

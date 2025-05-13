@@ -6,17 +6,13 @@ from selenium.webdriver.support import expected_conditions as EC
 def test_pharmacy_login():
     driver = webdriver.Chrome()
     try:
-        # Navigate to the pharmacy login page
         driver.get("http://localhost:3000/pharmacy-log-in")
 
-        # Enter credentials
-        driver.find_element(By.ID, "form1").send_keys("3")  # Pharmacist ID
-        driver.find_element(By.ID, "form2").send_keys("asdfhog")  # Password
+        driver.find_element(By.ID, "form1").send_keys("3")
+        driver.find_element(By.ID, "form2").send_keys("asdfhog")
 
-        # Submit the form
         driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
 
-        # Wait for dashboard navigation
         WebDriverWait(driver, 10).until(
             EC.url_contains("/pharmacy/dashboard")
         )

@@ -22,5 +22,5 @@ jobs:
       - name: Install deps
         run: pip install -r requirements.txt python-dotenv
       - name: Run tests
-        run: pytest tests/
+        run: pytest tests/ --cov=app
 

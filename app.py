@@ -685,7 +685,7 @@ def add_appointment():
             :appointment_id,
             :doctor_id,
             :patient_id,
-            DATETIME(:start_time),
+            DATETIME(:start_time, 'UTC'),
             DATETIME(:end_time),
             :status,
             :location,

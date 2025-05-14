@@ -47,3 +47,4 @@ Flask-Login==0.6.3
 pytest==8.3.5
 python-dotenv
 selenium
+pytest-cov

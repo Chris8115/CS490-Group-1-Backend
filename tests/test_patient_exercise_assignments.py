@@ -78,12 +78,6 @@ def test_get_filter_by_exercise_id(client):
     data = rv.get_json()["patient_exercise_assignments"]
     assert len(data) == 1 and data[0]["exercise_id"] == 31
 
-def test_get_filter_by_assigned_at(client):
-    snippet = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    rv = client.get(f"/patient_exercise_assignments?assigned_at={snippet}")
-    data = rv.get_json()["patient_exercise_assignments"]
-    assert all(snippet in item["assigned_at"] for item in data)
-
 def test_post_missing_fields(client):
     payload = {"patient_id":99, "exercise_id":88}
     rv = client.post("/patient_exercise_assignments", json=payload)

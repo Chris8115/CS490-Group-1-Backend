@@ -78,11 +78,11 @@ def test_get_filter_by_patient_id(client):
     assert len(rv.get_json()["patient_progress"]) == 2
 
 def test_get_filter_by_date_logged(client):
-    sample = client.get("/patient_progress").get_json()["patient_progress"][0]["date_logged"]
-    snippet = sample[:10]
-    rv = client.get(f"/patient_progress?date_logged={snippet}")
+    full_date = client.get("/patient_progress").get_json()["patient_progress"][0]["date_logged"]
+    rv = client.get(f"/patient_progress?date_logged={full_date}")
     assert rv.status_code == 200
-    assert all(snippet in p["date_logged"] for p in rv.get_json()["patient_progress"])
+    assert all(full_date == p["date_logged"] for p in rv.get_json()["patient_progress"])
+
 
 def test_delete_nonexistent_progress(client):
     rv = client.delete("/patient_progress/999")

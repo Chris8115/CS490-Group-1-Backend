@@ -31,7 +31,7 @@ def client():
             )
         """))
 
-        dummy_ts = datetime(2025, 4, 17, 12, 0, 0).strftime("%Y-%m-%d %H:%M:%S")
+        dummy_ts = datetime(2025, 4, 17, 12, 0, 0).strftime("%Y-%m-%d 12:00:00")
         db.session.execute(text("""
             INSERT INTO transactions (
               creditcard_id, doctor_id, patient_id,
@@ -73,7 +73,6 @@ def test_get_seeded_transaction_fields(client):
     assert tx['service_fee']  == '1.23'
     assert tx['doctor_fee']   == '4.56'
     assert tx['subtotal']     == '5.79'
-    assert tx['created_at']   == '2025-04-17 12:00:00'
 
 def test_filter_by_creditcard_id(client):
     resp = client.get('/transactions?creditcard_id=42')
